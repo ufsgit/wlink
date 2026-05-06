@@ -1,0 +1,117 @@
+=<div class="dashboard">
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue">
+        <i class="bi bi-people"></i>
+      </div>
+      <div class="stat-info">
+        <label>Total Contacts</label>
+        <h3>{{ stats.totalContacts | number }}</h3>
+        <span class="trend up"><i class="bi bi-arrow-up"></i> 12% increase</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon icon-purple">
+        <i class="bi bi-chat-left-dots"></i>
+      </div>
+      <div class="stat-info">
+        <label>Open Conversations</label>
+        <h3>{{ stats.openConversations | number }}</h3>
+        <span class="trend neutral">Active now</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon icon-green">
+        <i class="bi bi-megaphone"></i>
+      </div>
+      <div class="stat-info">
+        <label>Daily Messages</label>
+        <h3>{{ stats.messagesToday | number }}</h3>
+        <span class="trend up"><i class="bi bi-arrow-up"></i> 5% vs yesterday</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon icon-orange">
+        <i class="bi bi-eye"></i>
+      </div>
+      <div class="stat-info">
+        <label>Avg. Read Rate</label>
+        <h3>{{ stats.broadcastReadRate }}%</h3>
+        <span class="trend up"><i class="bi bi-arrow-up"></i> 8% above average</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-row">
+    <!-- Recent Chats -->
+    <div class="recent-chats">
+      <div class="card-header">
+        <h4>Recent Conversations</h4>
+        <a routerLink="/inbox" class="btn-link">View All</a>
+      </div>
+      <div class="chat-list">
+        <div *ngIf="loading" class="text-center py-4">
+          <div class="spinner-border text-primary"></div>
+        </div>
+        <div *ngIf="!loading && stats.recentConversations.length === 0" class="text-center py-4 text-muted">
+          No recent conversations.
+        </div>
+        <div *ngFor="let convo of stats.recentConversations" class="chat-item">
+          <div class="avatar">{{ convo.contact_name?.charAt(0) }}</div>
+          <div class="chat-info">
+            <div class="chat-top">
+              <span class="name">{{ convo.contact_name }}</span>
+              <span class="time">{{ convo.last_message_at | date:'shortTime' }}</span>
+            </div>
+            <p class="last-msg text-truncate">{{ convo.last_message || 'No messages yet' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <div class="card-header">
+        <h4>Quick Actions</h4>
+      </div>
+      <div class="action-grid">
+        <a routerLink="/broadcasts" class="action-btn">
+          <i class="bi bi-megaphone"></i>
+          <span>New Broadcast</span>
+        </a>
+        <a routerLink="/contacts" class="action-btn">
+          <i class="bi bi-person-plus"></i>
+          <span>Add Contact</span>
+        </a>
+        <a routerLink="/chatbots" class="action-btn">
+          <i class="bi bi-robot"></i>
+          <span>Bot Config</span>
+        </a>
+        <a routerLink="/settings" class="action-btn">
+          <i class="bi bi-gear"></i>
+          <span>API Settings</span>
+        </a>
+      </div>
+      
+      <div class="onboarding-card mt-4">
+        <h5>Integration Status</h5>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="small">WhatsApp API</span>
+          <span class="badge bg-success">Connected</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="small">RCS Business</span>
+          <span class="badge bg-warning">Pending</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="small">Facebook/IG</span>
+          <span class="badge bg-secondary">Offline</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

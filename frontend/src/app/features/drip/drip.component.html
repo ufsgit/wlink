@@ -1,0 +1,49 @@
+<div class="drip-page">
+  <div class="workflow-header">
+    <div>
+      <h2>Automated Workflows</h2>
+      <p class="text-muted">Multi-channel drip campaigns that engage customers at every touchpoint.</p>
+    </div>
+    <button class="btn btn-primary shadow-sm"><i class="bi bi-plus-circle"></i> Create Workflow</button>
+  </div>
+
+  <div class="sequence-list">
+    <div *ngFor="let seq of sequences" class="sequence-card">
+      <div class="seq-info">
+        <div class="trigger-tag mb-2">
+          <i class="bi bi-lightning-fill"></i> Trigger: {{ seq.trigger }}
+        </div>
+        <h4>{{ seq.name }}</h4>
+        
+        <div class="visual-steps">
+          <ng-container *ngFor="let step of seq.steps; let i = index; let last = last">
+            <div class="step-node" [class.active]="step.active" [title]="step.type">
+              <i class="bi" [class.bi-chat-left-text]="step.type === 'message'" 
+                           [class.bi-clock]="step.type === 'delay'"
+                           [class.bi-envelope]="step.type === 'email'"
+                           [class.bi-telephone]="step.type === 'ivr'"></i>
+            </div>
+            <div class="step-connector" *ngIf="!last"></div>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="seq-stats">
+        <div class="stat-group">
+          <div class="stat-item">
+            <label>In Progress</label>
+            <span>{{ seq.inProgress }}</span>
+          </div>
+          <div class="stat-item">
+            <label>Completed</label>
+            <span>{{ seq.completed }}</span>
+          </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-end gap-3">
+          <span class="badge" [class.bg-success]="seq.status === 'Active'" [class.bg-secondary]="seq.status === 'Draft'">{{ seq.status }}</span>
+          <button class="btn btn-sm btn-outline-primary">Manage</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

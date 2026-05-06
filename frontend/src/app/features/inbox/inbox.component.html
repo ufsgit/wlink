@@ -1,0 +1,161 @@
+<div class="inbox-container">
+  <!-- Sidebar: Conversation List -->
+  <div class="inbox-sidebar">
+    <div class="sidebar-header">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Chats</h4>
+        <div class="dropdown">
+          <button class="btn btn-icon btn-sm bg-light border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Filter Channels">
+            <i class="bi fs-5" [ngClass]="{
+              'bi-whatsapp text-success': currentChannel === 'whatsapp',
+              'bi-instagram text-danger': currentChannel === 'instagram',
+              'bi-facebook text-primary': currentChannel === 'messenger',
+              'bi-globe text-info': currentChannel === 'website',
+              'bi-filter text-muted': !currentChannel
+            }"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width: 200px;">
+            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('')">
+              <i class="bi bi-collection me-3 text-muted"></i> All Channels
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('whatsapp')">
+              <i class="bi bi-whatsapp text-success me-3"></i> WhatsApp
+            </a></li>
+            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('instagram')">
+              <i class="bi bi-instagram text-danger me-3"></i> Instagram
+            </a></li>
+            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('messenger')">
+              <i class="bi bi-messenger text-primary me-3"></i> Messenger
+            </a></li>
+            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('website')">
+              <i class="bi bi-globe text-info me-3"></i> Website Widget
+            </a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Search chats...">
+      </div>
+    </div>
+
+    <div class="conversation-list">
+      <div *ngIf="loadingConvos" class="text-center p-4">
+        <div class="spinner-border spinner-border-sm text-primary"></div>
+      </div>
+      
+      <div *ngFor="let convo of conversations" 
+           class="convo-item" 
+           [class.active]="selectedConvo?.id === convo.id"
+           (click)="selectConversation(convo)">
+        <div class="convo-avatar">
+          {{ convo.contact_name?.charAt(0) || 'C' }}
+          <div class="status-indicator online"></div>
+        </div>
+        <div class="convo-info">
+          <div class="convo-top">
+            <span class="convo-name">{{ convo.contact_name || convo.contact_phone }}</span>
+            <span class="convo-time">{{ convo.last_message_at | date:'shortTime' }}</span>
+          </div>
+          <div class="convo-msg">{{ convo.last_message || 'No messages yet' }}</div>
+        </div>
+        <div class="unread-badge" *ngIf="convo.unread_count > 0">{{ convo.unread_count }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main: Chat Area -->
+  <div class="chat-area" *ngIf="selectedConvo; else noSelect">
+    <div class="chat-header">
+      <div class="d-flex align-items-center gap-3">
+        <div class="chat-avatar">{{ selectedConvo.contact_name?.charAt(0) }}</div>
+        <div>
+          <div class="fw-bold">{{ selectedConvo.contact_name }}</div>
+          <div class="small text-success">
+            <i class="bi bi-whatsapp"></i> {{ selectedConvo.contact_phone }}
+          </div>
+        </div>
+      </div>
+      <div class="chat-actions">
+        <button class="btn btn-outline-success btn-sm me-2" (click)="updateStatus('resolved')">
+          <i class="bi bi-check-lg"></i> Resolve
+        </button>
+        <button class="btn btn-icon"><i class="bi bi-three-dots-vertical"></i></button>
+      </div>
+    </div>
+
+    <div class="chat-messages" #scrollMe>
+      <div *ngIf="loadingMessages" class="text-center p-4">
+        <div class="spinner-border text-primary"></div>
+      </div>
+
+      <div *ngFor="let msg of messages" class="msg-wrapper" [class.sent]="msg.direction === 'outbound'">
+        <div class="msg-bubble">
+          <div class="msg-content">{{ msg.content }}</div>
+          <div class="msg-meta">
+            {{ msg.created_at | date:'shortTime' }}
+            <i class="bi bi-check-all ms-1" *ngIf="msg.direction === 'outbound'"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="input-actions-left">
+        <button class="btn-action"><i class="bi bi-emoji-smile"></i></button>
+        <button class="btn-action"><i class="bi bi-paperclip"></i></button>
+        <button class="btn-action"><i class="bi bi-file-earmark-text"></i></button>
+      </div>
+      <div class="input-wrapper">
+        <input type="text" 
+               [(ngModel)]="newMessage" 
+               (keyup.enter)="sendMessage()"
+               placeholder="Type a message...">
+      </div>
+      <button class="btn-send" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Right: Contact Info -->
+  <div class="contact-info-panel" *ngIf="selectedConvo">
+    <div class="panel-header">Contact Details</div>
+    <div class="p-4 text-center">
+      <div class="info-avatar mb-3">{{ selectedConvo.contact_name?.charAt(0) }}</div>
+      <h5 class="mb-1">{{ selectedConvo.contact_name }}</h5>
+      <p class="text-muted small mb-4">{{ selectedConvo.contact_phone }}</p>
+      
+      <div class="info-list text-start">
+        <div class="info-item">
+          <label>Email</label>
+          <div>{{ selectedConvo.contact_email || 'Not provided' }}</div>
+        </div>
+        <div class="info-item">
+          <label>Status</label>
+          <div><span class="badge bg-success">Opted-in</span></div>
+        </div>
+        <div class="info-item">
+          <label>Channel</label>
+          <div>WhatsApp Business</div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <button class="btn btn-outline-primary btn-sm w-100 mb-2">Edit Profile</button>
+        <button class="btn btn-outline-danger btn-sm w-100">Block Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noSelect>
+    <div class="chat-area empty-state">
+      <div class="text-center">
+        <i class="bi bi-chat-dots display-1 text-light mb-4"></i>
+        <h4>Select a conversation to start chatting</h4>
+        <p class="text-muted">All your WhatsApp, Messenger, and Instagram messages in one place.</p>
+      </div>
+    </div>
+  </ng-template>
+</div>

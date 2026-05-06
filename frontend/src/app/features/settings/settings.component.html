@@ -1,0 +1,357 @@
+<div class="settings-page">
+  <div class="settings-nav">
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'whatsapp'" (click)="activeTab = 'whatsapp'">
+      <i class="bi bi-whatsapp me-2"></i>WhatsApp API
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'profile'" (click)="activeTab = 'profile'">
+      <i class="bi bi-person me-2"></i>Profile
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'business'" (click)="activeTab = 'business'">
+      <i class="bi bi-building me-2"></i>Business
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'team'" (click)="activeTab = 'team'; loadTeam()">
+      <i class="bi bi-people me-2"></i>Team
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'api'" (click)="activeTab = 'api'">
+      <i class="bi bi-code-slash me-2"></i>API & Webhooks
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'integrations'" (click)="activeTab = 'integrations'">
+      <i class="bi bi-plug me-2"></i>Integrations
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'billing'" (click)="activeTab = 'billing'; loadBilling()">
+      <i class="bi bi-credit-card me-2"></i>Billing
+    </a>
+  </div>
+
+  <div class="settings-content">
+
+    <!-- ===================== WHATSAPP API (META) ===================== -->
+    <div *ngIf="activeTab === 'whatsapp'">
+      <div class="meta-banner">
+        <div class="meta-banner-left">
+          <div class="meta-logo">
+            <i class="bi bi-whatsapp"></i>
+          </div>
+          <div>
+            <h3>WhatsApp Business API</h3>
+            <p>Connect directly with Meta's Cloud API for the latest WhatsApp features</p>
+          </div>
+        </div>
+        <span class="connection-badge" [class.connected]="business.whatsapp_token" [class.disconnected]="!business.whatsapp_token">
+          <i class="bi" [class.bi-check-circle-fill]="business.whatsapp_token" [class.bi-x-circle-fill]="!business.whatsapp_token"></i>
+          {{ business.whatsapp_token ? 'Connected' : 'Not Connected' }}
+        </span>
+      </div>
+
+      <!-- Setup Guide -->
+      <div class="setup-steps" *ngIf="!business.whatsapp_token">
+        <h4 class="section-title">Quick Setup Guide</h4>
+        <div class="step-list">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h5>Create a Meta Business Account</h5>
+              <p>Go to <a href="https://business.facebook.com" target="_blank">business.facebook.com</a> and create or select your business account.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h5>Create a WhatsApp Business App</h5>
+              <p>Visit <a href="https://developers.facebook.com/apps" target="_blank">developers.facebook.com/apps</a> → Create App → Select "Business" → Add WhatsApp product.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h5>Generate Permanent Access Token</h5>
+              <p>In the App Dashboard → WhatsApp → API Setup → Generate a permanent token with <code>whatsapp_business_messaging</code> permission.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h5>Copy Your Phone Number ID</h5>
+              <p>From WhatsApp → API Setup, copy the <strong>Phone Number ID</strong> and <strong>WhatsApp Business Account ID</strong>.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+              <h5>Configure Webhook</h5>
+              <p>Set the webhook URL below in your Meta App Dashboard and subscribe to <code>messages</code> events.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Credentials Form -->
+      <div class="api-form-section">
+        <h4 class="section-title">Meta API Credentials</h4>
+
+        <div class="alert-info-box" *ngIf="saveSuccess">
+          <i class="bi bi-check-circle-fill"></i> {{ saveSuccess }}
+        </div>
+        <div class="alert-error-box" *ngIf="saveError">
+          <i class="bi bi-x-circle-fill"></i> {{ saveError }}
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">WhatsApp Business Phone Number</label>
+            <input type="text" class="form-control" [(ngModel)]="business.whatsapp_number" placeholder="+91 9876543210">
+            <span class="form-hint">The phone number registered with your WhatsApp Business Account</span>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Permanent Access Token</label>
+            <div class="token-input">
+              <input [type]="showToken ? 'text' : 'password'" class="form-control" [(ngModel)]="business.whatsapp_token" placeholder="EAABxyz...">
+              <button class="toggle-visibility" (click)="showToken = !showToken">
+                <i class="bi" [class.bi-eye]="!showToken" [class.bi-eye-slash]="showToken"></i>
+              </button>
+            </div>
+            <span class="form-hint">Generate from Meta Developer Dashboard → WhatsApp → API Setup</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number ID</label>
+            <input type="text" class="form-control" [(ngModel)]="business.whatsapp_phone_id" placeholder="1234567890123456">
+            <span class="form-hint">Found in WhatsApp → API Setup</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">WhatsApp Business Account ID</label>
+            <input type="text" class="form-control" [(ngModel)]="business.waba_id" placeholder="9876543210123456">
+            <span class="form-hint">Your WABA ID from Business Settings</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Facebook Page ID <span class="optional">(optional)</span></label>
+            <input type="text" class="form-control" [(ngModel)]="business.fb_page_id" placeholder="Page ID for Messenger">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Instagram Account ID <span class="optional">(optional)</span></label>
+            <input type="text" class="form-control" [(ngModel)]="business.ig_account_id" placeholder="IG Business Account ID">
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" (click)="saveWhatsAppConfig()" [disabled]="saving">
+            <i class="bi bi-check-lg"></i> {{ saving ? 'Saving...' : 'Save Configuration' }}
+          </button>
+          <button class="btn btn-outline-secondary" (click)="testConnection()" [disabled]="testing">
+            <i class="bi bi-wifi"></i> {{ testing ? 'Testing...' : 'Test Connection' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Webhook Configuration -->
+      <div class="webhook-section">
+        <h4 class="section-title">Webhook Configuration</h4>
+        <p class="section-desc">Paste these values into your Meta App Dashboard → WhatsApp → Configuration → Webhook.</p>
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Callback URL</label>
+            <div class="copy-input">
+              <input type="text" class="form-control" [value]="webhookUrl" readonly>
+              <button class="copy-btn" (click)="copyToClipboard(webhookUrl)">
+                <i class="bi bi-clipboard"></i> Copy
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Verify Token</label>
+            <div class="copy-input">
+              <input type="text" class="form-control" [(ngModel)]="business.fb_verify_token" placeholder="your_verify_token">
+              <button class="copy-btn" (click)="copyToClipboard(business.fb_verify_token)">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Subscribed Fields</label>
+            <div class="subscribed-fields">
+              <span class="field-chip">messages</span>
+              <span class="field-chip">message_deliveries</span>
+              <span class="field-chip">message_reads</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Features -->
+      <div class="features-section">
+        <h4 class="section-title">Available API Features</h4>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <i class="bi bi-chat-left-text"></i>
+            <h5>Send Messages</h5>
+            <p>Text, images, videos, docs & interactive buttons</p>
+          </div>
+          <div class="feature-card">
+            <i class="bi bi-file-earmark-richtext"></i>
+            <h5>Template Messages</h5>
+            <p>Submit, manage & send pre-approved templates</p>
+          </div>
+          <div class="feature-card">
+            <i class="bi bi-broadcast-pin"></i>
+            <h5>Broadcast Campaigns</h5>
+            <p>Bulk message to tagged contact segments</p>
+          </div>
+          <div class="feature-card">
+            <i class="bi bi-robot"></i>
+            <h5>AI Chatbots</h5>
+            <p>Auto-reply flows with GPT-powered responses</p>
+          </div>
+          <div class="feature-card">
+            <i class="bi bi-check-circle"></i>
+            <h5>Green Tick Verification</h5>
+            <p>Apply for official business verification badge</p>
+          </div>
+          <div class="feature-card">
+            <i class="bi bi-graph-up-arrow"></i>
+            <h5>Real-time Analytics</h5>
+            <p>Delivery, read rates & conversation insights</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== PROFILE ===================== -->
+    <div *ngIf="activeTab === 'profile'">
+      <h3 class="section-title">My Profile</h3>
+      <div class="row g-3" style="max-width: 500px;">
+        <div class="col-12">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-control" value="Admin User">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control" value="admin@demo.com" disabled>
+        </div>
+        <div class="col-12 mt-4">
+          <button class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== BUSINESS ===================== -->
+    <div *ngIf="activeTab === 'business'">
+      <h3 class="section-title">Business Settings</h3>
+      <div style="max-width: 500px;">
+        <div class="form-group mb-3">
+          <label class="form-label">Business Name</label>
+          <input type="text" class="form-control" [(ngModel)]="business.name">
+        </div>
+        <div class="form-group mb-3">
+          <label class="form-label">Plan</label>
+          <input type="text" class="form-control" [value]="business.plan" disabled>
+        </div>
+        <div class="form-group mb-3">
+          <label class="form-label">Green Tick Status</label>
+          <input type="text" class="form-control" [value]="business.green_tick_status" disabled>
+        </div>
+        <button class="btn btn-primary" (click)="saveWhatsAppConfig()">Save</button>
+      </div>
+    </div>
+
+    <!-- ===================== TEAM ===================== -->
+    <div *ngIf="activeTab === 'team'">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="section-title mb-0">Team Members</h3>
+        <button class="btn btn-primary btn-sm" (click)="showInvite = !showInvite"><i class="bi bi-plus-lg"></i> Invite Agent</button>
+      </div>
+      <div *ngIf="showInvite" class="invite-form mb-4">
+        <div class="row g-2" style="max-width: 600px;">
+          <div class="col-4"><input type="text" class="form-control form-control-sm" [(ngModel)]="newAgent.name" placeholder="Name"></div>
+          <div class="col-4"><input type="email" class="form-control form-control-sm" [(ngModel)]="newAgent.email" placeholder="Email"></div>
+          <div class="col-2">
+            <select class="form-select form-select-sm" [(ngModel)]="newAgent.role">
+              <option value="agent">Agent</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="col-2"><button class="btn btn-success btn-sm w-100" (click)="inviteAgent()">Send</button></div>
+        </div>
+      </div>
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody style="font-size: 0.9rem;">
+          <tr *ngFor="let member of team">
+            <td>{{ member.name }}</td>
+            <td>{{ member.email }}</td>
+            <td><span class="badge bg-primary">{{ member.role }}</span></td>
+            <td><span class="badge" [class.bg-success]="member.is_active" [class.bg-secondary]="!member.is_active">{{ member.is_active ? 'Active' : 'Inactive' }}</span></td>
+            <td><button class="btn btn-link btn-sm text-danger p-0" (click)="removeAgent(member.id)"><i class="bi bi-trash"></i></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===================== API & WEBHOOKS ===================== -->
+    <div *ngIf="activeTab === 'api'">
+      <h3 class="section-title">API Configuration</h3>
+      <div style="max-width: 600px;">
+        <div class="mb-4">
+          <label class="form-label">Your Webhook Callback URL</label>
+          <div class="copy-input">
+            <input type="text" class="form-control" [value]="webhookUrl" readonly>
+            <button class="copy-btn" (click)="copyToClipboard(webhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Verify Token</label>
+          <div class="copy-input">
+            <input type="text" class="form-control" [value]="business.fb_verify_token || 'wlink_fb_verify_token'" readonly>
+            <button class="copy-btn" (click)="copyToClipboard(business.fb_verify_token || 'wlink_fb_verify_token')"><i class="bi bi-clipboard"></i> Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== INTEGRATIONS ===================== -->
+    <div *ngIf="activeTab === 'integrations'">
+      <h3 class="section-title">Third-party Integrations</h3>
+      <div class="integration-card" *ngFor="let intg of integrations">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi" [ngClass]="intg.icon" [style.color]="intg.color" style="font-size: 1.5rem;"></i>
+          <div>
+            <div style="font-weight: 600;">{{ intg.name }}</div>
+            <div class="text-muted small">{{ intg.desc }}</div>
+          </div>
+        </div>
+        <button class="btn btn-sm" [class.btn-outline-primary]="!intg.connected" [class.btn-success]="intg.connected">
+          {{ intg.connected ? 'Connected' : 'Connect' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================== BILLING ===================== -->
+    <div *ngIf="activeTab === 'billing'">
+      <h3 class="section-title">Billing & Plans</h3>
+      <div class="plan-grid" *ngIf="billingData">
+        <div class="plan-card" *ngFor="let plan of billingPlans" [class.current]="billingData.plan === plan.key">
+          <div class="plan-badge" *ngIf="billingData.plan === plan.key">Current Plan</div>
+          <h4>{{ plan.name }}</h4>
+          <div class="plan-price">₹{{ plan.price }}<span>/mo</span></div>
+          <ul>
+            <li><i class="bi bi-check-lg text-success"></i> {{ plan.contacts | number }} Contacts</li>
+            <li><i class="bi bi-check-lg text-success"></i> {{ plan.broadcasts }} Broadcasts/mo</li>
+            <li><i class="bi bi-check-lg text-success"></i> {{ plan.agents }} Team Members</li>
+          </ul>
+          <button class="btn btn-sm w-100" [class.btn-primary]="billingData.plan !== plan.key" [class.btn-outline-secondary]="billingData.plan === plan.key" [disabled]="billingData.plan === plan.key">
+            {{ billingData.plan === plan.key ? 'Active' : 'Upgrade' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

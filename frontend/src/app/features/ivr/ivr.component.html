@@ -1,0 +1,32 @@
+<div class="ivr-page">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700;">Smart IVR Flows</h2>
+      <p class="text-muted small mb-0">Automate your voice calls with intelligent routing</p>
+    </div>
+    <button class="btn btn-primary"><i class="bi bi-telephone-plus"></i> Design Flow</button>
+  </div>
+
+  <div class="ivr-grid">
+    <div *ngFor="let flow of flows" class="ivr-card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <h4 style="font-size: 1rem; font-weight: 700; margin: 0;">{{ flow.name }}</h4>
+        <span class="badge" [class.bg-success]="flow.active" [class.bg-secondary]="!flow.active">
+          {{ flow.active ? 'Active' : 'Paused' }}
+        </span>
+      </div>
+      <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;">DID: {{ flow.number }}</div>
+      
+      <div class="flow-preview">
+        <div class="flow-step"><i class="bi bi-play-circle"></i> Welcome Audio</div>
+        <div class="flow-step"><i class="bi bi-key"></i> Key 1: Sales (Forward)</div>
+        <div class="flow-step"><i class="bi bi-key"></i> Key 2: Support (Chatbot)</div>
+      </div>
+
+      <div class="mt-4 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary flex-grow-1">Edit Flow</button>
+        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-journal-text"></i> Logs</button>
+      </div>
+    </div>
+  </div>
+</div>

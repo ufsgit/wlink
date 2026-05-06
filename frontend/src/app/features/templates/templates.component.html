@@ -1,0 +1,141 @@
+<div class="templates-page">
+  <div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 style="font-weight: 800; color: #0f172a; margin: 0;">Message Templates</h2>
+      <p class="text-muted">Manage your pre-approved WhatsApp and RCS message templates.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" (click)="syncTemplates()" [disabled]="loading">
+        <i class="bi bi-arrow-repeat" [class.spin]="loading"></i> Sync from Meta
+      </button>
+      <button class="btn btn-primary" (click)="showModal = true">
+        <i class="bi bi-plus-lg"></i> Create Template
+      </button>
+    </div>
+  </div>
+
+  <div class="template-grid">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-5 w-100">
+      <div class="spinner-border text-primary"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && templates.length === 0" class="text-center py-5 w-100 border rounded-4 bg-light">
+      <i class="bi bi-file-earmark-text display-4 text-muted mb-3 d-block"></i>
+      <h5>No Templates Found</h5>
+      <p class="text-muted">Create or sync templates from Meta to start sending broadcasts.</p>
+    </div>
+
+    <!-- Template Cards -->
+    <div *ngFor="let t of templates" class="template-card">
+      <div class="template-header">
+        <span class="category-badge">{{ t.category }}</span>
+        <span class="status-badge" [ngClass]="'status-' + (t.status || 'pending').toLowerCase()">
+          {{ t.status || 'PENDING' }}
+        </span>
+      </div>
+      
+      <div class="template-body">
+        <h5 class="template-name">{{ t.name }}</h5>
+        <div class="template-preview">
+          <div class="preview-header" *ngIf="t.header_content">{{ t.header_content }}</div>
+          <div class="preview-body">{{ t.body }}</div>
+          <div class="preview-footer" *ngIf="t.footer">{{ t.footer }}</div>
+        </div>
+      </div>
+
+      <div class="template-footer-actions">
+        <div class="small text-muted"><i class="bi bi-globe me-1"></i> {{ t.language }}</div>
+        <button class="btn btn-icon text-danger btn-sm" (click)="deleteTemplate(t.id)">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Template Modal -->
+  <div class="custom-modal" *ngIf="showModal">
+    <div class="modal-backdrop" (click)="showModal = false"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>Create WhatsApp Template</h4>
+        <button class="close-btn" (click)="showModal = false">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div class="form-group mb-3">
+          <label class="form-label">Template Name*</label>
+          <input type="text" class="form-control" [(ngModel)]="newTemplate.name" placeholder="e.g. welcome_message">
+          <span class="small text-muted">Use lowercase, underscores only.</span>
+        </div>
+
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label class="form-label">Category</label>
+            <select class="form-select" [(ngModel)]="newTemplate.category">
+              <option value="MARKETING">Marketing</option>
+              <option value="UTILITY">Utility</option>
+              <option value="AUTHENTICATION">Authentication</option>
+            </select>
+          </div>
+          <div class="col-6 mb-3">
+            <label class="form-label">Language</label>
+            <select class="form-select" [(ngModel)]="newTemplate.language">
+              <option value="en_US">English (US)</option>
+              <option value="hi_IN">Hindi</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">Header (Optional)</label>
+          <input type="text" class="form-control" [(ngModel)]="newTemplate.header_content" placeholder="Header text">
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">Body Text*</label>
+          <textarea class="form-control" rows="4" [(ngModel)]="newTemplate.body" placeholder="Hello {{1}}, welcome to WLink!"></textarea>
+          <span class="small text-muted">Use {{1}}, {{2}} for variables.</span>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">Footer (Optional)</label>
+          <input type="text" class="form-control" [(ngModel)]="newTemplate.footer" placeholder="Footer text">
+        </div>
+
+        <div class="form-group mb-3 border-top pt-3">
+          <label class="form-label d-flex justify-content-between align-items-center">
+            Interactive Buttons
+            <button class="btn btn-sm btn-outline-primary" (click)="addButton()" [disabled]="newTemplate.buttons?.length >= 3">
+              <i class="bi bi-plus"></i> Add Button
+            </button>
+          </label>
+          <div *ngFor="let btn of newTemplate.buttons; let i = index" class="d-flex gap-2 mb-2 p-2 border rounded bg-light">
+            <select class="form-select w-auto" [(ngModel)]="btn.type">
+              <option value="QUICK_REPLY">Quick Reply</option>
+              <option value="URL">Visit Website</option>
+              <option value="PHONE_NUMBER">Call Phone</option>
+            </select>
+            <div class="flex-grow-1">
+              <input type="text" class="form-control mb-2" [(ngModel)]="btn.text" placeholder="Button Text (e.g. Stop, Visit)">
+              <input *ngIf="btn.type === 'URL'" type="text" class="form-control" [(ngModel)]="btn.url" placeholder="https://...">
+              <input *ngIf="btn.type === 'PHONE_NUMBER'" type="text" class="form-control" [(ngModel)]="btn.phone_number" placeholder="+1234567890">
+            </div>
+            <button class="btn btn-icon text-danger align-self-start mt-1" (click)="removeButton(i)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+          <span class="small text-muted" *ngIf="!newTemplate.buttons || newTemplate.buttons.length === 0">
+            No buttons added. You can add up to 3 buttons.
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" (click)="showModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="saveTemplate()" [disabled]="!newTemplate.name || !newTemplate.body">
+          Submit for Approval
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

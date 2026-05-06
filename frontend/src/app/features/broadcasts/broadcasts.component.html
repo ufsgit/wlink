@@ -1,0 +1,122 @@
+<div class="broadcast-container">
+  <div class="page-header">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h2 style="font-weight: 800; color: #0f172a; margin: 0;">Multi-Channel Broadcasts</h2>
+        <p class="text-muted mt-1">Reach your customers on their preferred platform with personalized messaging.</p>
+      </div>
+      <button class="btn btn-primary px-4 py-2 shadow-sm" (click)="showModal = true" style="border-radius: 12px; font-weight: 700;">
+        <i class="bi bi-megaphone-fill me-2"></i> Launch Campaign
+      </button>
+    </div>
+
+    <div class="channel-selector mt-4">
+      <button class="channel-btn" [class.active]="activeChannel === 'whatsapp'" (click)="setChannel('whatsapp')"><i class="bi bi-whatsapp"></i> WhatsApp</button>
+      <button class="channel-btn" [class.active]="activeChannel === 'rcs'" (click)="setChannel('rcs')"><i class="bi bi-chat-left-text"></i> RCS</button>
+      <button class="channel-btn" [class.active]="activeChannel === 'sms'" (click)="setChannel('sms')"><i class="bi bi-chat-square-text"></i> SMS</button>
+      <button class="channel-btn" [class.active]="activeChannel === 'facebook'" (click)="setChannel('facebook')"><i class="bi bi-facebook"></i> Messenger</button>
+      <button class="channel-btn" [class.active]="activeChannel === 'instagram'" (click)="setChannel('instagram')"><i class="bi bi-instagram"></i> Instagram</button>
+    </div>
+  </div>
+
+  <div class="broadcast-list">
+    <div *ngIf="loading" class="text-center p-5">
+      <div class="spinner-border text-primary"></div>
+    </div>
+
+    <div *ngIf="!loading && broadcasts.length === 0" class="text-center p-5 border rounded-4 bg-light mx-4 my-4">
+      <i class="bi bi-send display-4 text-muted mb-3 d-block"></i>
+      <h5>No Campaigns Yet</h5>
+      <p class="text-muted">Launch your first broadcast to engage your contact list in bulk.</p>
+      <button class="btn btn-outline-primary btn-sm mt-2" (click)="showModal = true">Start Campaign</button>
+    </div>
+
+    <ng-container *ngIf="!loading">
+      <div *ngFor="let bc of broadcasts" class="broadcast-item">
+      <div>
+        <div style="font-weight: 700; color: #1e293b; font-size: 1.05rem;">{{ bc.name }}</div>
+        <div class="d-flex align-items-center gap-2 mt-1">
+          <i class="bi" [class.bi-whatsapp]="bc.channel === 'whatsapp'" 
+                        [class.bi-chat-left-text]="bc.channel === 'rcs'" 
+                        [class.bi-chat-square-text]="bc.channel === 'sms'" style="font-size: 0.8rem; color: #64748b;"></i>
+          <span class="small text-muted">{{ bc.channel | uppercase }}</span>
+          <span class="text-muted small ms-2">• {{ bc.created_at | date:'mediumDate' }}</span>
+        </div>
+      </div>
+      
+      <div>
+        <span class="badge" 
+              [class.bg-success]="bc.status === 'completed'" 
+              [class.bg-primary]="bc.status === 'sending' || bc.status === 'running'"
+              [class.bg-warning]="bc.status === 'scheduled'"
+              [class.bg-secondary]="bc.status === 'draft'">
+          {{ bc.status | uppercase }}
+        </span>
+      </div>
+
+      <div>
+        <div class="progress" style="height: 6px; margin-bottom: 6px; border-radius: 10px;">
+          <div class="progress-bar" [style.width]="bc.progress + '%'"></div>
+        </div>
+        <div class="d-flex justify-content-between small text-muted" style="font-size: 0.75rem;">
+          <span>{{ bc.progress }}% Complete</span>
+          <span>{{ bc.total_sent }}/{{ bc.total_contacts }}</span>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <div class="small text-muted" style="font-size: 0.7rem; text-transform: uppercase;">Read Rate</div>
+        <div style="font-weight: 700; color: #059669;">{{ bc.readRate }}%</div>
+      </div>
+
+      <div class="text-end">
+        <button class="btn btn-icon text-danger" (click)="deleteBroadcast(bc.id)"><i class="bi bi-trash"></i></button>
+      </div>
+    </div>
+    </ng-container>
+  </div>
+
+  <!-- Launch Campaign Modal -->
+  <div class="custom-modal" *ngIf="showModal">
+    <div class="modal-backdrop" (click)="showModal = false"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>Launch New Campaign</h4>
+        <button class="close-btn" (click)="showModal = false">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group mb-3">
+          <label class="form-label">Campaign Name*</label>
+          <input type="text" class="form-control" [(ngModel)]="newBroadcast.name" placeholder="e.g. Winter Sale 2024">
+        </div>
+        
+        <div class="form-group mb-3">
+          <label class="form-label">Message Template*</label>
+          <select class="form-select" [(ngModel)]="newBroadcast.template_id">
+            <option value="">Select a template...</option>
+            <option *ngFor="let t of templates" [value]="t.id">{{ t.name }} ({{ t.language }})</option>
+          </select>
+          <span class="small text-muted" *ngIf="templates.length === 0">No approved templates found. Go to Templates to sync.</span>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">Target Audience (Tags)</label>
+          <input type="text" class="form-control" [(ngModel)]="newBroadcast.target_tags" placeholder="e.g. VIP, Leads (leave empty for all)">
+          <span class="small text-muted">Separate multiple tags with commas.</span>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">Schedule (Optional)</label>
+          <input type="datetime-local" class="form-control" [(ngModel)]="newBroadcast.scheduled_at">
+          <span class="small text-muted">Leave empty to send immediately.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" (click)="showModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="saveBroadcast()" [disabled]="!newBroadcast.name || !newBroadcast.template_id">
+          {{ newBroadcast.scheduled_at ? 'Schedule Campaign' : 'Launch Now' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

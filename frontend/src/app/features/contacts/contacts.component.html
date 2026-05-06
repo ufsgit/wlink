@@ -1,0 +1,137 @@
+<div class="contacts-page">
+  <div class="contacts-header">
+    <div class="header-left">
+      <h2>Contacts</h2>
+      <p class="text-muted">Manage your customer database and communication preferences.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline-secondary" (click)="exportContacts()">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <label class="btn btn-outline-secondary mb-0">
+        <i class="bi bi-upload"></i> Import
+        <input type="file" (change)="importContacts($event)" hidden accept=".csv">
+      </label>
+      <button class="btn btn-primary" (click)="openAddModal()">
+        <i class="bi bi-person-plus"></i> Add Contact
+      </button>
+    </div>
+  </div>
+
+  <div class="contacts-filters">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search by name, phone or email...">
+    </div>
+    <div class="filter-group">
+      <select class="form-select">
+        <option value="">All Channels</option>
+        <option value="whatsapp">WhatsApp</option>
+        <option value="sms">SMS</option>
+        <option value="rcs">RCS</option>
+      </select>
+      <select class="form-select">
+        <option value="">All Tags</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="contacts-table-container">
+    <table class="contacts-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Channel</th>
+          <th>Tags</th>
+          <th>Opt-in</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="loading">
+          <td colspan="6" class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+          </td>
+        </tr>
+        <tr *ngIf="!loading && contacts.length === 0">
+          <td colspan="6" class="text-center py-5">No contacts found.</td>
+        </tr>
+        <tr *ngFor="let contact of contacts">
+          <td>
+            <div class="d-flex align-items-center gap-3">
+              <div class="avatar">{{ contact.name?.charAt(0) }}</div>
+              <div>
+                <div class="fw-bold">{{ contact.name }}</div>
+                <div class="small text-muted">{{ contact.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ contact.phone }}</td>
+          <td>
+            <span class="channel-pill" [class.whatsapp]="contact.channel_preference === 'whatsapp'">
+              <i class="bi" [class.bi-whatsapp]="contact.channel_preference === 'whatsapp'"></i>
+              {{ contact.channel_preference }}
+            </span>
+          </td>
+          <td>
+            <div class="tag-list">
+              <span class="tag" *ngFor="let tag of contact.tags">{{ tag }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge" [class.bg-success]="contact.opted_in" [class.bg-secondary]="!contact.opted_in">
+              {{ contact.opted_in ? 'Opted-in' : 'Pending' }}
+            </span>
+          </td>
+          <td class="text-end">
+            <button class="btn btn-icon text-danger" (click)="deleteContact(contact.id)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Contact Modal -->
+  <div class="custom-modal" *ngIf="showModal">
+    <div class="modal-backdrop" (click)="showModal = false"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>Add New Contact</h4>
+        <button class="close-btn" (click)="showModal = false">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group mb-3">
+          <label>Full Name*</label>
+          <input type="text" class="form-control" [(ngModel)]="newContact.name" placeholder="John Doe">
+        </div>
+        <div class="form-group mb-3">
+          <label>Phone Number* (with country code)</label>
+          <input type="text" class="form-control" [(ngModel)]="newContact.phone" placeholder="+91 9876543210">
+        </div>
+        <div class="form-group mb-3">
+          <label>Email Address</label>
+          <input type="email" class="form-control" [(ngModel)]="newContact.email" placeholder="john@example.com">
+        </div>
+        <div class="form-group mb-3">
+          <label>Tags (comma separated)</label>
+          <input type="text" class="form-control" [(ngModel)]="newContact.tags" placeholder="VIP, Customer, Leads">
+        </div>
+        <div class="form-group mb-3">
+          <label>Preferred Channel</label>
+          <select class="form-select" [(ngModel)]="newContact.channel_preference">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="sms">SMS</option>
+            <option value="rcs">RCS</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" (click)="showModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="saveContact()">Save Contact</button>
+      </div>
+    </div>
+  </div>
+</div>

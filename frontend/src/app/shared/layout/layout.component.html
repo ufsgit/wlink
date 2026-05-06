@@ -1,0 +1,118 @@
+<div class="app-container" [class.sidebar-collapsed]="isCollapsed">
+  <aside class="sidebar">
+    <div class="logo-section">
+      <div class="logo-container">
+        <div class="logo-icon">W</div>
+        <div class="logo-text" *ngIf="!isCollapsed">WLink</div>
+      </div>
+      <button class="collapse-toggle" (click)="toggleSidebar()" [title]="isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'">
+        <i class="bi" [class.bi-chevron-left]="!isCollapsed" [class.bi-chevron-right]="isCollapsed"></i>
+      </button>
+    </div>
+
+    <nav class="nav-links" *ngIf="user$ | async as user">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Dashboard' : ''">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isCollapsed">Dashboard</span>
+      </a>
+      <a routerLink="/inbox" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Shared Inbox' : ''">
+        <i class="bi bi-chat-dots"></i>
+        <span *ngIf="!isCollapsed">Shared Inbox</span>
+      </a>
+      
+      <!-- Admin Only Tools -->
+      <ng-container *ngIf="user.role === 'admin' || user.role === 'superadmin'">
+        <a routerLink="/broadcasts" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Broadcasts' : ''">
+          <i class="bi bi-megaphone"></i>
+          <span *ngIf="!isCollapsed">Broadcasts</span>
+        </a>
+        <a routerLink="/chatbots" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Chatbots' : ''">
+          <i class="bi bi-robot"></i>
+          <span *ngIf="!isCollapsed">Chatbots</span>
+        </a>
+      </ng-container>
+
+      <a routerLink="/contacts" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Contacts' : ''">
+        <i class="bi bi-people"></i>
+        <span *ngIf="!isCollapsed">Contacts</span>
+      </a>
+
+      <!-- Admin Only Strategy & Settings -->
+      <ng-container *ngIf="user.role === 'admin' || user.role === 'superadmin'">
+        <a routerLink="/templates" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Templates' : ''">
+          <i class="bi bi-file-earmark-text"></i>
+          <span *ngIf="!isCollapsed">Templates</span>
+        </a>
+        <a routerLink="/drip" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Drip Campaigns' : ''">
+          <i class="bi bi-funnel"></i>
+          <span *ngIf="!isCollapsed">Drip Campaigns</span>
+        </a>
+        <a routerLink="/ecommerce" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Ecommerce' : ''">
+          <i class="bi bi-cart3"></i>
+          <span *ngIf="!isCollapsed">Ecommerce</span>
+        </a>
+        <a routerLink="/rcs" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'RCS Business' : ''">
+          <i class="bi bi-chat-left-text"></i>
+          <span *ngIf="!isCollapsed">RCS Business</span>
+        </a>
+        <a routerLink="/sms" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'SMS' : ''">
+          <i class="bi bi-chat-square-text"></i>
+          <span *ngIf="!isCollapsed">SMS</span>
+        </a>
+        <a routerLink="/ivr" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'IVR Flows' : ''">
+          <i class="bi bi-telephone-outbound"></i>
+          <span *ngIf="!isCollapsed">IVR Flows</span>
+        </a>
+        <a routerLink="/ctwa" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Click to WhatsApp' : ''">
+          <i class="bi bi-link-45deg"></i>
+          <span *ngIf="!isCollapsed">Click to WhatsApp</span>
+        </a>
+        <a routerLink="/affiliates" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Affiliates' : ''">
+          <i class="bi bi-award"></i>
+          <span *ngIf="!isCollapsed">Affiliates</span>
+        </a>
+        <a routerLink="/analytics" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Analytics' : ''">
+          <i class="bi bi-graph-up"></i>
+          <span *ngIf="!isCollapsed">Analytics</span>
+        </a>
+        <a routerLink="/settings" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Settings' : ''">
+          <i class="bi bi-gear"></i>
+          <span *ngIf="!isCollapsed">Settings</span>
+        </a>
+      </ng-container>
+    </nav>
+
+    <div class="user-section" *ngIf="user$ | async as user">
+      <div class="user-avatar">
+        {{ user.name[0] }}
+      </div>
+      <div class="user-info" *ngIf="!isCollapsed">
+        <div class="user-name">{{ user.name }}</div>
+        <div class="user-role">{{ user.role }}</div>
+      </div>
+      <button class="logout-btn" (click)="logout()" [title]="isCollapsed ? 'Logout' : ''">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-nav">
+      <div class="page-title">
+        {{ pageTitle }}
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-outline-light btn-sm">
+          <i class="bi bi-question-circle"></i> Support
+        </button>
+        <div class="notification-icon">
+          <i class="bi bi-bell"></i>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

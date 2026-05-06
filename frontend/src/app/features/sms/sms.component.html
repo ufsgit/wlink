@@ -1,0 +1,46 @@
+<div class="sms-page">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700;">SMS Campaigns</h2>
+      <p class="text-muted small mb-0">Send transactional and promotional SMS worldwide</p>
+    </div>
+    <button class="btn btn-primary"><i class="bi bi-chat-right-text"></i> New Campaign</button>
+  </div>
+
+  <div class="sms-stats">
+    <div class="sms-stat-card">
+      <label>Credits Remaining</label>
+      <div class="value">12,450</div>
+    </div>
+    <div class="sms-stat-card">
+      <label>Delivery Rate</label>
+      <div class="value">96.8%</div>
+    </div>
+    <div class="sms-stat-card">
+      <label>Total Sent (Month)</label>
+      <div class="value">45,200</div>
+    </div>
+  </div>
+
+  <div class="campaign-list">
+    <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px;">Recent SMS Campaigns</h3>
+    <div class="campaign-row" *ngFor="let camp of campaigns">
+      <div>
+        <div style="font-weight: 600;">{{ camp.name }}</div>
+        <div class="text-muted small">Sender: {{ camp.senderId }}</div>
+      </div>
+      <div>
+        <span class="badge" [class.bg-success]="camp.status === 'Sent'" [class.bg-warning]="camp.status === 'Draft'">
+          {{ camp.status }}
+        </span>
+      </div>
+      <div>
+        <div class="small text-muted">Recipients</div>
+        <div style="font-weight: 600;">{{ camp.recipients }}</div>
+      </div>
+      <div class="text-end">
+        <button class="btn btn-link btn-sm text-primary">Details</button>
+      </div>
+    </div>
+  </div>
+</div>
