@@ -4,7 +4,7 @@
       <h2 style="font-weight: 800; color: #0f172a; margin:0;">Chatbots & AI</h2>
       <p class="text-muted">Automate your customer engagement with AI-powered conversational flows.</p>
     </div>
-    <button class="btn btn-primary" (click)="showModal = true">
+    <button class="btn btn-primary" (click)="resetModal(); showModal = true">
       <i class="bi bi-plus-lg"></i> Create New Bot
     </button>
   </div>
@@ -30,7 +30,10 @@
           <i class="bi" [class.bi-robot]="bot.ai_enabled" [class.bi-chat-dots]="!bot.ai_enabled"></i>
         </div>
         <div class="ai-badge" *ngIf="bot.ai_enabled">AI Powered</div>
-        <button class="btn btn-icon btn-sm text-danger ms-auto" (click)="deleteBot(bot.id)">
+        <button class="btn btn-icon btn-sm text-primary ms-auto me-1" (click)="openEditModal(bot)">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button class="btn btn-icon btn-sm text-danger" (click)="deleteBot(bot.id)">
           <i class="bi bi-trash"></i>
         </button>
       </div>
@@ -52,7 +55,7 @@
       </div>
 
       <div class="bot-actions">
-        <button class="btn-flow">
+        <button class="btn-flow" [routerLink]="['/chatbots', bot.id, 'flow']">
           <i class="bi bi-diagram-3"></i> Edit Workflow
         </button>
         <div class="d-flex align-items-center gap-2">
@@ -68,11 +71,11 @@
 
   <!-- Create Bot Modal -->
   <div class="custom-modal" *ngIf="showModal">
-    <div class="modal-backdrop" (click)="showModal = false"></div>
+    <div class="modal-backdrop" (click)="resetModal()"></div>
     <div class="modal-card">
       <div class="modal-header">
-        <h4>Create AI Assistant</h4>
-        <button class="close-btn" (click)="showModal = false">&times;</button>
+        <h4>{{ editingBotId ? 'Edit AI Assistant' : 'Create AI Assistant' }}</h4>
+        <button class="close-btn" (click)="resetModal()">&times;</button>
       </div>
       <div class="modal-body">
         <div class="form-group mb-3">
@@ -91,15 +94,27 @@
             <option value="instagram">Instagram</option>
           </select>
         </div>
+        <div class="form-group mb-3" *ngIf="newBot.ai_enabled">
+          <label>Assistant Personality (System Prompt)</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="newBot.openai_system_prompt" placeholder="Describe how the bot should behave..."></textarea>
+          <p class="small text-muted mt-1">Example: 'You are a helpful travel assistant. Be polite and concise.'</p>
+        </div>
+
         <div class="form-check form-switch mt-3">
           <input class="form-check-input" type="checkbox" [(ngModel)]="newBot.ai_enabled" id="aiSwitch">
           <label class="form-check-label fw-bold" for="aiSwitch">Enable Conversational AI (GPT-4)</label>
         </div>
         <p class="small text-muted mt-1">If enabled, the bot will use AI to understand and respond to users outside of fixed flows.</p>
+
+        <div class="form-check form-switch mt-3">
+          <input class="form-check-input" type="checkbox" [(ngModel)]="newBot.is_welcome" id="welcomeSwitch">
+          <label class="form-check-label fw-bold" for="welcomeSwitch">Set as Welcome Bot</label>
+        </div>
+        <p class="small text-muted mt-1">If enabled, this bot will automatically greet new customers with a menu or introduction.</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline-secondary" (click)="showModal = false">Cancel</button>
-        <button class="btn btn-primary" (click)="saveBot()">Create Assistant</button>
+        <button class="btn btn-outline-secondary" (click)="resetModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveBot()">{{ editingBotId ? 'Update Assistant' : 'Create Assistant' }}</button>
       </div>
     </div>
   </div>

@@ -99,16 +99,43 @@
           <span class="small text-muted" *ngIf="templates.length === 0">No approved templates found. Go to Templates to sync.</span>
         </div>
 
-        <div class="form-group mb-3">
-          <label class="form-label">Target Audience (Tags)</label>
-          <input type="text" class="form-control" [(ngModel)]="newBroadcast.target_tags" placeholder="e.g. VIP, Leads (leave empty for all)">
-          <span class="small text-muted">Separate multiple tags with commas.</span>
+        <div class="form-group mb-4">
+          <label class="form-label d-flex justify-content-between">
+            Target Audience
+            <span class="badge bg-soft-primary text-primary" style="font-size: 0.75rem;">
+              {{ activeChannel | uppercase }}
+            </span>
+          </label>
+          <div class="tag-selection-grid">
+            <div *ngFor="let tag of availableTags" 
+                 class="tag-chip" 
+                 [class.active]="selectedTags.includes(tag)"
+                 (click)="toggleTag(tag)">
+              <i class="bi" [class.bi-check-circle-fill]="selectedTags.includes(tag)" [class.bi-plus-circle]="!selectedTags.includes(tag)"></i>
+              {{ tag }}
+            </div>
+            <div *ngIf="availableTags.length === 0" class="text-muted small p-2">
+              No tags found. Go to Contacts to categorize your users first.
+            </div>
+          </div>
+          <div class="audience-preview mt-3" [class.has-reach]="audienceCount > 0">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-people-fill me-2"></i>
+                <span>Estimated Reach</span>
+              </div>
+              <strong class="reach-count">{{ audienceCount }} Contacts</strong>
+            </div>
+            <p class="small text-muted mt-1 mb-0" *ngIf="audienceCount > 0">
+              Only opted-in contacts on {{ activeChannel }} will be targeted.
+            </p>
+          </div>
         </div>
 
         <div class="form-group mb-3">
           <label class="form-label">Schedule (Optional)</label>
-          <input type="datetime-local" class="form-control" [(ngModel)]="newBroadcast.scheduled_at">
-          <span class="small text-muted">Leave empty to send immediately.</span>
+          <input type="datetime-local" class="form-control rounded-3" [(ngModel)]="newBroadcast.scheduled_at">
+          <span class="small text-muted">Leave empty to launch immediately.</span>
         </div>
       </div>
       <div class="modal-footer">

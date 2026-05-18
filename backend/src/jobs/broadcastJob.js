@@ -17,7 +17,7 @@ function startBroadcastJob() {
         let contacts = [];
         if (tags.length) {
           const [all] = await pool.query('SELECT id, phone, tags FROM contacts WHERE business_id=? AND opted_in=1', [broadcast.business_id]);
-          contacts.push(...all.filter(c => (c.tags||[]).some(t => tags.includes(t))));
+          contacts.push(...all.filter(c => (c.tags || []).some(t => tags.includes(t))));
         }
         if (contactIds.length) {
           const [ids] = await pool.query('SELECT id, phone FROM contacts WHERE id IN (?) AND opted_in=1', [contactIds]);
@@ -32,7 +32,7 @@ function startBroadcastJob() {
 
         let sent = 0, failed = 0;
         for (const contact of contacts) {
-          const result = await WhatsappService.sendTemplateMessage(contact.phone, tName, 'en', [], broadcast.business_id);
+          const result = await WhatsappService.sendTemplateMessage(contact.phone, tName, 'en', broadcast.business_id);
           const status = result.success ? 'sent' : 'failed';
           if (result.success) sent++; else failed++;
           await pool.query(
@@ -46,5 +46,4 @@ function startBroadcastJob() {
   });
   console.log('📡 Broadcast scheduler started');
 }
-
 module.exports = { startBroadcastJob };

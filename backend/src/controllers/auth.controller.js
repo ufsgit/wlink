@@ -64,7 +64,7 @@ const login = async (req, res) => {
     const token = signToken({ userId: user.id, businessId: user.business_id, role: user.role, name: user.name, email: user.email });
     res.json({
       success: true,
-      data: { token, role: user.role, businessId: user.business_id, name: user.name, email: user.email, businessName: user.businessName },
+      data: { id: user.id, token, role: user.role, businessId: user.business_id, name: user.name, email: user.email, businessName: user.businessName },
       message: 'Login successful'
     });
   } catch (err) {

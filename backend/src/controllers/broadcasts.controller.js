@@ -2,7 +2,7 @@
 const pool = require('../db/pool');
 const WhatsappService = require('../services/WhatsappService');
 
-const paginate = (p, l) => ({ offset: (Math.max(1,+p||1)-1)*(Math.min(200,+l||50)), limit: Math.min(200,+l||50), page: Math.max(1,+p||1) });
+const paginate = (p, l) => ({ offset: (Math.max(1, +p || 1) - 1) * (Math.min(10000, +l || 1000)), limit: Math.min(10000, +l || 1000), page: Math.max(1, +p || 1) });
 
 const getBroadcasts = async (req, res) => {
   try {
@@ -22,14 +22,42 @@ const getBroadcasts = async (req, res) => {
 
 const createBroadcast = async (req, res) => {
   try {
-    const { name, template_id, target_tags, target_contact_ids, scheduled_at } = req.body;
+    const { name, template_id, target_tags, target_contact_ids, scheduled_at, channel } = req.body;
     const [result] = await pool.query(
-      'INSERT INTO broadcasts (business_id, template_id, name, target_tags, target_contact_ids, scheduled_at, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [req.user.businessId, template_id, name, JSON.stringify(target_tags||[]), JSON.stringify(target_contact_ids||[]), scheduled_at||null, scheduled_at?'scheduled':'draft']
+      'INSERT INTO broadcasts (business_id, template_id, name, channel, target_tags, target_contact_ids, scheduled_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [req.user.businessId, template_id, name, channel || 'whatsapp', JSON.stringify(target_tags || []), JSON.stringify(target_contact_ids || []), scheduled_at || null, scheduled_at ? 'scheduled' : 'draft']
     );
     const [rows] = await pool.query('SELECT * FROM broadcasts WHERE id = ?', [result.insertId]);
     res.status(201).json({ success: true, data: rows[0], message: 'Broadcast created' });
   } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
+};
+
+const getAudienceCount = async (req, res) => {
+  try {
+    const { tags, channel } = req.query;
+    const bizId = req.user.businessId;
+    let query = 'SELECT COUNT(*) as count FROM contacts WHERE business_id = ? AND opted_in = 1';
+    const params = [bizId];
+
+    const [[{ count }]] = await pool.query(query, params);
+
+    // If tags are provided, we filter in memory or via JSON_CONTAINS if supported
+    if (tags) {
+      const tagList = tags.split(',').map(t => t.trim());
+      const [rows] = await pool.query('SELECT tags FROM contacts WHERE business_id = ? AND opted_in = 1', [bizId]);
+      const filteredCount = rows.filter(r => {
+        let ct = r.tags;
+        if (typeof ct === 'string') {
+          try { ct = JSON.parse(ct); } catch (e) { ct = []; }
+        }
+        if (!Array.isArray(ct)) ct = [];
+        return tagList.some(t => ct.includes(t));
+      }).length;
+      return res.json({ success: true, data: { count: filteredCount } });
+    }
+
+    res.json({ success: true, data: { count } });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
 const sendBroadcast = async (req, res) => {
@@ -40,39 +68,54 @@ const sendBroadcast = async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ success: false, message: 'Not found', data: null });
     const broadcast = rows[0];
+    const channel = broadcast.channel || 'whatsapp';
 
     // Resolve contacts
     let contacts = [];
-    const tags = broadcast.target_tags || [];
-    const contactIds = broadcast.target_contact_ids || [];
-    if (tags.length > 0) {
-      const [tagged] = await pool.query('SELECT id, phone FROM contacts WHERE business_id=? AND opted_in=1', [broadcast.business_id]);
-      const filtered = tagged.filter(c => {
-        const ct = c.tags || [];
-        return tags.some(t => ct.includes(t));
+    const targetTags = typeof broadcast.target_tags === 'string' ? JSON.parse(broadcast.target_tags) : (broadcast.target_tags || []);
+
+    // Fetch all opted-in contacts for this business
+    const [allContacts] = await pool.query('SELECT id, phone, tags FROM contacts WHERE business_id=? AND opted_in=1', [broadcast.business_id]);
+
+    if (targetTags.length > 0) {
+      contacts = allContacts.filter(c => {
+        let ct = c.tags;
+        if (typeof ct === 'string') {
+          try { ct = JSON.parse(ct); } catch (e) { ct = []; }
+        }
+        if (!Array.isArray(ct)) ct = [];
+        return targetTags.some(t => ct.includes(t));
       });
-      contacts.push(...filtered);
+    } else {
+      contacts = allContacts;
     }
-    if (contactIds.length > 0) {
-      const [ids] = await pool.query('SELECT id, phone FROM contacts WHERE id IN (?) AND opted_in=1', [contactIds]);
-      contacts.push(...ids);
-    }
-    // Deduplicate
-    const seen = new Set();
-    contacts = contacts.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
 
     await pool.query("UPDATE broadcasts SET status='running', started_at=NOW(), total_recipients=? WHERE id=?", [contacts.length, broadcast.id]);
 
+    const WhatsappService = require('../services/WhatsappService');
+    const InstagramService = require('../services/InstagramService');
+    const FacebookService = require('../services/FacebookService');
+
     let sent = 0, failed = 0;
     for (const contact of contacts) {
-      const result = await WhatsappService.sendTemplateMessage(contact.phone, broadcast.tname, 'en', [], broadcast.business_id);
+      let result;
+      if (channel === 'instagram') {
+        result = await InstagramService.sendTextMessage(contact.phone, broadcast.tbody, broadcast.business_id);
+      } else if (channel === 'messenger') {
+        result = await FacebookService.sendTextMessage(contact.phone, broadcast.tbody, broadcast.business_id);
+      } else {
+        result = await WhatsappService.sendTemplateMessage(contact.phone, broadcast.tname, 'en', broadcast.business_id);
+      }
+
       const status = result.success ? 'sent' : 'failed';
       if (result.success) sent++; else failed++;
+
       await pool.query(
         'INSERT INTO broadcast_logs (broadcast_id, contact_id, status, wa_message_id) VALUES (?, ?, ?, ?)',
-        [broadcast.id, contact.id, status, result.data?.messages?.[0]?.id || null]
+        [broadcast.id, contact.id, status, result.data?.messages?.[0]?.id || result.data?.message_id || null]
       );
     }
+
     await pool.query(
       "UPDATE broadcasts SET status='completed', completed_at=NOW(), total_sent=?, total_failed=? WHERE id=?",
       [sent, failed, broadcast.id]
@@ -100,4 +143,5 @@ const deleteBroadcast = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
 };
 
-module.exports = { getBroadcasts, createBroadcast, sendBroadcast, getBroadcastAnalytics, deleteBroadcast };
+module.exports = { getBroadcasts, createBroadcast, sendBroadcast, getBroadcastAnalytics, deleteBroadcast, getAudienceCount };
+

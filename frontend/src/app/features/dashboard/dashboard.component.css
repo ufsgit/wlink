@@ -39,6 +39,10 @@
   border-color: var(--primary-light);
 }
 
+.stat-card.clickable {
+  cursor: pointer;
+}
+
 .stat-card:nth-child(1):hover::before { background: linear-gradient(90deg, #74B9FF, #0984E3); }
 .stat-card:nth-child(2):hover::before { background: linear-gradient(90deg, #A29BFE, #6C5CE7); }
 .stat-card:nth-child(3):hover::before { background: linear-gradient(90deg, #55EFC4, #00B894); }
@@ -153,6 +157,10 @@
   background: transparent;
   border: 1px solid var(--border);
   transition: all 0.3s ease;
+}
+
+.chat-item.clickable {
+  cursor: pointer;
 }
 
 .chat-item:hover {

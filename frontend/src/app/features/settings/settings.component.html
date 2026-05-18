@@ -127,13 +127,49 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Facebook Page ID <span class="optional">(optional)</span></label>
-            <input type="text" class="form-control" [(ngModel)]="business.fb_page_id" placeholder="Page ID for Messenger">
+            <label class="form-label">Facebook Page ID <span class="required">(Required for Instagram)</span></label>
+            <input type="text" class="form-control" [(ngModel)]="business.fb_page_id" placeholder="Page ID for Messenger & Instagram">
+            <span class="form-hint">Find this in Facebook Page Settings → About → Page ID</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Facebook Access Token <span class="optional">(optional)</span></label>
+            <div class="token-input">
+              <input [type]="showFbToken ? 'text' : 'password'" class="form-control" [(ngModel)]="business.fb_token" placeholder="EAABxyz...">
+              <button class="toggle-visibility" (click)="showFbToken = !showFbToken">
+                <i class="bi" [class.bi-eye]="!showFbToken" [class.bi-eye-slash]="showFbToken"></i>
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
             <label class="form-label">Instagram Account ID <span class="optional">(optional)</span></label>
             <input type="text" class="form-control" [(ngModel)]="business.ig_account_id" placeholder="IG Business Account ID">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Instagram Access Token <span class="required">(Page Access Token Required)</span></label>
+            <div class="token-input">
+              <input [type]="showIgToken ? 'text' : 'password'" class="form-control" [(ngModel)]="business.ig_token" placeholder="EAAS...">
+              <button class="toggle-visibility" (click)="showIgToken = !showIgToken">
+                <i class="bi" [class.bi-eye]="!showIgToken" [class.bi-eye-slash]="showIgToken"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Instagram App ID <span class="optional">(optional)</span></label>
+            <input type="text" class="form-control" [(ngModel)]="business.ig_app_id" placeholder="App ID from Meta Dashboard">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Instagram App Secret <span class="optional">(optional)</span></label>
+            <div class="token-input">
+              <input [type]="showIgSecret ? 'text' : 'password'" class="form-control" [(ngModel)]="business.ig_app_secret" placeholder="App Secret from Meta Dashboard">
+              <button class="toggle-visibility" (click)="showIgSecret = !showIgSecret">
+                <i class="bi" [class.bi-eye]="!showIgSecret" [class.bi-eye-slash]="showIgSecret"></i>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -142,7 +178,10 @@
             <i class="bi bi-check-lg"></i> {{ saving ? 'Saving...' : 'Save Configuration' }}
           </button>
           <button class="btn btn-outline-secondary" (click)="testConnection()" [disabled]="testing">
-            <i class="bi bi-wifi"></i> {{ testing ? 'Testing...' : 'Test Connection' }}
+            <i class="bi bi-wifi"></i> {{ testing ? 'Test WhatsApp' : 'Test WhatsApp' }}
+          </button>
+          <button class="btn btn-outline-info" (click)="testInstagramConnection()" [disabled]="testing">
+            <i class="bi bi-instagram"></i> {{ testing ? 'Testing...' : 'Test Instagram' }}
           </button>
         </div>
       </div>
@@ -298,16 +337,35 @@
     <!-- ===================== API & WEBHOOKS ===================== -->
     <div *ngIf="activeTab === 'api'">
       <h3 class="section-title">API Configuration</h3>
+      <p class="section-desc mb-4">Paste these callback URLs into your Meta Developer Dashboard for each platform.</p>
+      
       <div style="max-width: 600px;">
         <div class="mb-4">
-          <label class="form-label">Your Webhook Callback URL</label>
+          <label class="form-label">WhatsApp Webhook URL</label>
           <div class="copy-input">
             <input type="text" class="form-control" [value]="webhookUrl" readonly>
             <button class="copy-btn" (click)="copyToClipboard(webhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
           </div>
         </div>
+
         <div class="mb-4">
-          <label class="form-label">Verify Token</label>
+          <label class="form-label">Instagram Webhook URL</label>
+          <div class="copy-input">
+            <input type="text" class="form-control" [value]="igWebhookUrl" readonly>
+            <button class="copy-btn" (click)="copyToClipboard(igWebhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Facebook Messenger Webhook URL</label>
+          <div class="copy-input">
+            <input type="text" class="form-control" [value]="fbWebhookUrl" readonly>
+            <button class="copy-btn" (click)="copyToClipboard(fbWebhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Verify Token (Shared for Meta)</label>
           <div class="copy-input">
             <input type="text" class="form-control" [value]="business.fb_verify_token || 'wlink_fb_verify_token'" readonly>
             <button class="copy-btn" (click)="copyToClipboard(business.fb_verify_token || 'wlink_fb_verify_token')"><i class="bi bi-clipboard"></i> Copy</button>
@@ -327,8 +385,12 @@
             <div class="text-muted small">{{ intg.desc }}</div>
           </div>
         </div>
-        <button class="btn btn-sm" [class.btn-outline-primary]="!intg.connected" [class.btn-success]="intg.connected">
-          {{ intg.connected ? 'Connected' : 'Connect' }}
+        <button class="btn btn-sm" 
+          [class.btn-outline-primary]="!isIntegrated(intg.key)" 
+          [class.btn-success]="isIntegrated(intg.key)"
+          (click)="connectIntegration(intg.key)">
+          <i class="bi" [class.bi-plus-lg]="!isIntegrated(intg.key)" [class.bi-check-lg]="isIntegrated(intg.key)"></i>
+          {{ isIntegrated(intg.key) ? 'Connected' : 'Connect' }}
         </button>
       </div>
     </div>

@@ -17,10 +17,10 @@ const getBusiness = async (req, res) => {
 
 const updateBusiness = async (req, res) => {
   try {
-    const { name, whatsapp_number, whatsapp_token, whatsapp_phone_id, fb_page_id, ig_account_id, fb_verify_token } = req.body;
+    const { name, whatsapp_number, whatsapp_token, whatsapp_phone_id, waba_id, fb_page_id, fb_token, ig_account_id, ig_token, ig_app_id, ig_app_secret, fb_verify_token } = req.body;
     await pool.query(
-      'UPDATE businesses SET name=?,whatsapp_number=?,whatsapp_token=?,whatsapp_phone_id=?,fb_page_id=?,ig_account_id=?,fb_verify_token=? WHERE id=?',
-      [name, whatsapp_number||'', whatsapp_token||null, whatsapp_phone_id||null, fb_page_id||null, ig_account_id||null, fb_verify_token||null, req.user.businessId]
+      'UPDATE businesses SET name=?,whatsapp_number=?,whatsapp_token=?,whatsapp_phone_id=?,waba_id=?,fb_page_id=?,fb_token=?,ig_account_id=?,ig_token=?,ig_app_id=?,ig_app_secret=?,fb_verify_token=? WHERE id=?',
+      [name, whatsapp_number||'', whatsapp_token||null, whatsapp_phone_id||null, waba_id||null, fb_page_id||null, fb_token||null, ig_account_id||null, ig_token||null, ig_app_id||null, ig_app_secret||null, fb_verify_token||null, req.user.businessId]
     );
     const [rows] = await pool.query('SELECT * FROM businesses WHERE id=?', [req.user.businessId]);
     res.json({ success: true, data: rows[0], message: 'Updated' });
@@ -90,4 +90,14 @@ const testWhatsAppConnection = async (req, res) => {
   }
 };
 
-module.exports = { getBusiness, updateBusiness, getTeam, inviteAgent, updateAgent, deleteAgent, getBilling, testWhatsAppConnection };
+const testInstagramConnection = async (req, res) => {
+  try {
+    const InstagramService = require('../services/InstagramService');
+    const result = await InstagramService.testConnection(req.user.businessId);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+module.exports = { getBusiness, updateBusiness, getTeam, inviteAgent, updateAgent, deleteAgent, getBilling, testWhatsAppConnection, testInstagramConnection };

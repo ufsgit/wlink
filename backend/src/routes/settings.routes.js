@@ -12,5 +12,6 @@ router.put('/team/:id', requireRole('admin', 'superadmin'), c.updateAgent);
 router.delete('/team/:id', requireRole('admin', 'superadmin'), c.deleteAgent);
 router.get('/billing', c.getBilling);
 router.post('/whatsapp/test', requireRole('admin', 'superadmin'), c.testWhatsAppConnection);
+router.post('/instagram/test', requireRole('admin', 'superadmin'), c.testInstagramConnection);
 
 module.exports = router;

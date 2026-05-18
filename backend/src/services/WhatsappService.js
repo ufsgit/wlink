@@ -109,6 +109,34 @@ class WhatsappService {
     }
   }
 
+  async sendButtons(to, bodyText, buttons, businessId) {
+    const interactive = {
+      type: 'button',
+      body: { text: bodyText },
+      action: {
+        buttons: buttons.slice(0, 3).map((b, i) => ({
+          type: 'reply',
+          reply: { id: b.id || `btn_${i}`, title: b.title }
+        }))
+      }
+    };
+    return this.sendInteractiveMessage(to, interactive, businessId);
+  }
+
+  async sendList(to, headerText, bodyText, footerText, buttonText, sections, businessId) {
+    const interactive = {
+      type: 'list',
+      header: headerText ? { type: 'text', text: headerText } : undefined,
+      body: { text: bodyText },
+      footer: footerText ? { text: footerText } : undefined,
+      action: {
+        button: buttonText,
+        sections: sections
+      }
+    };
+    return this.sendInteractiveMessage(to, interactive, businessId);
+  }
+
   async submitTemplate(template, businessId) {
     const { token, phoneId } = await this.getCredentials(businessId);
     if (!token) return { success: false, message: 'WhatsApp not configured' };

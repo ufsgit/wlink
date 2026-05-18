@@ -1,20 +1,25 @@
 const pool = require('../db/pool');
 const WhatsappService = require('../services/WhatsappService');
 
-const paginate = (p, l) => ({ offset: (Math.max(1,+p||1)-1)*(Math.min(200,+l||50)), limit: Math.min(200,+l||50), page: Math.max(1,+p||1) });
+const paginate = (p, l) => ({ offset: (Math.max(1,+p||1)-1)*(Math.min(10000,+l||1000)), limit: Math.min(10000,+l||1000), page: Math.max(1,+p||1) });
 
 const getTemplates = async (req, res) => {
   try {
     const { page, limit, status } = req.query;
     const { offset, limit: lim, page: p } = paginate(page, limit);
     const bizId = req.user.businessId;
+    console.log(`[DEBUG] Fetching templates for Biz ID: ${bizId}`);
     let where = 'WHERE business_id = ?';
     const params = [bizId];
     if (status) { where += ' AND status = ?'; params.push(status); }
     const [[{ total }]] = await pool.query(`SELECT COUNT(*) as total FROM templates ${where}`, params);
     const [rows] = await pool.query(`SELECT * FROM templates ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`, [...params, lim, offset]);
+    console.log(`[DEBUG] Found ${rows.length} templates`);
     res.json({ success: true, data: rows, total, page: p, limit: lim, message: 'OK' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
+  } catch (err) { 
+    console.error(`[DEBUG] getTemplates Error: ${err.message}`);
+    res.status(500).json({ success: false, message: err.message, data: null }); 
+  }
 };
 
 const createTemplate = async (req, res) => {

@@ -1,7 +1,7 @@
 =<div class="dashboard">
   <!-- Stats Grid -->
   <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card clickable" routerLink="/contacts">
       <div class="stat-icon icon-blue">
         <i class="bi bi-people"></i>
       </div>
@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card clickable" routerLink="/inbox">
       <div class="stat-icon icon-purple">
         <i class="bi bi-chat-left-dots"></i>
       </div>
@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card clickable" routerLink="/inbox">
       <div class="stat-icon icon-green">
         <i class="bi bi-megaphone"></i>
       </div>
@@ -34,7 +34,7 @@
       </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card clickable" routerLink="/broadcasts">
       <div class="stat-icon icon-orange">
         <i class="bi bi-eye"></i>
       </div>
@@ -60,7 +60,7 @@
         <div *ngIf="!loading && stats.recentConversations.length === 0" class="text-center py-4 text-muted">
           No recent conversations.
         </div>
-        <div *ngFor="let convo of stats.recentConversations" class="chat-item">
+        <div *ngFor="let convo of stats.recentConversations" class="chat-item clickable" [routerLink]="['/inbox']" [queryParams]="{convoId: convo.id}">
           <div class="avatar">{{ convo.contact_name?.charAt(0) }}</div>
           <div class="chat-info">
             <div class="chat-top">

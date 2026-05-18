@@ -7,7 +7,7 @@ const fs = require('fs');
 
 const paginate = (page, limit) => {
   const p = Math.max(1, parseInt(page) || 1);
-  const l = Math.min(200, parseInt(limit) || 50);
+  const l = Math.min(10000, parseInt(limit) || 1000);
   return { offset: (p - 1) * l, limit: l, page: p };
 };
 
@@ -178,4 +178,28 @@ const handleOptInLink = async (req, res) => {
   }
 };
 
-module.exports = { getContacts, getContact, createContact, updateContact, deleteContact, importContacts, exportContacts, optIn, optOut, createOptInLink, handleOptInLink };
+const getUniqueTags = async (req, res) => {
+  try {
+    const bizId = req.user.businessId;
+    console.log(`[DEBUG] Fetching unique tags for Biz ID: ${bizId}`);
+    const [rows] = await pool.query('SELECT tags FROM contacts WHERE business_id = ? AND opted_in = 1', [bizId]);
+    console.log(`[DEBUG] Found ${rows.length} contacts with tags`);
+    const tags = new Set();
+    rows.forEach(r => {
+      let ct = r.tags;
+      if (typeof ct === 'string') {
+        try { ct = JSON.parse(ct); } catch (e) { ct = []; }
+      }
+      if (Array.isArray(ct)) {
+        ct.forEach(t => tags.add(t));
+      }
+    });
+    console.log(`[DEBUG] Unique tags found: ${Array.from(tags).join(', ')}`);
+    res.json({ success: true, data: Array.from(tags), message: 'OK' });
+  } catch (err) {
+    console.error(`[DEBUG] getUniqueTags Error: ${err.message}`);
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+module.exports = { getContacts, getContact, createContact, updateContact, deleteContact, importContacts, exportContacts, optIn, optOut, createOptInLink, handleOptInLink, getUniqueTags };

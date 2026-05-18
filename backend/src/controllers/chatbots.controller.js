@@ -1,7 +1,7 @@
 const pool = require('../db/pool');
 const OpenAIService = require('../services/OpenAIService');
 
-const paginate = (p, l) => ({ offset: (Math.max(1,+p||1)-1)*(Math.min(200,+l||50)), limit: Math.min(200,+l||50), page: Math.max(1,+p||1) });
+const paginate = (p, l) => ({ offset: (Math.max(1,+p||1)-1)*(Math.min(10000,+l||1000)), limit: Math.min(10000,+l||1000), page: Math.max(1,+p||1) });
 
 const getChatbots = async (req, res) => {
   try {
@@ -55,7 +55,9 @@ const testChatbot = async (req, res) => {
 };
 
 async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId) {
-  const flow = chatbot.flow || { nodes: [], edges: [] };
+  // Bug fix: flow from DB is a JSON string — always parse it
+  let flowRaw = chatbot.flow || { nodes: [], edges: [] };
+  const flow = typeof flowRaw === 'string' ? JSON.parse(flowRaw) : flowRaw;
   const nodes = flow.nodes || [];
 
   // Find or create session
@@ -67,25 +69,136 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
   let currentNodeId = session?.current_node_id || (nodes[0]?.id);
 
   const currentNode = nodes.find(n => n.id === currentNodeId);
-  if (!currentNode) return { response: 'Sorry, I could not process your request.' };
+
+  // Bug fix: Only use AI when there are NO flow nodes at all, or the node is explicitly ai_response type
+  // DO NOT run AI when there's an interactive/message node — that kills buttons!
+  const hasFlowNodes = nodes.length > 0;
+  const useAI = chatbot.ai_enabled && (!hasFlowNodes || !currentNode || currentNode.type === 'ai_response');
+
+  if (!currentNode && !chatbot.ai_enabled) {
+    return { response: 'Sorry, I could not process your request.' };
+  }
 
   let response = '';
-  let nextNodeId = currentNode.next;
+  let interactive = null;
+  let nextNodeId = currentNode?.next;
+
+  if (useAI) {
+    // Fetch last 10 messages for context
+    const [historyRows] = await pool.query(
+      `SELECT m.content, m.direction 
+       FROM messages m 
+       JOIN conversations c ON m.conversation_id = c.id 
+       WHERE c.contact_id = ? AND c.business_id = ? 
+       ORDER BY m.sent_at DESC LIMIT 10`,
+      [contactId, businessId]
+    );
+    
+    const messages = historyRows.reverse().map(m => ({
+      role: m.direction === 'inbound' ? 'user' : 'assistant',
+      content: m.content
+    }));
+    
+    if (!messages.length || messages[messages.length - 1].content !== inboundMessage) {
+      messages.push({ role: 'user', content: inboundMessage });
+    }
+
+    const aiResult = await OpenAIService.chat(businessId, messages, chatbot.openai_system_prompt || 'You are a professional assistant.');
+    if (aiResult.success) {
+      response = aiResult.data;
+    } else {
+      // AI not configured — fall back to next node content or a polite message
+      const nextNode = nodes.find(n => n.id === currentNode?.next);
+      response = nextNode?.content || 'Thank you for your message. Our team will assist you shortly.';
+      console.warn('[Chatbot] AI unavailable, falling back to next node or default message.');
+    }
+    return { response };
+  }
 
   if (currentNode.type === 'message') {
     response = currentNode.content;
+  } else if (currentNode.type === 'interactive') {
+    const buttons = (currentNode.buttons || []).slice(0, 3);
+
+    // Check if the user is REPLYING to this interactive node (by number or title)
+    const msgTrimmed = inboundMessage.trim().toLowerCase();
+    const selectedByNumber = parseInt(msgTrimmed) - 1; // "1" → index 0
+    const selectedByTitle = buttons.findIndex(b => b.title?.toLowerCase() === msgTrimmed);
+    const selectedByBtnId = buttons.findIndex(b => b.id === msgTrimmed);
+
+    let selectedButton = null;
+    if (!isNaN(selectedByNumber) && selectedByNumber >= 0 && selectedByNumber < buttons.length) {
+      selectedButton = buttons[selectedByNumber];
+    } else if (selectedByTitle >= 0) {
+      selectedButton = buttons[selectedByTitle];
+    } else if (selectedByBtnId >= 0) {
+      selectedButton = buttons[selectedByBtnId];
+    }
+
+    if (selectedButton) {
+      // User selected a button — navigate to its linked next node
+      nextNodeId = selectedButton.next || currentNode.next;
+      const nextNode = nodes.find(n => n.id === nextNodeId);
+      response = nextNode?.content || 'Thank you for your selection!';
+      // If next node is also interactive, process it now
+      if (nextNode?.type === 'interactive') {
+        response = nextNode.content;
+        const nextButtons = (nextNode.buttons || []).slice(0, 3);
+        if (nextButtons.length > 0) {
+          interactive = {
+            type: 'button',
+            body: { text: nextNode.content.trim() },
+            action: {
+              buttons: nextButtons.map((b, i) => ({
+                type: 'reply',
+                reply: { id: `btn_${i + 1}`, title: String(b.title || `Option ${i + 1}`).trim().substring(0, 20) }
+              }))
+            }
+          };
+        }
+      }
+    } else {
+      // User hasn't replied yet — show the interactive node for the first time
+      response = currentNode.content;
+      if (buttons.length === 0) {
+        console.warn('[Chatbot] Interactive node has no buttons, sending as text.');
+      } else {
+        interactive = {
+          type: 'button',
+          body: { text: (currentNode.content || 'Please choose an option:').trim() },
+          action: {
+            buttons: buttons.map((b, i) => ({
+              type: 'reply',
+              reply: {
+                id: `btn_${i + 1}`,
+                title: String(b.title || `Option ${i + 1}`).trim().substring(0, 20)
+              }
+            }))
+          }
+        };
+        // Do NOT advance the session — wait for user to select
+        nextNodeId = currentNode.id;
+      }
+    }
   } else if (currentNode.type === 'collect_input') {
     response = currentNode.content;
     nextNodeId = currentNode.next;
   } else if (currentNode.type === 'condition') {
     const rules = currentNode.rules || [];
-    const matched = rules.find(r => inboundMessage.trim() === r.match);
+    const matched = rules.find(r => inboundMessage.trim().toLowerCase() === r.match.toLowerCase());
     nextNodeId = matched ? matched.next : currentNode.default;
     const nextNode = nodes.find(n => n.id === nextNodeId);
     response = nextNode?.content || 'Processing...';
-  } else if (currentNode.type === 'ai_response') {
-    const aiResult = await OpenAIService.chat(businessId, [{ role: 'user', content: inboundMessage }], chatbot.openai_system_prompt || '');
-    response = aiResult.success ? aiResult.data : 'AI is not available right now.';
+    // If next node is interactive, we should process it too, but for now just move to it
+  } else if (currentNode.type === 'transfer') {
+    response = currentNode.content || 'Transferring you to a human agent...';
+    // Update conversation status to 'open' and clear session
+    const [convos] = await pool.query("SELECT id FROM conversations WHERE contact_id=? AND business_id=? AND status!='resolved' LIMIT 1", [contactId, businessId]);
+    if (convos.length) {
+      await pool.query("UPDATE conversations SET status='open', assigned_to=NULL WHERE id=?", [convos[0].id]);
+    }
+    if (session) await pool.query('DELETE FROM chatbot_sessions WHERE id=?', [session.id]);
+    return { response, transfer: true };
   } else if (currentNode.type === 'end') {
     response = currentNode.content || 'Thank you!';
     if (session) await pool.query('DELETE FROM chatbot_sessions WHERE id=?', [session.id]);
@@ -101,7 +214,7 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
       [chatbot.id, contactId, nextNodeId || currentNodeId]
     );
   }
-  return { response, currentNode: currentNodeId, nextNode: nextNodeId };
+  return { response, interactive, currentNode: currentNodeId, nextNode: nextNodeId };
 }
 
 module.exports = { getChatbots, createChatbot, updateChatbot, deleteChatbot, testChatbot, processChatbotFlow };

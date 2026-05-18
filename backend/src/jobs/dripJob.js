@@ -26,7 +26,7 @@ function startDripJob() {
         if (step.template_id) {
           const [templates] = await pool.query('SELECT name FROM templates WHERE id=?', [step.template_id]);
           if (templates.length) {
-            await WhatsappService.sendTemplateMessage(enrollment.phone, templates[0].name, 'en', [], enrollment.business_id);
+            await WhatsappService.sendTemplateMessage(enrollment.phone, templates[0].name, 'en', enrollment.business_id);
           }
         } else if (step.message) {
           await WhatsappService.sendTextMessage(enrollment.phone, step.message, enrollment.business_id);
@@ -46,5 +46,4 @@ function startDripJob() {
   });
   console.log('💧 Drip campaign scheduler started');
 }
-
 module.exports = { startDripJob };

@@ -3,13 +3,13 @@ const WhatsappService = require('../services/WhatsappService');
 
 const paginate = (page, limit) => {
   const p = Math.max(1, parseInt(page) || 1);
-  const l = Math.min(200, parseInt(limit) || 50);
+  const l = Math.min(10000, parseInt(limit) || 1000);
   return { offset: (p - 1) * l, limit: l, page: p };
 };
 
 const getConversations = async (req, res) => {
   try {
-    const { page, limit, status, channel, assigned_to } = req.query;
+    const { page, limit, status, channel, assigned_to, search } = req.query;
     const { offset, limit: lim, page: p } = paginate(page, limit);
     const bizId = req.user.businessId;
 
@@ -19,12 +19,16 @@ const getConversations = async (req, res) => {
     if (channel) { where += ' AND c.channel = ?'; params.push(channel); }
     if (assigned_to === 'me') { where += ' AND c.assigned_to = ?'; params.push(req.user.userId); }
     else if (assigned_to) { where += ' AND c.assigned_to = ?'; params.push(assigned_to); }
+    if (search) {
+      where += ' AND (co.name LIKE ? OR co.phone LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
 
     const [[{ total }]] = await pool.query(
       `SELECT COUNT(*) as total FROM conversations c ${where}`, params
     );
     const [rows] = await pool.query(
-      `SELECT c.*, co.name as contact_name, co.phone as contact_phone,
+      `SELECT c.*, co.name as contact_name, co.phone as contact_phone, co.opted_in,
         u.name as assigned_name,
         (SELECT content FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message,
         (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.direction = 'inbound') as unread_count
@@ -67,16 +71,39 @@ const sendMessage = async (req, res) => {
     if (!convRows.length) return res.status(404).json({ success: false, message: 'Conversation not found', data: null });
     const conv = convRows[0];
 
-    let waResult;
-    if (message_type === 'text' || !message_type) {
-      waResult = await WhatsappService.sendTextMessage(conv.phone, content, req.user.businessId);
+    const WhatsappService = require('../services/WhatsappService');
+    const InstagramService = require('../services/InstagramService');
+    const FacebookService = require('../services/FacebookService');
+
+    let metaResult;
+    if (conv.channel === 'instagram') {
+      if (message_type === 'text' || !message_type) {
+        metaResult = await InstagramService.sendTextMessage(conv.phone, content, req.user.businessId);
+      } else {
+        metaResult = await InstagramService.sendMediaMessage(conv.phone, message_type, media_url, req.user.businessId);
+      }
+    } else if (conv.channel === 'messenger') {
+      if (message_type === 'text' || !message_type) {
+        metaResult = await FacebookService.sendTextMessage(conv.phone, content, req.user.businessId);
+      } else {
+        metaResult = await FacebookService.sendMediaMessage(conv.phone, message_type, media_url, req.user.businessId);
+      }
     } else {
-      waResult = await WhatsappService.sendMediaMessage(conv.phone, message_type, media_url, content, req.user.businessId);
+      // Default to WhatsApp
+      if (message_type === 'text' || !message_type) {
+        metaResult = await WhatsappService.sendTextMessage(conv.phone, content, req.user.businessId);
+      } else {
+        metaResult = await WhatsappService.sendMediaMessage(conv.phone, message_type, media_url, content, req.user.businessId);
+      }
+    }
+
+    if (!metaResult.success) {
+      return res.status(400).json({ success: false, message: metaResult.message, data: null });
     }
 
     const [result] = await pool.query(
       'INSERT INTO messages (conversation_id, direction, content, media_url, message_type, wa_message_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [convId, 'outbound', content, media_url || null, message_type || 'text', waResult.data?.messages?.[0]?.id || null]
+      [convId, 'outbound', content, media_url || null, message_type || 'text', metaResult.data?.messages?.[0]?.id || metaResult.data?.message_id || null]
     );
     await pool.query('UPDATE conversations SET last_message_at = NOW() WHERE id = ?', [convId]);
 

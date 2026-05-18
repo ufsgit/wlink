@@ -2,7 +2,7 @@ const pool = require('../db/pool');
 const crypto = require('crypto');
 const { generateQRCode } = require('../utils/qrcode');
 
-const paginate = (p, l) => ({ offset: (Math.max(1,+p||1)-1)*(Math.min(200,+l||50)), limit: Math.min(200,+l||50), page: Math.max(1,+p||1) });
+const paginate = (p, l) => ({ offset: (Math.max(1,+p||1)-1)*(Math.min(10000,+l||1000)), limit: Math.min(10000,+l||1000), page: Math.max(1,+p||1) });
 
 const getLinks = async (req, res) => {
   try {

@@ -12,6 +12,7 @@ async function handleFacebookWebhook(req, res, io) {
 
   try {
     const body = req.body;
+    console.log('📬 Incoming Facebook Webhook:', JSON.stringify(body, null, 2));
     const entries = body.entry || [];
     for (const entry of entries) {
       const pageId = entry.id;
@@ -22,6 +23,7 @@ async function handleFacebookWebhook(req, res, io) {
       for (const event of messaging) {
         const senderId = event.sender?.id;
         const text = event.message?.text || '';
+        console.log(`📡 FB Event: Sender=${senderId}, Text=${text}`);
         if (!senderId || !text) continue;
 
         let [contacts] = await pool.query('SELECT id FROM contacts WHERE business_id=? AND phone=?', [bizId, senderId]);

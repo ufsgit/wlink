@@ -1,13 +1,41 @@
 const pool = require('../db/pool');
 const { processChatbotFlow } = require('../controllers/chatbots.controller');
+const WhatsappService = require('../services/WhatsappService');
+
+// Helper: send bot reply with detailed logging + text fallback if interactive fails
+async function sendBotReply(to, result, bizId, convId) {
+  try {
+    if (result.interactive) {
+      console.log('[Bot] Sending interactive message to', to, JSON.stringify(result.interactive, null, 2));
+      const sendResult = await WhatsappService.sendInteractiveMessage(to, result.interactive, bizId);
+      if (!sendResult.success) {
+        console.error('[Bot] Interactive send FAILED:', sendResult.message, '— falling back to text');
+        // Fall back to plain text with button options listed
+        const buttons = result.interactive.action?.buttons || [];
+        const optionsText = buttons.map((b, i) => `${i + 1}. ${b.reply?.title}`).join('\n');
+        const fallbackText = `${result.interactive.body?.text}\n\n${optionsText}`;
+        await WhatsappService.sendTextMessage(to, fallbackText, bizId);
+        if (convId) await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, fallbackText]);
+        return;
+      }
+      console.log('[Bot] Interactive message sent successfully');
+    } else if (result.response) {
+      console.log('[Bot] Sending text message to', to, ':', result.response);
+      const sendResult = await WhatsappService.sendTextMessage(to, result.response, bizId);
+      if (!sendResult.success) {
+        console.error('[Bot] Text send FAILED:', sendResult.message);
+      }
+    }
+    // Save bot message to DB
+    if (result.response && convId) {
+      await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, result.response]);
+    }
+  } catch (err) {
+    console.error('[Bot] sendBotReply error:', err.message);
+  }
+}
 
 async function handleWhatsappWebhook(req, res, io) {
-  console.log('--- Incoming Webhook Request ---');
-  console.log('Method:', req.method);
-  console.log('Headers Content-Type:', req.headers['content-type']);
-  console.log('Body Type:', typeof req.body);
-  console.log('Body exists:', !!req.body);
-  
   if (req.body && Object.keys(req.body).length > 0) {
     console.log('--- Webhook Body ---');
     console.log(JSON.stringify(req.body, null, 2));
@@ -61,27 +89,38 @@ async function handleWhatsappWebhook(req, res, io) {
         // Handle incoming messages
         for (const msg of messages) {
           const from = msg.from;
-          const text = msg.text?.body || msg.caption || '';
-          const msgType = msg.type || 'text';
-
+          const msgId = msg.id;
+          
           // Find business by phone_id (with fallback for Meta test ID)
           let [businesses] = await pool.query('SELECT id FROM businesses WHERE whatsapp_phone_id=?', [phoneId]);
-          
-          if (!businesses.length && phoneId === '123456123') {
-            console.log('--- Using fallback for Meta Test ID (123456123) ---');
+          if (!businesses.length && (phoneId === '123456123' || !phoneId)) {
             [businesses] = await pool.query('SELECT id FROM businesses LIMIT 1');
           }
-
-          console.log(`Matching business for ${phoneId}:`, businesses.length ? `Found ID ${businesses[0].id}` : 'NOT FOUND');
           
           if (!businesses.length) continue;
           const bizId = businesses[0].id;
+
+          // Auto-mark as read
+          await WhatsappService.markAsRead(msgId, bizId);
+
+          let text = msg.text?.body || msg.caption || '';
+          const msgType = msg.type || 'text';
+
+          // Handle interactive responses
+          if (msgType === 'interactive') {
+            const interactive = msg.interactive;
+            if (interactive.type === 'button_reply') {
+              text = interactive.button_reply.title; // or .id
+            } else if (interactive.type === 'list_reply') {
+              text = interactive.list_reply.title; // or .id
+            }
+          }
 
           // Find or create contact
           let [contacts] = await pool.query('SELECT id FROM contacts WHERE business_id=? AND phone=?', [bizId, from]);
           let contactId;
           if (!contacts.length) {
-            const [result] = await pool.query("INSERT INTO contacts (business_id, phone, opted_in, opt_in_source) VALUES (?, ?, 1, 'whatsapp')", [bizId, from]);
+            const [result] = await pool.query("INSERT INTO contacts (business_id, phone, opted_in, opt_in_source, tags) VALUES (?, ?, 1, 'whatsapp', '[\"lead\"]')", [bizId, from]);
             contactId = result.insertId;
           } else {
             contactId = contacts[0].id;
@@ -112,20 +151,46 @@ async function handleWhatsappWebhook(req, res, io) {
           }
 
           // Check for chatbot trigger
-          const [bots] = await pool.query("SELECT * FROM chatbots WHERE business_id=? AND is_active=1 AND channel='whatsapp'", [bizId]);
-          for (const bot of bots) {
-            const keywords = bot.trigger_keywords || [];
-            if (keywords.some(k => text.toLowerCase().includes(k.toLowerCase()))) {
-              const result = await processChatbotFlow(bot, contactId, text, bizId);
-              if (result.response) {
-                const WhatsappService = require('../services/WhatsappService');
-                await WhatsappService.sendTextMessage(from, result.response, bizId);
-                await pool.query(
-                  "INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')",
-                  [convId, result.response]
-                );
+          const [convDetails] = await pool.query('SELECT assigned_to, status FROM conversations WHERE id=?', [convId]);
+          const isAssigned = convDetails.length && convDetails[0].assigned_to;
+          
+          if (!isAssigned) {
+            const [sessionRows] = await pool.query('SELECT * FROM chatbot_sessions WHERE contact_id=? ORDER BY started_at DESC LIMIT 1', [contactId]);
+            let session = sessionRows[0] || null;
+            const [bots] = await pool.query("SELECT * FROM chatbots WHERE business_id=? AND is_active=1 AND channel='whatsapp'", [bizId]);
+            let botTriggered = false;
+            for (const bot of bots) {
+              const keywords = bot.trigger_keywords || [];
+              const isSessionActive = session && session.chatbot_id === bot.id;
+              const isKeywordMatch = keywords.some(k => text.toLowerCase().includes(k.toLowerCase()));
+
+              // If keyword matched and session is active, reset session to start fresh from node 1
+              if (isKeywordMatch && isSessionActive) {
+                await pool.query('DELETE FROM chatbot_sessions WHERE id=?', [session.id]);
+                session = null;
               }
-              break;
+              
+              if (isSessionActive || isKeywordMatch) {
+                const result = await processChatbotFlow(bot, contactId, text, bizId);
+                console.log('[Bot] Flow result:', JSON.stringify(result));
+                await sendBotReply(from, result, bizId, convId);
+                botTriggered = true;
+                break; 
+              }
+            }
+
+            // Fallback to a Welcome/Main Menu bot if it's a new session and no bot triggered
+            if (!botTriggered) {
+              const welcomeBot = bots.find(b =>
+                (b.name.toLowerCase().includes('welcome') || b.name.toLowerCase().includes('main menu')) ||
+                (b.ai_enabled && (!b.trigger_keywords || b.trigger_keywords.length === 0 || b.trigger_keywords.includes('*')))
+              );
+
+              if (welcomeBot) {
+                const result = await processChatbotFlow(welcomeBot, contactId, text, bizId);
+                console.log('[Bot] Welcome flow result:', JSON.stringify(result));
+                await sendBotReply(from, result, bizId, convId);
+              }
             }
           }
         }

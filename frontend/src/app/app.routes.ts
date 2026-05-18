@@ -34,6 +34,7 @@ export const routes: Routes = [
       { path: 'contacts', component: ContactsComponent },
       { path: 'broadcasts', component: BroadcastsComponent, data: { roles: ['admin', 'superadmin'] } },
       { path: 'chatbots', component: ChatbotsComponent, data: { roles: ['admin', 'superadmin'] } },
+      { path: 'chatbots/:id/flow', loadComponent: () => import('./features/chatbots/flow-editor/flow-editor.component').then(m => m.FlowEditorComponent), data: { roles: ['admin', 'superadmin'] } },
       { path: 'drip', component: DripComponent, data: { roles: ['admin', 'superadmin'] } },
       { path: 'ecommerce', component: EcommerceComponent, data: { roles: ['admin', 'superadmin'] } },
       { path: 'ctwa', component: CtwaComponent, data: { roles: ['admin', 'superadmin'] } },

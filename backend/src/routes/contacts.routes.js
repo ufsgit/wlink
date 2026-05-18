@@ -6,6 +6,7 @@ const upload = require('../middleware/upload');
 router.use(authenticate);
 router.get('/', c.getContacts);
 router.get('/export', c.exportContacts);
+router.get('/tags', c.getUniqueTags);
 router.post('/', c.createContact);
 router.post('/import', upload.single('file'), c.importContacts);
 router.post('/optin-link', c.createOptInLink);

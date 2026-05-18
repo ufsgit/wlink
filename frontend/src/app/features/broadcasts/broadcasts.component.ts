@@ -17,11 +17,13 @@ export class BroadcastsComponent implements OnInit {
   activeChannel = 'whatsapp';
 
   templates: any[] = [];
+  availableTags: string[] = [];
+  selectedTags: string[] = [];
+  audienceCount = 0;
   
   newBroadcast: any = {
     name: '',
     template_id: '',
-    target_tags: '',
     channel: 'whatsapp',
     scheduled_at: null
   };
@@ -31,6 +33,7 @@ export class BroadcastsComponent implements OnInit {
   ngOnInit() {
     this.loadBroadcasts();
     this.loadTemplates();
+    this.loadTags();
   }
 
   loadBroadcasts() {
@@ -39,8 +42,8 @@ export class BroadcastsComponent implements OnInit {
       next: (res: any) => {
         this.broadcasts = res.data.map((b: any) => ({
           ...b,
-          progress: b.total_sent ? Math.round((b.total_sent / b.total_contacts) * 100) : 0,
-          readRate: b.total_read ? Math.round((b.total_read / b.total_sent) * 100) : 0
+          progress: b.total_recipients ? Math.round((b.total_sent / b.total_recipients) * 100) : 0,
+          readRate: b.total_sent ? Math.round((b.total_read / b.total_sent) * 100) : 0
         }));
         this.loading = false;
       },
@@ -54,33 +57,64 @@ export class BroadcastsComponent implements OnInit {
     });
   }
 
+  loadTags() {
+    this.api.get('/contacts/tags').subscribe({
+      next: (res: any) => this.availableTags = res.data
+    });
+  }
+
+  toggleTag(tag: string) {
+    const idx = this.selectedTags.indexOf(tag);
+    if (idx > -1) this.selectedTags.splice(idx, 1);
+    else this.selectedTags.push(tag);
+    this.updateAudienceCount();
+  }
+
+  updateAudienceCount() {
+    const params = {
+      tags: this.selectedTags.join(','),
+      channel: this.activeChannel
+    };
+    this.api.get('/broadcasts/audience-count', params).subscribe({
+      next: (res: any) => this.audienceCount = res.data.count
+    });
+  }
+
   saveBroadcast() {
     if (!this.newBroadcast.name || !this.newBroadcast.template_id) return;
 
     const payload = {
       ...this.newBroadcast,
-      target_tags: this.newBroadcast.target_tags ? this.newBroadcast.target_tags.split(',').map((t: string) => t.trim()) : []
+      target_tags: this.selectedTags,
+      channel: this.activeChannel
     };
 
     this.api.post('/broadcasts', payload).subscribe({
       next: (res: any) => {
         if (res.success) {
-          // Send immediately if not scheduled
           if (!this.newBroadcast.scheduled_at) {
             this.api.post(`/broadcasts/${res.data.id}/send`, {}).subscribe({
               next: () => {
                 this.loadBroadcasts();
                 this.showModal = false;
+                this.resetForm();
               }
             });
           } else {
             this.loadBroadcasts();
             this.showModal = false;
+            this.resetForm();
           }
         }
       },
       error: (err) => alert(err.error?.message || 'Error creating broadcast')
     });
+  }
+
+  resetForm() {
+    this.newBroadcast = { name: '', template_id: '', channel: this.activeChannel, scheduled_at: null };
+    this.selectedTags = [];
+    this.audienceCount = 0;
   }
 
   deleteBroadcast(id: number) {
@@ -93,5 +127,6 @@ export class BroadcastsComponent implements OnInit {
   setChannel(channel: string) {
     this.activeChannel = channel;
     this.newBroadcast.channel = channel;
+    this.updateAudienceCount();
   }
 }

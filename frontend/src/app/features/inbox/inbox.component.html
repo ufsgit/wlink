@@ -2,65 +2,104 @@
   <!-- Sidebar: Conversation List -->
   <div class="inbox-sidebar">
     <div class="sidebar-header">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Chats</h4>
-        <div class="dropdown">
-          <button class="btn btn-icon btn-sm bg-light border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Filter Channels">
-            <i class="bi fs-5" [ngClass]="{
-              'bi-whatsapp text-success': currentChannel === 'whatsapp',
-              'bi-instagram text-danger': currentChannel === 'instagram',
-              'bi-facebook text-primary': currentChannel === 'messenger',
-              'bi-globe text-info': currentChannel === 'website',
-              'bi-filter text-muted': !currentChannel
-            }"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width: 200px;">
-            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('')">
-              <i class="bi bi-collection me-3 text-muted"></i> All Channels
-            </a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('whatsapp')">
-              <i class="bi bi-whatsapp text-success me-3"></i> WhatsApp
-            </a></li>
-            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('instagram')">
-              <i class="bi bi-instagram text-danger me-3"></i> Instagram
-            </a></li>
-            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('messenger')">
-              <i class="bi bi-messenger text-primary me-3"></i> Messenger
-            </a></li>
-            <li><a class="dropdown-item d-flex align-items-center py-2" href="javascript:void(0)" (click)="filterByChannel('website')">
-              <i class="bi bi-globe text-info me-3"></i> Website Widget
-            </a></li>
-          </ul>
+      <div class="sidebar-title-row">
+        <div class="sidebar-title">
+          <h4>Inbox</h4>
+          <span class="convo-count">{{ conversations.length }}</span>
+        </div>
+        <div class="sidebar-actions">
+          <div class="dropdown">
+            <button class="filter-btn" type="button" (click)="showChannelFilter = !showChannelFilter">
+              <i class="bi" [ngClass]="{
+                'bi-whatsapp': currentChannel === 'whatsapp',
+                'bi-instagram': currentChannel === 'instagram',
+                'bi-facebook': currentChannel === 'messenger',
+                'bi-globe': currentChannel === 'website',
+                'bi-funnel': !currentChannel
+              }"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" [class.show]="showChannelFilter">
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('')" [class.active-filter]="!currentChannel">
+                <i class="bi bi-collection me-3 text-muted"></i> All Channels
+              </a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('whatsapp')" [class.active-filter]="currentChannel === 'whatsapp'">
+                <i class="bi bi-whatsapp me-3" style="color: #25D366;"></i> WhatsApp
+              </a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('instagram')" [class.active-filter]="currentChannel === 'instagram'">
+                <i class="bi bi-instagram me-3" style="color: #E1306C;"></i> Instagram
+              </a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('messenger')" [class.active-filter]="currentChannel === 'messenger'">
+                <i class="bi bi-messenger me-3" style="color: #0084FF;"></i> Messenger
+              </a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('website'); showChannelFilter = false" [class.active-filter]="currentChannel === 'website'">
+                <i class="bi bi-globe me-3" style="color: #3B82F6;"></i> Website Widget
+              </a></li>
+            </ul>
+          </div>
         </div>
       </div>
       <div class="search-box">
         <i class="bi bi-search"></i>
-        <input type="text" placeholder="Search chats...">
+        <input type="text" placeholder="Search conversations..." [(ngModel)]="searchQuery" (input)="onSearch()">
       </div>
     </div>
 
+    <!-- Channel Filter Tabs -->
+    <div class="channel-tabs">
+      <button class="channel-tab" [class.active]="!currentChannel" (click)="filterByChannel('')">All</button>
+      <button class="channel-tab" [class.active]="currentChannel === 'whatsapp'" (click)="filterByChannel('whatsapp')">
+        <i class="bi bi-whatsapp"></i> WhatsApp
+      </button>
+      <button class="channel-tab" [class.active]="currentChannel === 'instagram'" (click)="filterByChannel('instagram')">
+        <i class="bi bi-instagram"></i> Instagram
+      </button>
+      <button class="channel-tab" [class.active]="currentChannel === 'messenger'" (click)="filterByChannel('messenger')">
+        <i class="bi bi-messenger"></i> Messenger
+      </button>
+    </div>
+
     <div class="conversation-list">
-      <div *ngIf="loadingConvos" class="text-center p-4">
+      <div *ngIf="loadingConvos" class="loading-state">
         <div class="spinner-border spinner-border-sm text-primary"></div>
+        <span>Loading conversations...</span>
+      </div>
+
+      <div *ngIf="!loadingConvos && conversations.length === 0" class="empty-convos">
+        <i class="bi bi-inbox"></i>
+        <p>No conversations yet</p>
       </div>
       
       <div *ngFor="let convo of conversations" 
            class="convo-item" 
            [class.active]="selectedConvo?.id === convo.id"
            (click)="selectConversation(convo)">
-        <div class="convo-avatar">
-          {{ convo.contact_name?.charAt(0) || 'C' }}
-          <div class="status-indicator online"></div>
+        <div class="convo-avatar-wrap">
+          <div class="convo-avatar">{{ convo.contact_name?.charAt(0) || 'C' }}</div>
+          <div class="channel-indicator" [ngClass]="{
+            'ch-whatsapp': convo.channel === 'whatsapp',
+            'ch-instagram': convo.channel === 'instagram',
+            'ch-messenger': convo.channel === 'messenger',
+            'ch-web': convo.channel === 'website'
+          }">
+            <i class="bi" [ngClass]="{
+              'bi-whatsapp': convo.channel === 'whatsapp',
+              'bi-instagram': convo.channel === 'instagram',
+              'bi-messenger': convo.channel === 'messenger',
+              'bi-globe': convo.channel === 'website'
+            }"></i>
+          </div>
         </div>
         <div class="convo-info">
           <div class="convo-top">
             <span class="convo-name">{{ convo.contact_name || convo.contact_phone }}</span>
             <span class="convo-time">{{ convo.last_message_at | date:'shortTime' }}</span>
           </div>
-          <div class="convo-msg">{{ convo.last_message || 'No messages yet' }}</div>
+          <div class="convo-bottom">
+            <span class="convo-msg">{{ convo.last_message || 'No messages yet' }}</span>
+            <span class="unread-badge" *ngIf="convo.unread_count > 0">{{ convo.unread_count }}</span>
+          </div>
         </div>
-        <div class="unread-badge" *ngIf="convo.unread_count > 0">{{ convo.unread_count }}</div>
       </div>
     </div>
   </div>
@@ -68,34 +107,69 @@
   <!-- Main: Chat Area -->
   <div class="chat-area" *ngIf="selectedConvo; else noSelect">
     <div class="chat-header">
-      <div class="d-flex align-items-center gap-3">
+      <div class="chat-header-left">
         <div class="chat-avatar">{{ selectedConvo.contact_name?.charAt(0) }}</div>
-        <div>
-          <div class="fw-bold">{{ selectedConvo.contact_name }}</div>
-          <div class="small text-success">
-            <i class="bi bi-whatsapp"></i> {{ selectedConvo.contact_phone }}
+        <div class="chat-user-info">
+          <div class="chat-user-name">{{ selectedConvo.contact_name }}</div>
+          <div class="chat-user-status">
+            <span class="status-dot online"></span>
+            <i class="bi" [ngClass]="{
+              'bi-whatsapp': selectedConvo.channel === 'whatsapp',
+              'bi-instagram': selectedConvo.channel === 'instagram',
+              'bi-messenger': selectedConvo.channel === 'messenger',
+              'bi-globe': selectedConvo.channel === 'website'
+            }"></i>
+            {{ selectedConvo.contact_phone }}
           </div>
         </div>
       </div>
-      <div class="chat-actions">
-        <button class="btn btn-outline-success btn-sm me-2" (click)="updateStatus('resolved')">
-          <i class="bi bi-check-lg"></i> Resolve
+      <div class="chat-header-actions">
+        <button class="header-action-btn resolve-btn" (click)="updateStatus('resolved')" title="Resolve conversation">
+          <i class="bi bi-check-circle"></i>
+          <span>Resolve</span>
         </button>
-        <button class="btn btn-icon"><i class="bi bi-three-dots-vertical"></i></button>
+        <div class="dropdown">
+          <button class="header-action-btn" type="button" (click)="showHeaderMenu = !showHeaderMenu" title="More options">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0" [class.show]="showHeaderMenu">
+            <li><a class="dropdown-item py-2" href="javascript:void(0)" (click)="assignToMe(); showHeaderMenu = false">
+              <i class="bi bi-person-check me-2"></i> Assign to Me
+            </a></li>
+            <li><a class="dropdown-item py-2" href="javascript:void(0)">
+              <i class="bi bi-envelope-open me-2"></i> Mark as Unread
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)">
+              <i class="bi bi-trash me-2"></i> Delete Conversation
+            </a></li>
+          </ul>
+        </div>
       </div>
     </div>
 
     <div class="chat-messages" #scrollMe>
-      <div *ngIf="loadingMessages" class="text-center p-4">
-        <div class="spinner-border text-primary"></div>
+      <div *ngIf="loadingMessages" class="messages-loading">
+        <div class="spinner-border text-primary spinner-border-sm"></div>
+        <span>Loading messages...</span>
+      </div>
+
+      <div class="messages-date-divider" *ngIf="messages.length > 0">
+        <span>Today</span>
       </div>
 
       <div *ngFor="let msg of messages" class="msg-wrapper" [class.sent]="msg.direction === 'outbound'">
         <div class="msg-bubble">
           <div class="msg-content">{{ msg.content }}</div>
           <div class="msg-meta">
-            {{ msg.created_at | date:'shortTime' }}
-            <i class="bi bi-check-all ms-1" *ngIf="msg.direction === 'outbound'"></i>
+            <span class="msg-time">{{ msg.sent_at || msg.created_at | date:'shortTime' }}</span>
+            <span class="msg-status" *ngIf="msg.direction === 'outbound'">
+              <i class="bi" [ngClass]="{
+                'bi-check': msg.status === 'sent',
+                'bi-check-all': msg.status === 'delivered' || msg.status === 'read' || !msg.status,
+                'text-info': msg.status === 'read'
+              }"></i>
+            </span>
           </div>
         </div>
       </div>
@@ -103,9 +177,14 @@
 
     <div class="chat-input-area">
       <div class="input-actions-left">
-        <button class="btn-action"><i class="bi bi-emoji-smile"></i></button>
-        <button class="btn-action"><i class="bi bi-paperclip"></i></button>
-        <button class="btn-action"><i class="bi bi-file-earmark-text"></i></button>
+        <div class="emoji-picker-container" *ngIf="showEmojiPicker">
+          <div class="emoji-list">
+            <span *ngFor="let e of emojis" (click)="addEmoji(e)">{{e}}</span>
+          </div>
+        </div>
+        <button class="btn-action" title="Emoji" (click)="toggleEmojiPicker()"><i class="bi bi-emoji-smile"></i></button>
+        <button class="btn-action" title="Attach file" (click)="attachFile()"><i class="bi bi-paperclip"></i></button>
+        <button class="btn-action" title="Send Product" (click)="openProductPicker()"><i class="bi bi-bag"></i></button>
       </div>
       <div class="input-wrapper">
         <input type="text" 
@@ -119,43 +198,150 @@
     </div>
   </div>
 
-  <!-- Right: Contact Info -->
+  <!-- Right: Contact Info Panel -->
   <div class="contact-info-panel" *ngIf="selectedConvo">
-    <div class="panel-header">Contact Details</div>
-    <div class="p-4 text-center">
-      <div class="info-avatar mb-3">{{ selectedConvo.contact_name?.charAt(0) }}</div>
-      <h5 class="mb-1">{{ selectedConvo.contact_name }}</h5>
-      <p class="text-muted small mb-4">{{ selectedConvo.contact_phone }}</p>
+    <div class="panel-header">
+      <span>Contact Details</span>
+      <button class="panel-close-btn" title="Close panel">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="panel-body">
+      <div class="panel-profile">
+        <div class="info-avatar">{{ selectedConvo.contact_name?.charAt(0) }}</div>
+        <h5 class="info-name">{{ selectedConvo.contact_name }}</h5>
+        <p class="info-phone">{{ selectedConvo.contact_phone }}</p>
+        <div class="info-channel-badge" [ngClass]="{
+          'badge-whatsapp': selectedConvo.channel === 'whatsapp',
+          'badge-instagram': selectedConvo.channel === 'instagram',
+          'badge-messenger': selectedConvo.channel === 'messenger'
+        }">
+          <i class="bi" [ngClass]="{
+            'bi-whatsapp': selectedConvo.channel === 'whatsapp',
+            'bi-instagram': selectedConvo.channel === 'instagram',
+            'bi-messenger': selectedConvo.channel === 'messenger',
+            'bi-globe': selectedConvo.channel === 'website'
+          }"></i>
+          {{ selectedConvo.channel || 'whatsapp' | titlecase }}
+        </div>
+      </div>
       
-      <div class="info-list text-start">
-        <div class="info-item">
-          <label>Email</label>
-          <div>{{ selectedConvo.contact_email || 'Not provided' }}</div>
+      <div class="info-divider"></div>
+
+      <div class="info-section">
+        <div class="info-section-title">Contact Information</div>
+        <div class="info-row">
+          <div class="info-row-icon"><i class="bi bi-envelope"></i></div>
+          <div>
+            <div class="info-row-label">Email</div>
+            <div class="info-row-value">{{ selectedConvo.contact_email || 'Not provided' }}</div>
+          </div>
         </div>
-        <div class="info-item">
-          <label>Status</label>
-          <div><span class="badge bg-success">Opted-in</span></div>
+        <div class="info-row">
+          <div class="info-row-icon"><i class="bi bi-shield-check"></i></div>
+          <div>
+            <div class="info-row-label">Opt-in Status</div>
+            <div class="info-row-value"><span class="status-chip opted-in">Opted-in</span></div>
+          </div>
         </div>
-        <div class="info-item">
-          <label>Channel</label>
-          <div>WhatsApp Business</div>
+        <div class="info-row">
+          <div class="info-row-icon"><i class="bi bi-chat-square-text"></i></div>
+          <div>
+            <div class="info-row-label">Conversation Status</div>
+            <div class="info-row-value">
+              <span class="status-chip" [ngClass]="{
+                'status-open': selectedConvo.status === 'open',
+                'status-resolved': selectedConvo.status === 'resolved'
+              }">{{ selectedConvo.status || 'open' | titlecase }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="info-row" *ngIf="selectedConvo.assigned_name">
+          <div class="info-row-icon"><i class="bi bi-person-badge"></i></div>
+          <div>
+            <div class="info-row-label">Assigned To</div>
+            <div class="info-row-value">{{ selectedConvo.assigned_name }}</div>
+          </div>
         </div>
       </div>
 
-      <div class="mt-4">
-        <button class="btn btn-outline-primary btn-sm w-100 mb-2">Edit Profile</button>
-        <button class="btn btn-outline-danger btn-sm w-100">Block Contact</button>
+      <div class="info-divider"></div>
+
+      <div class="info-section">
+        <div class="info-section-title">Quick Actions</div>
+        <div class="quick-actions">
+          <button class="quick-action-btn" (click)="editContact()"><i class="bi bi-pencil-square"></i> Edit Contact</button>
+          <button class="quick-action-btn" (click)="addTag()"><i class="bi bi-tag"></i> Add Tag</button>
+          <button class="quick-action-btn" (click)="assignAgent()"><i class="bi bi-person-plus"></i> Assign Agent</button>
+          
+          <button *ngIf="selectedConvo.opted_in !== 0" class="quick-action-btn danger" (click)="blockContact()">
+            <i class="bi bi-slash-circle"></i> Block Contact
+          </button>
+          <button *ngIf="selectedConvo.opted_in === 0" class="quick-action-btn" style="color: var(--success); border-color: rgba(16,185,129,0.2);" (click)="unblockContact()">
+            <i class="bi bi-check-circle"></i> Unblock Contact
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <ng-template #noSelect>
     <div class="chat-area empty-state">
-      <div class="text-center">
-        <i class="bi bi-chat-dots display-1 text-light mb-4"></i>
-        <h4>Select a conversation to start chatting</h4>
-        <p class="text-muted">All your WhatsApp, Messenger, and Instagram messages in one place.</p>
+      <div class="empty-state-content">
+        <div class="empty-state-icon">
+          <i class="bi bi-chat-square-dots"></i>
+        </div>
+        <h3>Welcome to your Inbox</h3>
+        <p>Select a conversation from the sidebar to start messaging.<br>All your WhatsApp, Instagram, and Messenger chats in one place.</p>
+        <div class="empty-state-channels">
+          <div class="es-channel"><i class="bi bi-whatsapp"></i></div>
+          <div class="es-channel"><i class="bi bi-instagram"></i></div>
+          <div class="es-channel"><i class="bi bi-messenger"></i></div>
+          <div class="es-channel"><i class="bi bi-globe"></i></div>
+        </div>
       </div>
     </div>
   </ng-template>
+
+  <!-- Product Picker Modal -->
+  <div class="product-modal-overlay" *ngIf="showProductPicker" (click)="showProductPicker = false">
+    <div class="product-modal" (click)="$event.stopPropagation()">
+      <div class="product-modal-header">
+        <h5><i class="bi bi-bag me-2"></i>Send Product</h5>
+        <button class="close-btn" (click)="showProductPicker = false">&times;</button>
+      </div>
+      <div class="product-modal-search">
+        <i class="bi bi-search"></i>
+        <input type="text" [(ngModel)]="productSearch" placeholder="Search products...">
+      </div>
+      <div class="product-modal-body">
+        <div *ngIf="loadingProducts" class="text-center py-4">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+          <p class="text-muted small mt-2">Loading products...</p>
+        </div>
+        <div *ngIf="!loadingProducts && filteredProducts.length === 0" class="text-center py-4">
+          <i class="bi bi-box-seam display-4 text-muted"></i>
+          <p class="text-muted mt-2">No products found</p>
+        </div>
+        <div class="product-grid">
+          <div *ngFor="let product of filteredProducts" class="product-card" (click)="sendProduct(product)">
+            <div class="product-icon">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="product-details">
+              <div class="product-name">{{ product.name }}</div>
+              <div class="product-price">₹{{ product.price }}</div>
+              <div class="product-stock">
+                <span class="stock-dot" [class.in-stock]="product.stock > 0" [class.out-of-stock]="product.stock <= 0"></span>
+                {{ product.stock > 0 ? product.stock + ' in stock' : 'Out of stock' }}
+              </div>
+            </div>
+            <div class="product-send-icon">
+              <i class="bi bi-send"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

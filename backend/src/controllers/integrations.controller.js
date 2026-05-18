@@ -68,4 +68,55 @@ const pushHubspotLead = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
 };
 
-module.exports = { getIntegrations, connectIntegration, disconnectIntegration, testOpenAI, syncGoogleSheets, pushZohoLead, pushHubspotLead };
+const searchInstagramUser = async (req, res) => {
+  try {
+    const { igSid } = req.query;
+    const InstagramService = require('../services/InstagramService');
+    const result = await InstagramService.getUserProfile(igSid, req.user.businessId);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+const startInstagramChat = async (req, res) => {
+  try {
+    const { igSid, message, name } = req.body;
+    const bizId = req.user.businessId;
+    const InstagramService = require('../services/InstagramService');
+
+    // 1. Create or get contact
+    let [contacts] = await pool.query('SELECT id FROM contacts WHERE business_id=? AND phone=?', [bizId, igSid]);
+    let contactId;
+    if (!contacts.length) {
+      const [result] = await pool.query('INSERT INTO contacts (business_id, phone, name, channel_preference) VALUES (?, ?, ?, ?)', [bizId, igSid, name || `IG_${igSid}`, 'instagram']);
+      contactId = result.insertId;
+    } else {
+      contactId = contacts[0].id;
+    }
+
+    // 2. Create or get conversation
+    let [convos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND channel='instagram' AND status!='resolved' LIMIT 1", [bizId, contactId]);
+    let convId;
+    if (!convos.length) {
+      const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at) VALUES (?, ?, 'instagram', NOW())", [bizId, contactId]);
+      convId = result.insertId;
+    } else {
+      convId = convos[0].id;
+    }
+
+    // 3. Send message
+    const metaResult = await InstagramService.sendTextMessage(igSid, message, bizId);
+    if (!metaResult.success) return res.status(400).json(metaResult);
+
+    // 4. Save message to DB
+    await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, message]);
+    await pool.query('UPDATE conversations SET last_message_at=NOW() WHERE id=?', [convId]);
+
+    res.json({ success: true, data: { conversationId: convId }, message: 'Conversation started and message sent' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+module.exports = { getIntegrations, connectIntegration, disconnectIntegration, testOpenAI, syncGoogleSheets, pushZohoLead, pushHubspotLead, searchInstagramUser, startInstagramChat };

@@ -10,5 +10,7 @@ router.post('/openai/test', c.testOpenAI);
 router.post('/google-sheets/sync', c.syncGoogleSheets);
 router.post('/zoho/push-lead', c.pushZohoLead);
 router.post('/hubspot/push-lead', c.pushHubspotLead);
+router.get('/instagram/search-user', c.searchInstagramUser);
+router.post('/instagram/start-chat', c.startInstagramChat);
 
 module.exports = router;
