@@ -1,4 +1,4 @@
-=<div class="dashboard">
+<div class="dashboard">
   <!-- Stats Grid -->
   <div class="stats-grid">
     <div class="stat-card clickable" routerLink="/contacts">
@@ -57,8 +57,10 @@
         <div *ngIf="loading" class="text-center py-4">
           <div class="spinner-border text-primary"></div>
         </div>
-        <div *ngIf="!loading && stats.recentConversations.length === 0" class="text-center py-4 text-muted">
-          No recent conversations.
+        <div *ngIf="!loading && stats.recentConversations.length === 0" class="empty-state" style="padding: 40px 20px;">
+          <i class="bi bi-chat-heart icon d-block" style="color: #EC4899; background: rgba(236, 72, 153, 0.1);"></i>
+          <h3 style="font-size: 1.1rem;">No recent conversations</h3>
+          <p style="font-size: 0.85rem;">Your latest active chats will appear here.</p>
         </div>
         <div *ngFor="let convo of stats.recentConversations" class="chat-item clickable" [routerLink]="['/inbox']" [queryParams]="{convoId: convo.id}">
           <div class="avatar">{{ convo.contact_name?.charAt(0) }}</div>
@@ -98,18 +100,18 @@
       </div>
       
       <div class="onboarding-card mt-4">
-        <h5>Integration Status</h5>
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="small">WhatsApp API</span>
-          <span class="badge bg-success">Connected</span>
+        <h5 class="mb-3">Integration Status</h5>
+        <div class="integration-item">
+          <span class="small"><i class="bi bi-whatsapp me-2" style="color: #25D366;"></i>WhatsApp API</span>
+          <span class="badge status-connected">Connected</span>
         </div>
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="small">RCS Business</span>
-          <span class="badge bg-warning">Pending</span>
+        <div class="integration-item">
+          <span class="small"><i class="bi bi-chat-left-text me-2" style="color: #6366F1;"></i>RCS Business</span>
+          <span class="badge status-pending">Pending</span>
         </div>
-        <div class="d-flex justify-content-between align-items-center">
-          <span class="small">Facebook/IG</span>
-          <span class="badge bg-secondary">Offline</span>
+        <div class="integration-item border-0 pb-0">
+          <span class="small"><i class="bi bi-facebook me-2" style="color: #3B82F6;"></i>Facebook/IG</span>
+          <span class="badge status-offline">Offline</span>
         </div>
       </div>
     </div>

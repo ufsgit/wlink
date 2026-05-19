@@ -1,11 +1,12 @@
 .inbox-container {
   display: flex;
   height: calc(100vh - 120px);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 6px 16px rgba(0,0,0,0.02);
+  box-shadow: 0 10px 25px -5px rgba(17, 24, 39, 0.05), 0 8px 10px -6px rgba(17, 24, 39, 0.01);
 }
 
 /* ====== SIDEBAR ====== */
@@ -151,10 +152,24 @@
   display: flex; align-items: center; gap: 5px;
 }
 .channel-tab:hover { background: var(--bg-dark); color: var(--text-secondary); }
-.channel-tab.active {
-  background: var(--primary); color: #fff;
-  box-shadow: 0 2px 8px rgba(79,70,229,0.25);
+
+.channel-tab.tab-all.active {
+  background: linear-gradient(135deg, #6366F1, #4F46E5); color: #fff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35); border-color: transparent;
 }
+.channel-tab.tab-whatsapp.active {
+  background: linear-gradient(135deg, #25D366, #128C7E); color: #fff;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35); border-color: transparent;
+}
+.channel-tab.tab-instagram.active {
+  background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF); color: #fff;
+  box-shadow: 0 4px 12px rgba(221, 42, 123, 0.35); border-color: transparent;
+}
+.channel-tab.tab-messenger.active {
+  background: linear-gradient(135deg, #00C6FF, #0072FF); color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 132, 255, 0.35); border-color: transparent;
+}
+
 .active-filter { background: rgba(79,70,229,0.06) !important; color: var(--primary) !important; font-weight: 600; }
 
 /* Conversation List */
@@ -168,16 +183,27 @@
 .empty-convos i { font-size: 2rem; opacity: 0.4; }
 
 .convo-item {
-  display: flex; padding: 14px 20px; gap: 14px;
-  cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.03);
-  transition: all 0.15s; position: relative;
+  display: flex; padding: 16px 20px; gap: 14px;
+  cursor: pointer; border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative;
+  margin: 0 12px 4px;
+  border-radius: 16px;
+  border: 1px solid transparent;
 }
-.convo-item:hover { background: var(--bg-dark); }
+.convo-item:hover { background: rgba(243, 244, 246, 0.8); }
 .convo-item.active {
-  background: rgba(79,70,229,0.04);
-  border-left: 3px solid var(--primary);
-  padding-left: 17px;
+  background: #ffffff;
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.05);
 }
+.convo-item.active::before {
+  content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 4px;
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  border-radius: 0 4px 4px 0;
+}
+.convo-item.active-whatsapp::before { background: linear-gradient(135deg, #25D366, #128C7E); }
+.convo-item.active-instagram::before { background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF); }
+.convo-item.active-messenger::before { background: linear-gradient(135deg, #00C6FF, #0072FF); }
 
 .convo-avatar-wrap { position: relative; flex-shrink: 0; }
 
@@ -309,6 +335,10 @@
   box-shadow: 0 2px 8px rgba(79,70,229,0.2);
 }
 
+.theme-whatsapp .msg-wrapper.sent .msg-bubble { background: linear-gradient(135deg, #25D366, #128C7E); box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2); }
+.theme-instagram .msg-wrapper.sent .msg-bubble { background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF); box-shadow: 0 2px 8px rgba(221, 42, 123, 0.2); }
+.theme-messenger .msg-wrapper.sent .msg-bubble { background: linear-gradient(135deg, #00C6FF, #0072FF); box-shadow: 0 2px 8px rgba(0, 132, 255, 0.2); }
+
 .msg-content { word-break: break-word; white-space: pre-line; }
 
 .msg-meta {
@@ -352,20 +382,36 @@
   cursor: pointer; font-size: 1.1rem; transition: all 0.2s;
   box-shadow: 0 4px 12px rgba(79,70,229,0.25);
 }
+
+.theme-whatsapp .btn-send { background: linear-gradient(135deg, #25D366, #128C7E); box-shadow: 0 4px 12px rgba(37,211,102,0.25); }
+.theme-instagram .btn-send { background: linear-gradient(135deg, #DD2A7B, #8134AF); box-shadow: 0 4px 12px rgba(221,42,123,0.25); }
+.theme-messenger .btn-send { background: linear-gradient(135deg, #00C6FF, #0072FF); box-shadow: 0 4px 12px rgba(0,132,255,0.25); }
+
 .btn-send:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,0.35); }
+.theme-whatsapp .btn-send:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(37,211,102,0.35); }
+.theme-instagram .btn-send:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(221,42,123,0.35); }
+.theme-messenger .btn-send:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(0,132,255,0.35); }
+
 .btn-send:disabled { background: var(--border); cursor: not-allowed; box-shadow: none; }
 
 /* ====== EMPTY STATE ====== */
-.empty-state { align-items: center; justify-content: center; background: #F8FAFC; }
-.empty-state-content { text-align: center; max-width: 400px; }
-.empty-state-icon {
-  width: 80px; height: 80px; margin: 0 auto 24px;
-  background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(99,102,241,0.12));
-  border-radius: 24px; display: flex; align-items: center; justify-content: center;
+.empty-state { 
+  align-items: center; 
+  justify-content: center; 
+  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.08), transparent 40%),
+              radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 40%);
+  background-color: #FAFAFA;
 }
-.empty-state-icon i { font-size: 2rem; color: var(--primary); }
-.empty-state-content h3 { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-.empty-state-content p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+.empty-state-content { text-align: center; max-width: 440px; }
+.empty-state-icon {
+  width: 96px; height: 96px; margin: 0 auto 32px;
+  background: linear-gradient(135deg, #6366F1, #EC4899);
+  border-radius: 32px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 12px 24px -4px rgba(99, 102, 241, 0.35);
+}
+.empty-state-icon i { font-size: 2.5rem; color: #ffffff; }
+.empty-state-content h3 { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 12px; letter-spacing: -0.02em; }
+.empty-state-content p { font-size: 1rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 32px; }
 
 .empty-state-channels { display: flex; justify-content: center; gap: 12px; }
 .es-channel {

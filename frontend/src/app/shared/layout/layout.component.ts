@@ -35,7 +35,11 @@ export class LayoutComponent {
     const segments = url.split('/');
     const last = segments[segments.length - 1].split('?')[0]; // Remove query params
     if (!last || last === 'dashboard') return 'Dashboard Overview';
-    return last.charAt(0).toUpperCase() + last.slice(1);
+    if (last === 'sms') return 'SMS Campaigns';
+    if (last === 'ivr') return 'IVR Flows';
+    if (last === 'rcs') return 'RCS Business';
+    if (last === 'ctwa') return 'Click to WhatsApp';
+    return last.charAt(0).toUpperCase() + last.slice(1).replace(/-/g, ' ');
   }
 
   logout() {

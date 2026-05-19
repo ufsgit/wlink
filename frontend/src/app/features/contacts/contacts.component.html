@@ -5,15 +5,15 @@
       <p class="text-muted">Manage your customer database and communication preferences.</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-outline-secondary" (click)="exportContacts()">
-        <i class="bi bi-download"></i> Export
+      <button class="btn btn-light shadow-sm fw-bold px-4 py-2" (click)="exportContacts()" style="border-radius: 12px; border: 1px solid #e2e8f0;">
+        <i class="bi bi-download me-2"></i> Export
       </button>
-      <label class="btn btn-outline-secondary mb-0">
-        <i class="bi bi-upload"></i> Import
+      <label class="btn btn-light shadow-sm fw-bold px-4 py-2 mb-0" style="border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer;">
+        <i class="bi bi-upload me-2"></i> Import
         <input type="file" (change)="importContacts($event)" hidden accept=".csv">
       </label>
-      <button class="btn btn-primary" (click)="openAddModal()">
-        <i class="bi bi-person-plus"></i> Add Contact
+      <button class="btn btn-primary px-4 py-2 shadow-sm ms-2" (click)="openAddModal()" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #10B981, #059669); border: none;">
+        <i class="bi bi-person-plus me-2"></i> Add Contact
       </button>
     </div>
   </div>
@@ -21,16 +21,16 @@
   <div class="contacts-filters">
     <div class="search-box">
       <i class="bi bi-search"></i>
-      <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search by name, phone or email...">
+      <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search by name, phone or email..." class="premium-input">
     </div>
     <div class="filter-group">
-      <select class="form-select" [(ngModel)]="activeChannel" (change)="loadContacts()">
+      <select class="form-select premium-input" [(ngModel)]="activeChannel" (change)="loadContacts()">
         <option value="">All Channels</option>
         <option value="whatsapp">WhatsApp</option>
         <option value="sms">SMS</option>
         <option value="rcs">RCS</option>
       </select>
-      <select class="form-select" [(ngModel)]="activeTag" (change)="loadContacts()">
+      <select class="form-select premium-input" [(ngModel)]="activeTag" (change)="loadContacts()">
         <option value="">All Tags</option>
         <option *ngFor="let tag of allTags" [value]="tag">{{ tag }}</option>
       </select>
@@ -56,23 +56,29 @@
           </td>
         </tr>
         <tr *ngIf="!loading && contacts.length === 0">
-          <td colspan="6" class="text-center py-5">No contacts found.</td>
+          <td colspan="6" class="text-center py-5">
+            <div class="empty-state d-flex flex-column align-items-center justify-content-center" style="min-height: 200px;">
+              <i class="bi bi-people d-block mb-3" style="font-size: 3rem; color: #10B981; background: rgba(16, 185, 129, 0.1); width: 80px; height: 80px; line-height: 80px; border-radius: 50%;"></i>
+              <h4 style="font-weight: 800; color: #111827;">No Contacts Found</h4>
+              <p class="text-muted mb-0">Try adjusting your filters or search query.</p>
+            </div>
+          </td>
         </tr>
         <tr *ngFor="let contact of contacts">
           <td>
             <div class="d-flex align-items-center gap-3 contact-profile" (click)="goToChat(contact)" title="Click to open chat">
-              <div class="avatar bg-primary text-white shadow-sm">{{ contact.name?.charAt(0) | uppercase }}</div>
+              <div class="avatar shadow-sm" style="background: linear-gradient(135deg, #10B981, #059669);">{{ contact.name?.charAt(0) | uppercase }}</div>
               <div>
                 <div class="fw-bold contact-name">{{ contact.name }}</div>
                 <div class="small text-muted"><i class="bi bi-envelope me-1"></i>{{ contact.email }}</div>
               </div>
             </div>
           </td>
-          <td>{{ contact.phone }}</td>
+          <td class="fw-medium">{{ contact.phone }}</td>
           <td>
             <span class="channel-pill" [class.whatsapp]="contact.channel_preference === 'whatsapp'">
-              <i class="bi" [class.bi-whatsapp]="contact.channel_preference === 'whatsapp'"></i>
-              {{ contact.channel_preference }}
+              <i class="bi" [class.bi-whatsapp]="contact.channel_preference === 'whatsapp'" [class.bi-chat-dots]="contact.channel_preference !== 'whatsapp'"></i>
+              {{ contact.channel_preference | uppercase }}
             </span>
           </td>
           <td>
@@ -87,13 +93,13 @@
             </span>
           </td>
           <td class="text-end">
-            <button class="btn btn-icon text-primary me-2" (click)="goToChat(contact)" title="Message">
+            <button class="btn btn-icon text-primary me-2" (click)="goToChat(contact)" title="Message" style="background: rgba(59, 130, 246, 0.05);">
               <i class="bi bi-chat-dots"></i>
             </button>
-            <button class="btn btn-icon text-warning me-2" (click)="openEditModal(contact)" title="Edit">
+            <button class="btn btn-icon text-primary me-2" (click)="openEditModal(contact)" title="Edit" style="background: rgba(59, 130, 246, 0.05);">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-icon text-danger" (click)="deleteContact(contact.id)" title="Delete">
+            <button class="btn btn-icon text-danger" (click)="deleteContact(contact.id)" title="Delete" style="background: rgba(239, 68, 68, 0.05);">
               <i class="bi bi-trash"></i>
             </button>
           </td>
@@ -101,36 +107,37 @@
       </tbody>
     </table>
   </div>
+</div>
 
-  <!-- Add/Edit Contact Modal -->
+<!-- Add/Edit Contact Modal -->
   <div class="custom-modal" *ngIf="showModal">
     <div class="modal-backdrop" (click)="showModal = false"></div>
-    <div class="modal-card">
-      <div class="modal-header">
-        <h4>{{ editingContactId ? 'Edit Contact' : 'Add New Contact' }}</h4>
+    <div class="modal-card shadow-lg">
+      <div class="modal-header bg-light">
+        <h4 class="mb-0">{{ editingContactId ? 'Edit Contact' : 'Add New Contact' }}</h4>
         <button class="close-btn" (click)="showModal = false">&times;</button>
       </div>
-      <div class="modal-body">
-        <div class="form-group mb-3">
-          <label>Full Name*</label>
-          <input type="text" class="form-control" [(ngModel)]="newContact.name" placeholder="John Doe">
+      <div class="modal-body p-4 p-md-5">
+        <div class="form-group mb-4 pb-2">
+          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Full Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.name" placeholder="John Doe">
         </div>
-        <div class="form-group mb-3">
-          <label>Phone Number* (with country code)</label>
-          <input type="text" class="form-control" [(ngModel)]="newContact.phone" placeholder="+91 9876543210">
+        <div class="form-group mb-4 pb-2">
+          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Phone Number <span class="text-danger">*</span> <span class="text-muted fw-normal">(with country code)</span></label>
+          <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.phone" placeholder="+91 9876543210">
         </div>
-        <div class="form-group mb-3">
-          <label>Email Address</label>
-          <input type="email" class="form-control" [(ngModel)]="newContact.email" placeholder="john@example.com">
+        <div class="form-group mb-4 pb-2">
+          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Email Address</label>
+          <input type="email" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.email" placeholder="john@example.com">
         </div>
-        <div class="form-group mb-3">
-          <label>Tags (comma separated)</label>
-          <input type="text" class="form-control" [(ngModel)]="newContact.tags" placeholder="VIP, Customer, Leads">
-          <span class="small text-muted">Use commas to add multiple categories.</span>
+        <div class="form-group mb-4 pb-2">
+          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Tags <span class="text-muted fw-normal">(comma separated)</span></label>
+          <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.tags" placeholder="VIP, Customer, Leads">
+          <p class="small text-muted mt-2"><i class="bi bi-info-circle me-1"></i> Use commas to add multiple categories.</p>
         </div>
-        <div class="form-group mb-3">
-          <label>Preferred Channel</label>
-          <select class="form-select" [(ngModel)]="newContact.channel_preference">
+        <div class="form-group mb-4 pb-2">
+          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Preferred Channel</label>
+          <select class="form-select form-select-lg premium-input w-100" [(ngModel)]="newContact.channel_preference" style="display: block;">
             <option value="whatsapp">WhatsApp</option>
             <option value="sms">SMS</option>
             <option value="rcs">RCS</option>
@@ -138,12 +145,11 @@
           </select>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline-secondary" (click)="showModal = false">Cancel</button>
-        <button class="btn btn-primary" (click)="saveContact()">
+      <div class="modal-footer bg-light border-top-0 p-4">
+        <button class="btn btn-light px-4 py-2 shadow-sm" (click)="showModal = false" style="border-radius: 12px; font-weight: 600;">Cancel</button>
+        <button class="btn btn-primary px-5 py-2 shadow-sm ms-3" (click)="saveContact()" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #10B981, #059669); border: none;">
           {{ editingContactId ? 'Update Contact' : 'Save Contact' }}
         </button>
       </div>
     </div>
   </div>
-</div>

@@ -47,14 +47,14 @@
 
     <!-- Channel Filter Tabs -->
     <div class="channel-tabs">
-      <button class="channel-tab" [class.active]="!currentChannel" (click)="filterByChannel('')">All</button>
-      <button class="channel-tab" [class.active]="currentChannel === 'whatsapp'" (click)="filterByChannel('whatsapp')">
+      <button class="channel-tab tab-all" [class.active]="!currentChannel" (click)="filterByChannel('')">All</button>
+      <button class="channel-tab tab-whatsapp" [class.active]="currentChannel === 'whatsapp'" (click)="filterByChannel('whatsapp')">
         <i class="bi bi-whatsapp"></i> WhatsApp
       </button>
-      <button class="channel-tab" [class.active]="currentChannel === 'instagram'" (click)="filterByChannel('instagram')">
+      <button class="channel-tab tab-instagram" [class.active]="currentChannel === 'instagram'" (click)="filterByChannel('instagram')">
         <i class="bi bi-instagram"></i> Instagram
       </button>
-      <button class="channel-tab" [class.active]="currentChannel === 'messenger'" (click)="filterByChannel('messenger')">
+      <button class="channel-tab tab-messenger" [class.active]="currentChannel === 'messenger'" (click)="filterByChannel('messenger')">
         <i class="bi bi-messenger"></i> Messenger
       </button>
     </div>
@@ -72,7 +72,12 @@
       
       <div *ngFor="let convo of conversations" 
            class="convo-item" 
-           [class.active]="selectedConvo?.id === convo.id"
+           [ngClass]="{
+             'active': selectedConvo?.id === convo.id,
+             'active-whatsapp': selectedConvo?.id === convo.id && convo.channel === 'whatsapp',
+             'active-instagram': selectedConvo?.id === convo.id && convo.channel === 'instagram',
+             'active-messenger': selectedConvo?.id === convo.id && convo.channel === 'messenger'
+           }"
            (click)="selectConversation(convo)">
         <div class="convo-avatar-wrap">
           <div class="convo-avatar">{{ convo.contact_name?.charAt(0) || 'C' }}</div>
@@ -105,7 +110,11 @@
   </div>
 
   <!-- Main: Chat Area -->
-  <div class="chat-area" *ngIf="selectedConvo; else noSelect">
+  <div class="chat-area" [ngClass]="{
+    'theme-whatsapp': selectedConvo?.channel === 'whatsapp',
+    'theme-instagram': selectedConvo?.channel === 'instagram',
+    'theme-messenger': selectedConvo?.channel === 'messenger'
+  }" *ngIf="selectedConvo; else noSelect">
     <div class="chat-header">
       <div class="chat-header-left">
         <div class="chat-avatar">{{ selectedConvo.contact_name?.charAt(0) }}</div>
