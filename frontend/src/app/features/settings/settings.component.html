@@ -27,7 +27,7 @@
 
     <!-- ===================== WHATSAPP API (META) ===================== -->
     <div *ngIf="activeTab === 'whatsapp'">
-      <div class="meta-banner">
+      <div class="meta-banner" [class.connected]="business.whatsapp_token" [class.disconnected]="!business.whatsapp_token">
         <div class="meta-banner-left">
           <div class="meta-logo">
             <i class="bi bi-whatsapp"></i>
@@ -38,6 +38,7 @@
           </div>
         </div>
         <span class="connection-badge" [class.connected]="business.whatsapp_token" [class.disconnected]="!business.whatsapp_token">
+          <span class="status-dot"></span>
           <i class="bi" [class.bi-check-circle-fill]="business.whatsapp_token" [class.bi-x-circle-fill]="!business.whatsapp_token"></i>
           {{ business.whatsapp_token ? 'Connected' : 'Not Connected' }}
         </span>
@@ -262,110 +263,234 @@
     </div>
 
     <!-- ===================== PROFILE ===================== -->
-    <div *ngIf="activeTab === 'profile'">
+    <div *ngIf="activeTab === 'profile'" class="profile-tab">
       <h3 class="section-title">My Profile</h3>
-      <div class="row g-3" style="max-width: 500px;">
-        <div class="col-12">
-          <label class="form-label">Full Name</label>
-          <input type="text" class="form-control" value="Admin User">
+      <p class="section-desc">Manage your personal information and account settings.</p>
+
+      <div class="profile-layout">
+        <!-- Avatar Card -->
+        <div class="profile-avatar-card">
+          <div class="profile-avatar-circle">
+            <span>{{ business.name ? business.name[0] : 'A' }}</span>
+          </div>
+          <h4 class="profile-display-name">Admin User</h4>
+          <span class="profile-role-badge">Administrator</span>
+          <p class="profile-email-muted">admin&#64;demo.com</p>
         </div>
-        <div class="col-12">
-          <label class="form-label">Email Address</label>
-          <input type="email" class="form-control" value="admin@demo.com" disabled>
-        </div>
-        <div class="col-12 mt-4">
-          <button class="btn btn-primary">Save Changes</button>
+
+        <!-- Profile Form Card -->
+        <div class="profile-form-card">
+          <div class="profile-form-field">
+            <label>Full Name</label>
+            <input type="text" class="form-control" value="Admin User">
+          </div>
+
+          <div class="profile-form-field">
+            <label>Email Address</label>
+            <input type="email" class="form-control" value="admin@demo.com" disabled>
+            <span class="form-hint">Email cannot be changed. Contact support if needed.</span>
+          </div>
+
+          <div class="profile-form-field">
+            <label>Role</label>
+            <input type="text" class="form-control" value="Admin" disabled>
+          </div>
+
+          <div class="profile-form-actions">
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Changes</button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- ===================== BUSINESS ===================== -->
-    <div *ngIf="activeTab === 'business'">
+    <div *ngIf="activeTab === 'business'" class="business-tab">
       <h3 class="section-title">Business Settings</h3>
-      <div style="max-width: 500px;">
-        <div class="form-group mb-3">
-          <label class="form-label">Business Name</label>
-          <input type="text" class="form-control" [(ngModel)]="business.name">
+      <p class="section-desc">Configure your organization's details and subscription.</p>
+
+      <div class="business-form-card">
+        <div class="business-form-grid">
+          <div class="profile-form-field">
+            <label>Business Name</label>
+            <input type="text" class="form-control" [(ngModel)]="business.name" placeholder="Your Business Name">
+          </div>
+
+          <div class="profile-form-field">
+            <label>Current Plan</label>
+            <div class="plan-indicator">
+              <input type="text" class="form-control" [value]="business.plan | titlecase" disabled>
+              <span class="plan-tag">Active</span>
+            </div>
+          </div>
+
+          <div class="profile-form-field">
+            <label>Green Tick Status</label>
+            <input type="text" class="form-control" [value]="business.green_tick_status | titlecase" disabled>
+            <span class="form-hint">Verification is managed by Meta. Apply via Business Manager.</span>
+          </div>
+
+          <div class="profile-form-field">
+            <label>Business ID</label>
+            <input type="text" class="form-control" [value]="business.id || '—'" disabled>
+          </div>
         </div>
-        <div class="form-group mb-3">
-          <label class="form-label">Plan</label>
-          <input type="text" class="form-control" [value]="business.plan" disabled>
+
+        <div class="profile-form-actions">
+          <button class="btn btn-primary" (click)="saveWhatsAppConfig()"><i class="bi bi-check-lg"></i> Save Business Info</button>
         </div>
-        <div class="form-group mb-3">
-          <label class="form-label">Green Tick Status</label>
-          <input type="text" class="form-control" [value]="business.green_tick_status" disabled>
-        </div>
-        <button class="btn btn-primary" (click)="saveWhatsAppConfig()">Save</button>
       </div>
     </div>
 
     <!-- ===================== TEAM ===================== -->
-    <div *ngIf="activeTab === 'team'">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="section-title mb-0">Team Members</h3>
-        <button class="btn btn-primary btn-sm" (click)="showInvite = !showInvite"><i class="bi bi-plus-lg"></i> Invite Agent</button>
+    <div *ngIf="activeTab === 'team'" class="team-tab">
+      <div class="team-header-container">
+        <div>
+          <h3 class="section-title">Team Members</h3>
+          <p class="section-desc">Manage your team's access, roles, and invitations.</p>
+        </div>
+        <button class="btn btn-primary" (click)="showInvite = !showInvite">
+          <i class="bi bi-person-plus-fill me-2"></i> Invite Agent
+        </button>
       </div>
-      <div *ngIf="showInvite" class="invite-form mb-4">
-        <div class="row g-2" style="max-width: 600px;">
-          <div class="col-4"><input type="text" class="form-control form-control-sm" [(ngModel)]="newAgent.name" placeholder="Name"></div>
-          <div class="col-4"><input type="email" class="form-control form-control-sm" [(ngModel)]="newAgent.email" placeholder="Email"></div>
-          <div class="col-2">
-            <select class="form-select form-select-sm" [(ngModel)]="newAgent.role">
-              <option value="agent">Agent</option>
-              <option value="admin">Admin</option>
+
+      <!-- Invite Form Card -->
+      <div *ngIf="showInvite" class="invite-form-card mb-4">
+        <h5>Invite New Team Member</h5>
+        <div class="invite-form-grid">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="form-control" [(ngModel)]="newAgent.name" placeholder="E.g. Jane Doe">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="form-control" [(ngModel)]="newAgent.email" placeholder="jane@example.com">
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select class="form-select" [(ngModel)]="newAgent.role">
+              <option value="agent">Agent (Chat Only)</option>
+              <option value="admin">Admin (Full Access)</option>
             </select>
           </div>
-          <div class="col-2"><button class="btn btn-success btn-sm w-100" (click)="inviteAgent()">Send</button></div>
+          <div class="form-group d-flex align-items-end">
+            <button class="btn btn-primary w-100" (click)="inviteAgent()">
+              <i class="bi bi-send-fill me-2"></i> Send Invite
+            </button>
+          </div>
         </div>
       </div>
-      <table class="table table-hover">
-        <thead class="table-light">
-          <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
-        </thead>
-        <tbody style="font-size: 0.9rem;">
-          <tr *ngFor="let member of team">
-            <td>{{ member.name }}</td>
-            <td>{{ member.email }}</td>
-            <td><span class="badge bg-primary">{{ member.role }}</span></td>
-            <td><span class="badge" [class.bg-success]="member.is_active" [class.bg-secondary]="!member.is_active">{{ member.is_active ? 'Active' : 'Inactive' }}</span></td>
-            <td><button class="btn btn-link btn-sm text-danger p-0" (click)="removeAgent(member.id)"><i class="bi bi-trash"></i></button></td>
-          </tr>
-        </tbody>
-      </table>
+
+      <!-- Team Members Table Card -->
+      <div class="team-table-card">
+        <table class="table custom-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let member of team">
+              <td>
+                <div class="member-cell">
+                  <div class="member-avatar">
+                    {{ member.name ? member.name[0] : 'U' }}
+                  </div>
+                  <div>
+                    <div class="member-name">{{ member.name }}</div>
+                    <div class="member-email">{{ member.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="role-badge" [class.role-admin]="member.role === 'admin'" [class.role-agent]="member.role === 'agent'">
+                  {{ member.role }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [class.status-active]="member.is_active" [class.status-inactive]="!member.is_active">
+                  <span class="status-dot"></span> {{ member.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td class="text-end">
+                <button class="action-btn text-danger" (click)="removeAgent(member.id)" title="Remove Member">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="team.length === 0">
+              <td colspan="4" class="text-center py-5 text-muted">
+                <i class="bi bi-people mb-2" style="font-size: 2rem;"></i>
+                <p class="mb-0">No team members added yet.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ===================== API & WEBHOOKS ===================== -->
     <div *ngIf="activeTab === 'api'">
       <h3 class="section-title">API Configuration</h3>
-      <p class="section-desc mb-4">Paste these callback URLs into your Meta Developer Dashboard for each platform.</p>
-      
-      <div style="max-width: 600px;">
-        <div class="mb-4">
-          <label class="form-label">WhatsApp Webhook URL</label>
+      <p class="section-desc">Paste these callback URLs into your Meta Developer Dashboard for each platform.</p>
+
+      <div class="webhook-cards">
+        <!-- WhatsApp Webhook -->
+        <div class="webhook-card">
+          <div class="webhook-card-header">
+            <div class="webhook-icon whatsapp"><i class="bi bi-whatsapp"></i></div>
+            <div>
+              <h5>WhatsApp Webhook URL</h5>
+              <p>Messages, delivery receipts & read events</p>
+            </div>
+          </div>
           <div class="copy-input">
             <input type="text" class="form-control" [value]="webhookUrl" readonly>
             <button class="copy-btn" (click)="copyToClipboard(webhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
           </div>
         </div>
 
-        <div class="mb-4">
-          <label class="form-label">Instagram Webhook URL</label>
+        <!-- Instagram Webhook -->
+        <div class="webhook-card">
+          <div class="webhook-card-header">
+            <div class="webhook-icon instagram"><i class="bi bi-instagram"></i></div>
+            <div>
+              <h5>Instagram Webhook URL</h5>
+              <p>Direct messages & story replies</p>
+            </div>
+          </div>
           <div class="copy-input">
             <input type="text" class="form-control" [value]="igWebhookUrl" readonly>
             <button class="copy-btn" (click)="copyToClipboard(igWebhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
           </div>
         </div>
 
-        <div class="mb-4">
-          <label class="form-label">Facebook Messenger Webhook URL</label>
+        <!-- Facebook Messenger Webhook -->
+        <div class="webhook-card">
+          <div class="webhook-card-header">
+            <div class="webhook-icon facebook"><i class="bi bi-facebook"></i></div>
+            <div>
+              <h5>Facebook Messenger Webhook URL</h5>
+              <p>Page messages & postback events</p>
+            </div>
+          </div>
           <div class="copy-input">
             <input type="text" class="form-control" [value]="fbWebhookUrl" readonly>
             <button class="copy-btn" (click)="copyToClipboard(fbWebhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
           </div>
         </div>
 
-        <div class="mb-4">
-          <label class="form-label">Verify Token (Shared for Meta)</label>
+        <!-- Verify Token -->
+        <div class="webhook-card">
+          <div class="webhook-card-header">
+            <div class="webhook-icon token"><i class="bi bi-shield-lock"></i></div>
+            <div>
+              <h5>Verify Token</h5>
+              <p>Shared verification token for all Meta webhooks</p>
+            </div>
+          </div>
           <div class="copy-input">
             <input type="text" class="form-control" [value]="business.fb_verify_token || 'wlink_fb_verify_token'" readonly>
             <button class="copy-btn" (click)="copyToClipboard(business.fb_verify_token || 'wlink_fb_verify_token')"><i class="bi bi-clipboard"></i> Copy</button>
@@ -375,41 +500,90 @@
     </div>
 
     <!-- ===================== INTEGRATIONS ===================== -->
-    <div *ngIf="activeTab === 'integrations'">
-      <h3 class="section-title">Third-party Integrations</h3>
-      <div class="integration-card" *ngFor="let intg of integrations">
-        <div class="d-flex align-items-center gap-3">
-          <i class="bi" [ngClass]="intg.icon" [style.color]="intg.color" style="font-size: 1.5rem;"></i>
-          <div>
-            <div style="font-weight: 600;">{{ intg.name }}</div>
-            <div class="text-muted small">{{ intg.desc }}</div>
+    <div *ngIf="activeTab === 'integrations'" class="integrations-tab">
+      <div class="team-header-container">
+        <div>
+          <h3 class="section-title mb-0">App Integrations</h3>
+          <p class="section-desc">Connect WLink with your favorite tools and platforms.</p>
+        </div>
+      </div>
+
+      <div class="integrations-grid">
+        <div class="integration-card-pro" *ngFor="let intg of integrations" [class.connected]="isIntegrated(intg.key)">
+          <div class="intg-header">
+            <div class="intg-icon-wrapper" [style.color]="intg.color">
+              <i class="bi" [ngClass]="intg.icon"></i>
+            </div>
+            <span class="intg-status" *ngIf="isIntegrated(intg.key)">
+              <i class="bi bi-check-circle-fill"></i> Connected
+            </span>
+          </div>
+          
+          <div class="intg-body">
+            <h4>{{ intg.name }}</h4>
+            <p>{{ intg.desc }}</p>
+          </div>
+          
+          <div class="intg-footer">
+            <button class="btn w-100" 
+              [class.btn-connect]="!isIntegrated(intg.key)" 
+              [class.btn-manage]="isIntegrated(intg.key)"
+              (click)="connectIntegration(intg.key)">
+              {{ isIntegrated(intg.key) ? 'Manage Settings' : 'Connect App' }}
+            </button>
           </div>
         </div>
-        <button class="btn btn-sm" 
-          [class.btn-outline-primary]="!isIntegrated(intg.key)" 
-          [class.btn-success]="isIntegrated(intg.key)"
-          (click)="connectIntegration(intg.key)">
-          <i class="bi" [class.bi-plus-lg]="!isIntegrated(intg.key)" [class.bi-check-lg]="isIntegrated(intg.key)"></i>
-          {{ isIntegrated(intg.key) ? 'Connected' : 'Connect' }}
-        </button>
       </div>
     </div>
 
     <!-- ===================== BILLING ===================== -->
-    <div *ngIf="activeTab === 'billing'">
-      <h3 class="section-title">Billing & Plans</h3>
+    <div *ngIf="activeTab === 'billing'" class="billing-tab">
+      <div class="team-header-container">
+        <div>
+          <h3 class="section-title mb-0">Billing & Subscription</h3>
+          <p class="section-desc">Manage your plan, payment methods, and billing history.</p>
+        </div>
+      </div>
+
+      <!-- Current Subscription Banner -->
+      <div class="current-plan-banner" *ngIf="billingData">
+        <div class="banner-left">
+          <div class="plan-icon"><i class="bi bi-star-fill"></i></div>
+          <div>
+            <h4 class="mb-1">Current Plan: <strong>{{ (billingData.plan || 'Starter') | titlecase }}</strong></h4>
+            <p class="mb-0 text-muted small">Your next billing date is <strong>Oct 1, 2026</strong>. <a href="#" class="text-primary text-decoration-none fw-bold">View invoices</a></p>
+          </div>
+        </div>
+        <div class="banner-right">
+          <button class="btn btn-outline-secondary btn-sm me-2">Cancel Plan</button>
+          <button class="btn btn-primary btn-sm">Update Payment Method</button>
+        </div>
+      </div>
+
+      <h4 class="mt-5 mb-4" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.2rem; color: #0f172a;">Available Plans</h4>
+
       <div class="plan-grid" *ngIf="billingData">
         <div class="plan-card" *ngFor="let plan of billingPlans" [class.current]="billingData.plan === plan.key">
           <div class="plan-badge" *ngIf="billingData.plan === plan.key">Current Plan</div>
           <h4>{{ plan.name }}</h4>
-          <div class="plan-price">₹{{ plan.price }}<span>/mo</span></div>
-          <ul>
-            <li><i class="bi bi-check-lg text-success"></i> {{ plan.contacts | number }} Contacts</li>
-            <li><i class="bi bi-check-lg text-success"></i> {{ plan.broadcasts }} Broadcasts/mo</li>
-            <li><i class="bi bi-check-lg text-success"></i> {{ plan.agents }} Team Members</li>
+          <p class="plan-desc text-muted small mb-4">Perfect for {{ plan.name === 'Starter' ? 'small businesses' : plan.name === 'Pro' ? 'growing teams' : 'large enterprises' }}</p>
+          
+          <div class="plan-price">
+            <span class="currency">₹</span>{{ plan.price }}<span class="period">/mo</span>
+          </div>
+          
+          <ul class="plan-features">
+            <li><i class="bi bi-check-circle-fill text-success"></i> <strong>{{ plan.contacts | number }}</strong> Contacts</li>
+            <li><i class="bi bi-check-circle-fill text-success"></i> <strong>{{ plan.broadcasts }}</strong> Broadcasts/mo</li>
+            <li><i class="bi bi-check-circle-fill text-success"></i> <strong>{{ plan.agents }}</strong> Team Members</li>
+            <li><i class="bi bi-check-circle-fill text-success"></i> Basic Support</li>
           </ul>
-          <button class="btn btn-sm w-100" [class.btn-primary]="billingData.plan !== plan.key" [class.btn-outline-secondary]="billingData.plan === plan.key" [disabled]="billingData.plan === plan.key">
-            {{ billingData.plan === plan.key ? 'Active' : 'Upgrade' }}
+          
+          <button class="btn w-100 mt-auto" 
+            [class.btn-primary]="billingData.plan !== plan.key" 
+            [class.btn-outline-secondary]="billingData.plan === plan.key" 
+            [disabled]="billingData.plan === plan.key">
+            {{ billingData.plan === plan.key ? 'Active Plan' : 'Upgrade to ' + plan.name }}
           </button>
         </div>
       </div>

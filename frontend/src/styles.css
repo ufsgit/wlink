@@ -44,6 +44,50 @@
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { font-size: 14px; scroll-behavior: smooth; }
+
+/* Premium Typography & Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  color: #0f172a;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-size: 2.2rem;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-size: 1.75rem;
+  letter-spacing: -0.025em;
+}
+
+h3 {
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+h4 {
+  font-size: 1.15rem;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+h5 {
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+h6 {
+  font-size: 0.875rem;
+  letter-spacing: -0.005em;
+  font-weight: 600;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
   background-color: var(--bg-dark);

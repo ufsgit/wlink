@@ -121,11 +121,54 @@
         {{ pageTitle }}
       </div>
       <div class="top-actions">
-        <button class="btn btn-outline-light btn-sm">
-          <i class="bi bi-question-circle"></i> Support
+        <!-- Support Button -->
+        <button class="support-btn" (click)="toggleSupportModal()" title="Help & Support">
+          <i class="bi bi-question-circle"></i>
+          <span>Support</span>
         </button>
-        <div class="notification-icon">
-          <i class="bi bi-bell"></i>
+
+        <!-- Notification Bell & Dropdown Wrapper -->
+        <div class="notification-wrapper">
+          <button class="notification-trigger" (click)="toggleNotificationDropdown($event)" title="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="notification-badge" *ngIf="unreadNotificationsCount > 0">
+              {{ unreadNotificationsCount }}
+            </span>
+          </button>
+
+          <!-- Floating Notification Dropdown Card -->
+          <div class="notification-dropdown" *ngIf="showNotificationDropdown" (click)="$event.stopPropagation()">
+            <div class="dropdown-header">
+              <h4>Notifications</h4>
+              <button class="btn-text-action" (click)="markAllAsRead()" *ngIf="unreadNotificationsCount > 0">Mark all as read</button>
+            </div>
+            <div class="dropdown-body">
+              <div class="notification-list" *ngIf="notifications.length > 0; else emptyNotifications">
+                <div class="notification-item" *ngFor="let n of notifications" [class.unread]="n.unread" (click)="readNotification(n)">
+                  <div class="notification-icon-wrapper" [class]="n.type">
+                    <i class="bi" [class]="n.icon"></i>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-title-row">
+                      <span class="notification-item-title">{{ n.title }}</span>
+                      <span class="notification-item-time">{{ n.time }}</span>
+                    </div>
+                    <p class="notification-item-message">{{ n.message }}</p>
+                  </div>
+                  <div class="unread-dot" *ngIf="n.unread"></div>
+                </div>
+              </div>
+              <ng-template #emptyNotifications>
+                <div class="empty-notifications">
+                  <i class="bi bi-bell-slash"></i>
+                  <p>All caught up! No new notifications.</p>
+                </div>
+              </ng-template>
+            </div>
+            <div class="dropdown-footer">
+              <button class="btn-view-all" (click)="clearAllNotifications()">Clear All</button>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -134,4 +177,85 @@
       <router-outlet></router-outlet>
     </div>
   </main>
+
+  <!-- Help & Support Center Modal -->
+  <div class="support-modal-backdrop" *ngIf="showSupportModal" (click)="toggleSupportModal()">
+    <div class="support-modal-card" (click)="$event.stopPropagation()">
+      <div class="support-modal-header">
+        <div class="support-header-title">
+          <i class="bi bi-headset"></i>
+          <div>
+            <h3>Help & Support</h3>
+            <p>Get in touch or browse documentation</p>
+          </div>
+        </div>
+        <button class="support-close-btn" (click)="toggleSupportModal()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="support-modal-body">
+        <!-- Support channels grid -->
+        <div class="support-grid">
+          <a href="https://docs.wlink.demo" target="_blank" class="support-card">
+            <div class="support-card-icon docs">
+              <i class="bi bi-book"></i>
+            </div>
+            <div class="support-card-info">
+              <h4>Documentation</h4>
+              <p>Explore guides, APIs, and tutorials</p>
+            </div>
+            <i class="bi bi-arrow-right-short support-arrow"></i>
+          </a>
+
+          <div class="support-card" (click)="openLiveChat()">
+            <div class="support-card-icon chat">
+              <i class="bi bi-chat-left-text"></i>
+            </div>
+            <div class="support-card-info">
+              <h4>Live Chat Support</h4>
+              <p>Chat with our support engineers</p>
+            </div>
+            <i class="bi bi-arrow-right-short support-arrow"></i>
+          </div>
+
+          <a href="mailto:support@wlink.demo" class="support-card">
+            <div class="support-card-icon email">
+              <i class="bi bi-envelope"></i>
+            </div>
+            <div class="support-card-info">
+              <h4>Email Support</h4>
+              <p>Send us a ticket, response in 1 hour</p>
+            </div>
+            <i class="bi bi-arrow-right-short support-arrow"></i>
+          </a>
+
+          <div class="support-card status">
+            <div class="support-card-icon systems">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="support-card-info">
+              <h4>System Status</h4>
+              <p>All channels operating normally</p>
+            </div>
+            <span class="status-pulse-pill">
+              <span class="pulse-dot"></span>
+              Operational
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Form -->
+        <div class="support-quick-message">
+          <h5>Quick Message</h5>
+          <form (submit)="submitQuickSupport($event)">
+            <textarea class="form-control premium-input" placeholder="How can we help you today?" required></textarea>
+            <button type="submit" class="btn btn-primary btn-sm submit-support-btn">
+              <i class="bi bi-send"></i> Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
