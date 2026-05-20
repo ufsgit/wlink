@@ -10,6 +10,7 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
+  perspective: 1200px; /* Enable Z-axis 3D space across all columns */
 }
 
 .stat-card {
@@ -20,10 +21,14 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 12px -4px rgba(17, 24, 39, 0.05);
+  
+  /* 3D Perspective Physics */
+  transform-style: preserve-3d;
+  transform: perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px);
 }
 
 .stat-card::before {
@@ -34,10 +39,26 @@
   transition: all 0.4s ease;
 }
 
+/* Reflective 3D Glass Shine Ray */
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transition: all 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
+  pointer-events: none;
+  transform: skewX(-20deg) translateZ(5px);
+}
+
+/* 3D Translation & Rotational Tilt on Hover */
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(17, 24, 39, 0.08), 0 8px 10px -6px rgba(17, 24, 39, 0.04);
+  transform: perspective(1000px) translateY(-8px) rotateX(6deg) rotateY(-6deg) translateZ(12px);
+  box-shadow: 0 24px 38px -8px rgba(17, 24, 39, 0.12), 0 10px 18px -10px rgba(17, 24, 39, 0.08);
   border-color: transparent;
+}
+
+.stat-card:hover::after {
+  left: 200%;
 }
 
 .stat-card.clickable {
@@ -49,10 +70,10 @@
 .stat-card:nth-child(3) { background: linear-gradient(145deg, #f0fdf4 0%, #ffffff 100%); border-color: #dcfce7; }
 .stat-card:nth-child(4) { background: linear-gradient(145deg, #fffbeb 0%, #ffffff 100%); border-color: #fef3c7; }
 
-.stat-card:nth-child(1):hover { box-shadow: 0 12px 24px -8px rgba(59, 130, 246, 0.25); border-color: #bfdbfe; }
-.stat-card:nth-child(2):hover { box-shadow: 0 12px 24px -8px rgba(168, 85, 247, 0.25); border-color: #e9d5ff; }
-.stat-card:nth-child(3):hover { box-shadow: 0 12px 24px -8px rgba(16, 185, 129, 0.25); border-color: #bbf7d0; }
-.stat-card:nth-child(4):hover { box-shadow: 0 12px 24px -8px rgba(245, 158, 11, 0.25); border-color: #fde68a; }
+.stat-card:nth-child(1):hover { box-shadow: 0 20px 32px -10px rgba(59, 130, 246, 0.28); border-color: #bfdbfe; }
+.stat-card:nth-child(2):hover { box-shadow: 0 20px 32px -10px rgba(168, 85, 247, 0.28); border-color: #e9d5ff; }
+.stat-card:nth-child(3):hover { box-shadow: 0 20px 32px -10px rgba(16, 185, 129, 0.28); border-color: #bbf7d0; }
+.stat-card:nth-child(4):hover { box-shadow: 0 20px 32px -10px rgba(245, 158, 11, 0.28); border-color: #fde68a; }
 
 .stat-icon {
   width: 60px;
@@ -63,12 +84,32 @@
   justify-content: center;
   font-size: 1.75rem;
   box-shadow: inset 0 2px 4px rgba(255,255,255,0.1);
+  
+  /* 3D depth offsets */
+  transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform: translateZ(0px);
+}
+
+/* Elevated icon shadows on Z-pop */
+.stat-card:hover .stat-icon {
+  transform: translateZ(42px) scale(1.08);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.2);
 }
 
 .icon-blue { background: linear-gradient(135deg, #74B9FF 0%, #0984E3 100%); color: #fff; }
 .icon-purple { background: linear-gradient(135deg, #A29BFE 0%, #6C5CE7 100%); color: #fff; }
 .icon-green { background: linear-gradient(135deg, #55EFC4 0%, #00B894 100%); color: #fff; }
 .icon-orange { background: linear-gradient(135deg, #FFEAA7 0%, #FDCB6E 100%); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+.stat-info {
+  /* 3D depth offsets */
+  transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform: translateZ(0px);
+}
+
+.stat-card:hover .stat-info {
+  transform: translateZ(28px);
+}
 
 .stat-info label {
   display: block;

@@ -1,42 +1,51 @@
 <div class="contacts-page">
-  <div class="contacts-header">
+  <!-- Page Header -->
+  <div class="contacts-header d-flex justify-content-between align-items-center" style="display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important;">
     <div class="header-left">
       <h2>Contacts</h2>
-      <p class="text-muted">Manage your customer database and communication preferences.</p>
+      <p class="text-muted mt-1 mb-0">Manage your customer database and communication preferences.</p>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-light shadow-sm fw-bold px-4 py-2" (click)="exportContacts()" style="border-radius: 12px; border: 1px solid #e2e8f0;">
-        <i class="bi bi-download me-2"></i> Export
+    
+    <div class="header-actions" style="display: flex !important; flex-direction: row !important; align-items: center !important; gap: 12px !important;">
+      <button class="btn btn-export shadow-sm" (click)="exportContacts()">
+        <i class="bi bi-download me-1"></i> Export
       </button>
-      <label class="btn btn-light shadow-sm fw-bold px-4 py-2 mb-0" style="border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer;">
-        <i class="bi bi-upload me-2"></i> Import
+      <label class="btn btn-export shadow-sm mb-0" style="cursor: pointer;">
+        <i class="bi bi-upload me-1"></i> Import
         <input type="file" (change)="importContacts($event)" hidden accept=".csv">
       </label>
-      <button class="btn btn-primary px-4 py-2 shadow-sm ms-2" (click)="openAddModal()" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #10B981, #059669); border: none;">
+      <button class="btn btn-primary px-4 py-2 shadow-sm ms-1" (click)="openAddModal()" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #10B981, #059669); border: none;">
         <i class="bi bi-person-plus me-2"></i> Add Contact
       </button>
     </div>
   </div>
 
+  <!-- Filters Row -->
   <div class="contacts-filters">
     <div class="search-box">
       <i class="bi bi-search"></i>
       <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search by name, phone or email..." class="premium-input">
     </div>
+    
     <div class="filter-group">
-      <select class="form-select premium-input" [(ngModel)]="activeChannel" (change)="loadContacts()">
+      <select class="form-select premium-select shadow-sm" [(ngModel)]="activeChannel" (change)="loadContacts()">
         <option value="">All Channels</option>
         <option value="whatsapp">WhatsApp</option>
         <option value="sms">SMS</option>
         <option value="rcs">RCS</option>
+        <option value="instagram">Instagram</option>
+        <option value="facebook">Facebook</option>
+        <option value="website">Website</option>
       </select>
-      <select class="form-select premium-input" [(ngModel)]="activeTag" (change)="loadContacts()">
+      
+      <select class="form-select premium-select shadow-sm" [(ngModel)]="activeTag" (change)="loadContacts()">
         <option value="">All Tags</option>
         <option *ngFor="let tag of allTags" [value]="tag">{{ tag }}</option>
       </select>
     </div>
   </div>
 
+  <!-- Contacts Table Section -->
   <div class="contacts-table-container">
     <table class="contacts-table">
       <thead>
@@ -52,7 +61,7 @@
       <tbody>
         <tr *ngIf="loading">
           <td colspan="6" class="text-center py-5">
-            <div class="spinner-border text-primary"></div>
+            <div class="spinner-border text-success"></div>
           </td>
         </tr>
         <tr *ngIf="!loading && contacts.length === 0">
@@ -64,42 +73,60 @@
             </div>
           </td>
         </tr>
+        
         <tr *ngFor="let contact of contacts">
           <td>
             <div class="d-flex align-items-center gap-3 contact-profile" (click)="goToChat(contact)" title="Click to open chat">
-              <div class="avatar shadow-sm" style="background: linear-gradient(135deg, #10B981, #059669);">{{ contact.name?.charAt(0) | uppercase }}</div>
+              <!-- Animated custom initial badge with deep emerald shadow -->
+              <div class="avatar shadow-sm">{{ contact.name?.charAt(0) | uppercase }}</div>
               <div>
-                <div class="fw-bold contact-name">{{ contact.name }}</div>
-                <div class="small text-muted"><i class="bi bi-envelope me-1"></i>{{ contact.email }}</div>
+                <div class="fw-bold contact-name" style="font-size: 0.95rem;">{{ contact.name }}</div>
+                <div class="contact-email-badge">
+                  <i class="bi bi-envelope-fill"></i>
+                  <span>{{ contact.email }}</span>
+                </div>
               </div>
             </div>
           </td>
-          <td class="fw-medium">{{ contact.phone }}</td>
+          
+          <td class="fw-bold" style="color: #475569;">{{ contact.phone }}</td>
+          
           <td>
-            <span class="channel-pill" [class.whatsapp]="contact.channel_preference === 'whatsapp'">
-              <i class="bi" [class.bi-whatsapp]="contact.channel_preference === 'whatsapp'" [class.bi-chat-dots]="contact.channel_preference !== 'whatsapp'"></i>
-              {{ contact.channel_preference | uppercase }}
+            <span class="channel-pill" [ngClass]="contact.channel_preference || 'whatsapp'">
+              <i class="bi" [ngClass]="{
+                'bi-whatsapp': (contact.channel_preference === 'whatsapp' || !contact.channel_preference),
+                'bi-chat-left-text': contact.channel_preference === 'sms',
+                'bi-chat-dots': contact.channel_preference === 'rcs',
+                'bi-instagram': contact.channel_preference === 'instagram',
+                'bi-facebook': contact.channel_preference === 'facebook',
+                'bi-globe': contact.channel_preference === 'website'
+              }"></i>
+              {{ (contact.channel_preference === 'sms' || contact.channel_preference === 'rcs') ? (contact.channel_preference | uppercase) : (contact.channel_preference || 'whatsapp' | titlecase) }}
             </span>
           </td>
+          
           <td>
             <div class="tag-list">
               <span class="tag-pill" *ngFor="let tag of contact.tags">{{ tag }}</span>
               <span *ngIf="contact.tags.length === 0" class="text-muted small">No tags</span>
             </div>
           </td>
+          
           <td>
-            <span class="badge" [class.bg-success]="contact.opted_in" [class.bg-secondary]="!contact.opted_in">
+            <span class="badge-status" [class.opted-in]="contact.opted_in" [class.pending]="!contact.opted_in">
+              <i class="bi bi-circle-fill" style="font-size: 0.35rem;"></i>
               {{ contact.opted_in ? 'Opted-in' : 'Pending' }}
             </span>
           </td>
+          
           <td class="text-end">
-            <button class="btn btn-icon text-primary me-2" (click)="goToChat(contact)" title="Message" style="background: rgba(59, 130, 246, 0.05);">
+            <button class="btn btn-icon text-primary me-2 shadow-sm" (click)="goToChat(contact)" title="Message" style="background: rgba(59, 130, 246, 0.05);">
               <i class="bi bi-chat-dots"></i>
             </button>
-            <button class="btn btn-icon text-primary me-2" (click)="openEditModal(contact)" title="Edit" style="background: rgba(59, 130, 246, 0.05);">
+            <button class="btn btn-icon text-primary me-2 shadow-sm" (click)="openEditModal(contact)" title="Edit" style="background: rgba(59, 130, 246, 0.05);">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-icon text-danger" (click)="deleteContact(contact.id)" title="Delete" style="background: rgba(239, 68, 68, 0.05);">
+            <button class="btn btn-icon text-danger shadow-sm" (click)="deleteContact(contact.id)" title="Delete" style="background: rgba(239, 68, 68, 0.05);">
               <i class="bi bi-trash"></i>
             </button>
           </td>
@@ -110,46 +137,50 @@
 </div>
 
 <!-- Add/Edit Contact Modal -->
-  <div class="custom-modal" *ngIf="showModal">
-    <div class="modal-backdrop" (click)="showModal = false"></div>
-    <div class="modal-card shadow-lg">
-      <div class="modal-header bg-light">
-        <h4 class="mb-0">{{ editingContactId ? 'Edit Contact' : 'Add New Contact' }}</h4>
-        <button class="close-btn" (click)="showModal = false">&times;</button>
+<div class="custom-modal" *ngIf="showModal">
+  <div class="modal-backdrop" (click)="showModal = false"></div>
+  <div class="modal-card shadow-lg">
+    <div class="modal-header">
+      <h4 class="mb-0">{{ editingContactId ? 'Edit Contact' : 'Add New Contact' }}</h4>
+      <button class="close-btn" (click)="showModal = false">&times;</button>
+    </div>
+    
+    <div class="modal-body p-4 p-md-5">
+      <div class="form-group mb-4 pb-2">
+        <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Full Name <span class="text-danger">*</span></label>
+        <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.name" placeholder="John Doe">
       </div>
-      <div class="modal-body p-4 p-md-5">
-        <div class="form-group mb-4 pb-2">
-          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Full Name <span class="text-danger">*</span></label>
-          <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.name" placeholder="John Doe">
-        </div>
-        <div class="form-group mb-4 pb-2">
-          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Phone Number <span class="text-danger">*</span> <span class="text-muted fw-normal">(with country code)</span></label>
-          <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.phone" placeholder="+91 9876543210">
-        </div>
-        <div class="form-group mb-4 pb-2">
-          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Email Address</label>
-          <input type="email" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.email" placeholder="john@example.com">
-        </div>
-        <div class="form-group mb-4 pb-2">
-          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Tags <span class="text-muted fw-normal">(comma separated)</span></label>
-          <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.tags" placeholder="VIP, Customer, Leads">
-          <p class="small text-muted mt-2"><i class="bi bi-info-circle me-1"></i> Use commas to add multiple categories.</p>
-        </div>
-        <div class="form-group mb-4 pb-2">
-          <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Preferred Channel</label>
-          <select class="form-select form-select-lg premium-input w-100" [(ngModel)]="newContact.channel_preference" style="display: block;">
-            <option value="whatsapp">WhatsApp</option>
-            <option value="sms">SMS</option>
-            <option value="rcs">RCS</option>
-            <option value="instagram">Instagram</option>
-          </select>
-        </div>
+      <div class="form-group mb-4 pb-2">
+        <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Phone Number <span class="text-danger">*</span> <span class="text-muted fw-normal">(with country code)</span></label>
+        <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.phone" placeholder="+91 9876543210">
       </div>
-      <div class="modal-footer bg-light border-top-0 p-4">
-        <button class="btn btn-light px-4 py-2 shadow-sm" (click)="showModal = false" style="border-radius: 12px; font-weight: 600;">Cancel</button>
-        <button class="btn btn-primary px-5 py-2 shadow-sm ms-3" (click)="saveContact()" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #10B981, #059669); border: none;">
-          {{ editingContactId ? 'Update Contact' : 'Save Contact' }}
-        </button>
+      <div class="form-group mb-4 pb-2">
+        <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Email Address</label>
+        <input type="email" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.email" placeholder="john@example.com">
+      </div>
+      <div class="form-group mb-4 pb-2">
+        <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Tags <span class="text-muted fw-normal">(comma separated)</span></label>
+        <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.tags" placeholder="VIP, Customer, Leads">
+        <p class="small text-muted mt-2"><i class="bi bi-info-circle me-1"></i> Use commas to add multiple categories.</p>
+      </div>
+      <div class="form-group mb-4 pb-2">
+        <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Preferred Channel</label>
+        <select class="form-select form-select-lg premium-input w-100" [(ngModel)]="newContact.channel_preference" style="display: block;">
+          <option value="whatsapp">WhatsApp</option>
+          <option value="sms">SMS</option>
+          <option value="rcs">RCS</option>
+          <option value="instagram">Instagram</option>
+          <option value="facebook">Facebook</option>
+          <option value="website">Website</option>
+        </select>
       </div>
     </div>
+    
+    <div class="modal-footer bg-light border-top-0 p-4">
+      <button class="btn btn-light px-4 py-2 shadow-sm" (click)="showModal = false" style="border-radius: 12px; font-weight: 600;">Cancel</button>
+      <button class="btn btn-primary px-5 py-2 shadow-sm ms-3" (click)="saveContact()" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #10B981, #059669); border: none;">
+        {{ editingContactId ? 'Update Contact' : 'Save Contact' }}
+      </button>
+    </div>
   </div>
+</div>
