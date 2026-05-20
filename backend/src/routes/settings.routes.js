@@ -12,6 +12,12 @@ router.put('/team/:id', requireRole('admin', 'superadmin'), c.updateAgent);
 router.delete('/team/:id', requireRole('admin', 'superadmin'), c.deleteAgent);
 router.get('/billing', c.getBilling);
 router.post('/whatsapp/test', requireRole('admin', 'superadmin'), c.testWhatsAppConnection);
-router.post('/instagram/test', requireRole('admin', 'superadmin'), c.testInstagramConnection);
+
+// Social Media Accounts Management Routes
+router.get('/social-accounts', c.getSocialAccounts);
+router.post('/social-accounts', requireRole('admin', 'superadmin'), c.createSocialAccount);
+router.put('/social-accounts/:id', requireRole('admin', 'superadmin'), c.updateSocialAccount);
+router.delete('/social-accounts/:id', requireRole('admin', 'superadmin'), c.deleteSocialAccount);
+router.post('/social-accounts/:id/test', requireRole('admin', 'superadmin'), c.testSocialAccountConnection);
 
 module.exports = router;

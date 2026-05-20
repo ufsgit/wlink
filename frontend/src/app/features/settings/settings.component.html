@@ -1,7 +1,7 @@
 <div class="settings-page">
   <div class="settings-nav">
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'whatsapp'" (click)="activeTab = 'whatsapp'">
-      <i class="bi bi-whatsapp me-2"></i>WhatsApp API
+      <i class="bi bi-cpu me-2"></i>Channels Manager
     </a>
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'profile'" (click)="activeTab = 'profile'">
       <i class="bi bi-person me-2"></i>Profile
@@ -25,238 +25,354 @@
 
   <div class="settings-content">
 
-    <!-- ===================== WHATSAPP API (META) ===================== -->
+    <!-- ===================== CHANNELS MANAGER ===================== -->
     <div *ngIf="activeTab === 'whatsapp'">
-      <div class="meta-banner" [class.connected]="business.whatsapp_token" [class.disconnected]="!business.whatsapp_token">
-        <div class="meta-banner-left">
-          <div class="meta-logo">
-            <i class="bi bi-whatsapp"></i>
+      <!-- Upper Intro Section -->
+      <div class="channels-header-card">
+        <div class="channels-intro-left">
+          <div class="intro-icon">
+            <i class="bi bi-cpu"></i>
           </div>
           <div>
-            <h3>WhatsApp Business API</h3>
-            <p>Connect directly with Meta's Cloud API for the latest WhatsApp features</p>
+            <h3>Connected Channels Hub</h3>
+            <p>Connect and manage multiple social media accounts for WhatsApp, Instagram, and Facebook Messenger. Route incoming messages dynamically to your workspace.</p>
           </div>
         </div>
-        <span class="connection-badge" [class.connected]="business.whatsapp_token" [class.disconnected]="!business.whatsapp_token">
-          <span class="status-dot"></span>
-          <i class="bi" [class.bi-check-circle-fill]="business.whatsapp_token" [class.bi-x-circle-fill]="!business.whatsapp_token"></i>
-          {{ business.whatsapp_token ? 'Connected' : 'Not Connected' }}
-        </span>
+        <button class="btn btn-primary" (click)="openAddChannel()">
+          <i class="bi bi-plus-lg"></i> Connect New Channel
+        </button>
       </div>
 
-      <!-- Setup Guide -->
-      <div class="setup-steps" *ngIf="!business.whatsapp_token">
-        <h4 class="section-title">Quick Setup Guide</h4>
-        <div class="step-list">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-content">
-              <h5>Create a Meta Business Account</h5>
-              <p>Go to <a href="https://business.facebook.com" target="_blank">business.facebook.com</a> and create or select your business account.</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-content">
-              <h5>Create a WhatsApp Business App</h5>
-              <p>Visit <a href="https://developers.facebook.com/apps" target="_blank">developers.facebook.com/apps</a> → Create App → Select "Business" → Add WhatsApp product.</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-content">
-              <h5>Generate Permanent Access Token</h5>
-              <p>In the App Dashboard → WhatsApp → API Setup → Generate a permanent token with <code>whatsapp_business_messaging</code> permission.</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-number">4</div>
-            <div class="step-content">
-              <h5>Copy Your Phone Number ID</h5>
-              <p>From WhatsApp → API Setup, copy the <strong>Phone Number ID</strong> and <strong>WhatsApp Business Account ID</strong>.</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-number">5</div>
-            <div class="step-content">
-              <h5>Configure Webhook</h5>
-              <p>Set the webhook URL below in your Meta App Dashboard and subscribe to <code>messages</code> events.</p>
-            </div>
-          </div>
-        </div>
+      <!-- Live Notification Banner -->
+      <div class="alert-info-box" *ngIf="saveSuccess">
+        <i class="bi bi-check-circle-fill"></i> {{ saveSuccess }}
+      </div>
+      <div class="alert-error-box" *ngIf="saveError">
+        <i class="bi bi-x-circle-fill"></i> {{ saveError }}
       </div>
 
-      <!-- API Credentials Form -->
-      <div class="api-form-section">
-        <h4 class="section-title">Meta API Credentials</h4>
+      <!-- Channels Grid -->
+      <div class="channels-grid-layout mt-4">
+        <!-- Loop over socialAccounts -->
+        <div class="channel-card-premium" *ngFor="let account of socialAccounts"
+          [class.whatsapp]="account.platform === 'whatsapp'"
+          [class.instagram]="account.platform === 'instagram'"
+          [class.facebook]="account.platform === 'facebook'">
+          <!-- Card Glowing Border effect -->
+          <div class="card-glow"></div>
+          
+          <div class="channel-card-body">
+            <!-- Platform Logo & Status -->
+            <div class="channel-header-row">
+              <div class="platform-meta">
+                <div class="platform-badge-icon"
+                  [style.color]="account.platform === 'whatsapp' ? '#25D366' : (account.platform === 'instagram' ? '#E1306C' : '#0084FF')">
+                  <i class="bi"
+                    [class.bi-whatsapp]="account.platform === 'whatsapp'"
+                    [class.bi-instagram]="account.platform === 'instagram'"
+                    [class.bi-messenger]="account.platform === 'facebook'"></i>
+                </div>
+                <div>
+                  <h4 class="channel-title">{{ account.account_name || 'Unnamed Channel' }}</h4>
+                  <span class="platform-text-tag">{{ account.platform === 'facebook' ? 'MESSENGER' : (account.platform | uppercase) }}</span>
+                </div>
+              </div>
 
-        <div class="alert-info-box" *ngIf="saveSuccess">
-          <i class="bi bi-check-circle-fill"></i> {{ saveSuccess }}
+              <!-- Active Status Toggle Switch -->
+              <div class="status-toggle-wrap">
+                <span class="status-indicator-text" [class.active]="account.is_active">{{ account.is_active ? 'Active' : 'Disabled' }}</span>
+                <label class="switch">
+                  <input type="checkbox" [checked]="account.is_active" (change)="toggleSocialAccountActive(account)">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Details List -->
+            <div class="channel-details-box mt-3">
+              <!-- WhatsApp details -->
+              <div class="detail-row" *ngIf="account.platform === 'whatsapp'">
+                <span class="detail-label">Phone Number</span>
+                <span class="detail-val">{{ account.phone_number || '—' }}</span>
+              </div>
+              <div class="detail-row" *ngIf="account.platform === 'whatsapp'">
+                <span class="detail-label">Phone ID</span>
+                <span class="detail-val font-mono">{{ account.phone_id || '—' }}</span>
+              </div>
+              <div class="detail-row" *ngIf="account.platform === 'whatsapp'">
+                <span class="detail-label">WABA ID</span>
+                <span class="detail-val font-mono">{{ account.waba_id || '—' }}</span>
+              </div>
+              <!-- Instagram details -->
+              <div class="detail-row" *ngIf="account.platform === 'instagram'">
+                <span class="detail-label">IG Account ID</span>
+                <span class="detail-val font-mono">{{ account.account_id || '—' }}</span>
+              </div>
+              <div class="detail-row" *ngIf="account.platform === 'instagram'">
+                <span class="detail-label">Facebook Page ID</span>
+                <span class="detail-val font-mono">{{ account.app_id || '—' }}</span>
+              </div>
+              <!-- Facebook Messenger details -->
+              <div class="detail-row" *ngIf="account.platform === 'facebook'">
+                <span class="detail-label">Facebook Page ID</span>
+                <span class="detail-val font-mono">{{ account.app_id || account.account_id || '—' }}</span>
+              </div>
+              <div class="detail-row" *ngIf="account.platform === 'facebook'">
+                <span class="detail-label">Token Status</span>
+                <span class="detail-val" style="color: #0084FF;">{{ account.token ? '● Configured' : '○ Missing' }}</span>
+              </div>
+            </div>
+
+            <!-- Connection Test Result Area -->
+            <div class="connection-test-result mt-3 animate-fade-in" *ngIf="account.testResult">
+              <div class="test-badge" [class.success]="account.testResult.success" [class.failed]="!account.testResult.success">
+                <i class="bi" [class.bi-check-circle-fill]="account.testResult.success" [class.bi-exclamation-triangle-fill]="!account.testResult.success"></i>
+                <span>{{ account.testResult.message }}</span>
+              </div>
+            </div>
+
+            <!-- Card Actions footer -->
+            <div class="channel-card-footer mt-4">
+              <button class="btn btn-sm btn-action-test" (click)="testSocialAccountConnection(account)" [disabled]="account.testing">
+                <i class="bi bi-arrow-repeat spin" *ngIf="account.testing"></i>
+                <i class="bi bi-wifi" *ngIf="!account.testing"></i>
+                {{ account.testing ? 'Testing...' : 'Test Connection' }}
+              </button>
+              
+              <div class="action-btn-group">
+                <button class="btn btn-sm btn-icon-edit" (click)="openEditChannel(account)" title="Edit Credentials">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn btn-sm btn-icon-delete" (click)="deleteSocialAccount(account.id)" title="Disconnect Channel">
+                  <i class="bi bi-trash3-fill"></i>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="alert-error-box" *ngIf="saveError">
-          <i class="bi bi-x-circle-fill"></i> {{ saveError }}
-        </div>
 
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label class="form-label">WhatsApp Business Phone Number</label>
-            <input type="text" class="form-control" [(ngModel)]="business.whatsapp_number" placeholder="+91 9876543210">
-            <span class="form-hint">The phone number registered with your WhatsApp Business Account</span>
+        <!-- Empty State if no accounts exist -->
+        <div class="channels-empty-state" *ngIf="socialAccounts.length === 0">
+          <div class="empty-state-icon">
+            <i class="bi bi-hdd-network-fill"></i>
           </div>
-
-          <div class="form-group full-width">
-            <label class="form-label">Permanent Access Token</label>
-            <div class="token-input">
-              <input [type]="showToken ? 'text' : 'password'" class="form-control" [(ngModel)]="business.whatsapp_token" placeholder="EAABxyz...">
-              <button class="toggle-visibility" (click)="showToken = !showToken">
-                <i class="bi" [class.bi-eye]="!showToken" [class.bi-eye-slash]="showToken"></i>
-              </button>
-            </div>
-            <span class="form-hint">Generate from Meta Developer Dashboard → WhatsApp → API Setup</span>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Phone Number ID</label>
-            <input type="text" class="form-control" [(ngModel)]="business.whatsapp_phone_id" placeholder="1234567890123456">
-            <span class="form-hint">Found in WhatsApp → API Setup</span>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">WhatsApp Business Account ID</label>
-            <input type="text" class="form-control" [(ngModel)]="business.waba_id" placeholder="9876543210123456">
-            <span class="form-hint">Your WABA ID from Business Settings</span>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Facebook Page ID <span class="required">(Required for Instagram)</span></label>
-            <input type="text" class="form-control" [(ngModel)]="business.fb_page_id" placeholder="Page ID for Messenger & Instagram">
-            <span class="form-hint">Find this in Facebook Page Settings → About → Page ID</span>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Facebook Access Token <span class="optional">(optional)</span></label>
-            <div class="token-input">
-              <input [type]="showFbToken ? 'text' : 'password'" class="form-control" [(ngModel)]="business.fb_token" placeholder="EAABxyz...">
-              <button class="toggle-visibility" (click)="showFbToken = !showFbToken">
-                <i class="bi" [class.bi-eye]="!showFbToken" [class.bi-eye-slash]="showFbToken"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Instagram Account ID <span class="optional">(optional)</span></label>
-            <input type="text" class="form-control" [(ngModel)]="business.ig_account_id" placeholder="IG Business Account ID">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Instagram Access Token <span class="required">(Page Access Token Required)</span></label>
-            <div class="token-input">
-              <input [type]="showIgToken ? 'text' : 'password'" class="form-control" [(ngModel)]="business.ig_token" placeholder="EAAS...">
-              <button class="toggle-visibility" (click)="showIgToken = !showIgToken">
-                <i class="bi" [class.bi-eye]="!showIgToken" [class.bi-eye-slash]="showIgToken"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Instagram App ID <span class="optional">(optional)</span></label>
-            <input type="text" class="form-control" [(ngModel)]="business.ig_app_id" placeholder="App ID from Meta Dashboard">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Instagram App Secret <span class="optional">(optional)</span></label>
-            <div class="token-input">
-              <input [type]="showIgSecret ? 'text' : 'password'" class="form-control" [(ngModel)]="business.ig_app_secret" placeholder="App Secret from Meta Dashboard">
-              <button class="toggle-visibility" (click)="showIgSecret = !showIgSecret">
-                <i class="bi" [class.bi-eye]="!showIgSecret" [class.bi-eye-slash]="showIgSecret"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-primary" (click)="saveWhatsAppConfig()" [disabled]="saving">
-            <i class="bi bi-check-lg"></i> {{ saving ? 'Saving...' : 'Save Configuration' }}
-          </button>
-          <button class="btn btn-outline-secondary" (click)="testConnection()" [disabled]="testing">
-            <i class="bi bi-wifi"></i> {{ testing ? 'Test WhatsApp' : 'Test WhatsApp' }}
-          </button>
-          <button class="btn btn-outline-info" (click)="testInstagramConnection()" [disabled]="testing">
-            <i class="bi bi-instagram"></i> {{ testing ? 'Testing...' : 'Test Instagram' }}
+          <h4>No Channels Connected Yet</h4>
+          <p>Bring WLink to life by connecting your first social media communication channel.</p>
+          <button class="btn btn-primary mt-3" (click)="openAddChannel()">
+            <i class="bi bi-plus-lg"></i> Connect Your First Channel
           </button>
         </div>
       </div>
 
       <!-- Webhook Configuration -->
-      <div class="webhook-section">
-        <h4 class="section-title">Webhook Configuration</h4>
-        <p class="section-desc">Paste these values into your Meta App Dashboard → WhatsApp → Configuration → Webhook.</p>
+      <div class="webhook-section mt-5">
+        <h4 class="section-title">Developer Webhook URLs</h4>
+        <p class="section-desc">To receive inbound messages, copy these URLs and paste them into your Meta Developer Dashboard Webhook Configuration.</p>
 
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label class="form-label">Callback URL</label>
+        <div class="webhook-cards mt-3">
+          <!-- WhatsApp Webhook -->
+          <div class="webhook-card">
+            <div class="webhook-card-header">
+              <div class="webhook-icon whatsapp"><i class="bi bi-whatsapp"></i></div>
+              <div>
+                <h5>WhatsApp Webhook Endpoint</h5>
+                <p>Receives messages, statuses, delivery & read events</p>
+              </div>
+            </div>
             <div class="copy-input">
               <input type="text" class="form-control" [value]="webhookUrl" readonly>
-              <button class="copy-btn" (click)="copyToClipboard(webhookUrl)">
-                <i class="bi bi-clipboard"></i> Copy
-              </button>
+              <button class="copy-btn" (click)="copyToClipboard(webhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Verify Token</label>
+          <!-- Instagram Webhook -->
+          <div class="webhook-card">
+            <div class="webhook-card-header">
+              <div class="webhook-icon instagram"><i class="bi bi-instagram"></i></div>
+              <div>
+                <h5>Instagram Webhook Endpoint</h5>
+                <p>Receives direct messages & story replies</p>
+              </div>
+            </div>
             <div class="copy-input">
-              <input type="text" class="form-control" [(ngModel)]="business.fb_verify_token" placeholder="your_verify_token">
-              <button class="copy-btn" (click)="copyToClipboard(business.fb_verify_token)">
-                <i class="bi bi-clipboard"></i>
-              </button>
+              <input type="text" class="form-control" [value]="igWebhookUrl" readonly>
+              <button class="copy-btn" (click)="copyToClipboard(igWebhookUrl)"><i class="bi bi-clipboard"></i> Copy</button>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Subscribed Fields</label>
-            <div class="subscribed-fields">
-              <span class="field-chip">messages</span>
-              <span class="field-chip">message_deliveries</span>
-              <span class="field-chip">message_reads</span>
+          <!-- Verify Token -->
+          <div class="webhook-card">
+            <div class="webhook-card-header">
+              <div class="webhook-icon token"><i class="bi bi-shield-lock"></i></div>
+              <div>
+                <h5>Verify Token</h5>
+                <p>Configure this exact verification token in your Meta App Settings</p>
+              </div>
+            </div>
+            <div class="copy-input">
+              <input type="text" class="form-control" [value]="business.fb_verify_token || 'wlink_fb_verify_token'" readonly>
+              <button class="copy-btn" (click)="copyToClipboard(business.fb_verify_token || 'wlink_fb_verify_token')"><i class="bi bi-clipboard"></i> Copy</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- API Features -->
-      <div class="features-section">
-        <h4 class="section-title">Available API Features</h4>
-        <div class="feature-grid">
-          <div class="feature-card">
-            <i class="bi bi-chat-left-text"></i>
-            <h5>Send Messages</h5>
-            <p>Text, images, videos, docs & interactive buttons</p>
+      <!-- Slide-in Drawer Modal overlay for Adding/Editing Channels -->
+      <div class="channel-modal-overlay" *ngIf="showAddChannelModal" (click)="closeChannelModal()">
+        <div class="channel-modal-drawer" (click)="$event.stopPropagation()">
+          <div class="drawer-header">
+            <div>
+              <h3>{{ editingAccount ? 'Edit Channel Credentials' : 'Connect New Channel' }}</h3>
+              <p>{{ editingAccount ? 'Update settings for this social connection' : 'Add another social profile/API link to this account' }}</p>
+            </div>
+            <button class="close-drawer-btn" (click)="closeChannelModal()">
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
-          <div class="feature-card">
-            <i class="bi bi-file-earmark-richtext"></i>
-            <h5>Template Messages</h5>
-            <p>Submit, manage & send pre-approved templates</p>
+
+          <div class="drawer-body">
+            <!-- Platform Selection Segment (Only editable on create) -->
+            <div class="form-group mb-4">
+              <label class="form-label">Platform Selection</label>
+              <div class="platform-segment" *ngIf="!editingAccount">
+                <label class="segment-option" [class.selected]="newChannel.platform === 'whatsapp'">
+                  <input type="radio" name="platform" value="whatsapp" [(ngModel)]="newChannel.platform">
+                  <i class="bi bi-whatsapp"></i> WhatsApp
+                </label>
+                <label class="segment-option" [class.selected]="newChannel.platform === 'instagram'">
+                  <input type="radio" name="platform" value="instagram" [(ngModel)]="newChannel.platform">
+                  <i class="bi bi-instagram"></i> Instagram
+                </label>
+                <label class="segment-option" [class.selected]="newChannel.platform === 'facebook'">
+                  <input type="radio" name="platform" value="facebook" [(ngModel)]="newChannel.platform">
+                  <i class="bi bi-messenger"></i> Messenger
+                </label>
+              </div>
+              <div class="selected-platform-locked" *ngIf="editingAccount">
+                <i class="bi"
+                  [class.bi-whatsapp]="editingAccount.platform === 'whatsapp'"
+                  [class.bi-instagram]="editingAccount.platform === 'instagram'"
+                  [class.bi-messenger]="editingAccount.platform === 'facebook'"></i>
+                <span>{{ editingAccount.platform === 'facebook' ? 'MESSENGER' : (editingAccount.platform | uppercase) }} (Locked)</span>
+              </div>
+            </div>
+
+            <!-- Shared Fields -->
+            <div class="form-group mb-3">
+              <label class="form-label">Connection Name</label>
+              <input type="text" class="form-control" [(ngModel)]="newChannel.account_name" placeholder="e.g., Main Support, Marketing IG" required>
+              <span class="form-hint">Internal name to easily identify this account inside the workspace</span>
+            </div>
+
+            <!-- Platform Specific Form Fields: WHATSAPP -->
+            <div *ngIf="newChannel.platform === 'whatsapp'">
+              <div class="form-group mb-3">
+                <label class="form-label">WhatsApp Phone Number</label>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.phone_number" placeholder="e.g., +919876543210" required>
+                <span class="form-hint">Include country code without any spaces or plus sign</span>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Phone Number ID</label>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.phone_id" placeholder="15-digit Meta phone ID" required>
+                <span class="form-hint">From Meta Developer Dashboard → WhatsApp → API Setup</span>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">WhatsApp Business Account ID (WABA ID)</label>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.waba_id" placeholder="15-digit WABA ID" required>
+                <span class="form-hint">Found in Meta Developer Dashboard or WhatsApp Business Manager</span>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Permanent Access Token</label>
+                <div class="token-input">
+                  <input [type]="showToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required>
+                  <button class="toggle-visibility" (click)="showToken = !showToken">
+                    <i class="bi" [class.bi-eye]="!showToken" [class.bi-eye-slash]="showToken"></i>
+                  </button>
+                </div>
+                <span class="form-hint">Meta developer Access Token with <code>whatsapp_business_messaging</code> scope</span>
+              </div>
+            </div>
+
+            <!-- Platform Specific Form Fields: INSTAGRAM -->
+            <div *ngIf="newChannel.platform === 'instagram'">
+              <div class="form-group mb-3">
+                <label class="form-label">Instagram Business Account ID</label>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.account_id" placeholder="IG Account ID" required>
+                <span class="form-hint">Instagram Account ID linked to Facebook Page</span>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Facebook Page ID</label>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.app_id" placeholder="Facebook Page ID" required>
+                <span class="form-hint">Page ID linked to this Instagram Business account</span>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Facebook Page Access Token</label>
+                <div class="token-input">
+                  <input [type]="showIgToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAAS..." required>
+                  <button class="toggle-visibility" (click)="showIgToken = !showIgToken">
+                    <i class="bi" [class.bi-eye]="!showIgToken" [class.bi-eye-slash]="showIgToken"></i>
+                  </button>
+                </div>
+                <span class="form-hint">Page Access Token with <code>instagram_basic</code> and <code>instagram_manage_messages</code></span>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Instagram App ID <span class="optional">(optional)</span></label>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.app_secret" placeholder="Instagram/Meta App ID">
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Instagram App Secret <span class="optional">(optional)</span></label>
+                <div class="token-input">
+                  <input [type]="showIgSecret ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.verify_token" placeholder="Instagram/Meta App Secret">
+                  <button class="toggle-visibility" (click)="showIgSecret = !showIgSecret">
+                    <i class="bi" [class.bi-eye]="!showIgSecret" [class.bi-eye-slash]="showIgSecret"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Platform Specific Form Fields: FACEBOOK MESSENGER -->
+            <div *ngIf="newChannel.platform === 'facebook'">
+              <div class="form-group mb-3">
+                <label class="form-label">Facebook Page ID</label>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.app_id" placeholder="e.g., 1139806642546903" required>
+                <span class="form-hint">Found in your Facebook Page Settings → About → Page ID</span>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Facebook Page Access Token</label>
+                <div class="token-input">
+                  <input [type]="showFbToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required>
+                  <button class="toggle-visibility" (click)="showFbToken = !showFbToken">
+                    <i class="bi" [class.bi-eye]="!showFbToken" [class.bi-eye-slash]="showFbToken"></i>
+                  </button>
+                </div>
+                <span class="form-hint">Page Access Token with <code>pages_messaging</code> and <code>pages_read_engagement</code> permissions</span>
+              </div>
+
+              <div class="fb-messenger-info-box">
+                <i class="bi bi-info-circle-fill" style="color: #0084FF;"></i>
+                <div>
+                  <strong>Webhook Setup Reminder</strong>
+                  <p>After saving, go to your Meta Developer Dashboard → Messenger → Webhooks and subscribe to <code>messages</code> and <code>messaging_postbacks</code> events using the webhook URL from the API &amp; Webhooks tab.</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="feature-card">
-            <i class="bi bi-broadcast-pin"></i>
-            <h5>Broadcast Campaigns</h5>
-            <p>Bulk message to tagged contact segments</p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-robot"></i>
-            <h5>AI Chatbots</h5>
-            <p>Auto-reply flows with GPT-powered responses</p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-check-circle"></i>
-            <h5>Green Tick Verification</h5>
-            <p>Apply for official business verification badge</p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-graph-up-arrow"></i>
-            <h5>Real-time Analytics</h5>
-            <p>Delivery, read rates & conversation insights</p>
+
+          <!-- Drawer Footer Actions -->
+          <div class="drawer-footer">
+            <button class="btn btn-outline-secondary" (click)="closeChannelModal()" [disabled]="saving">Cancel</button>
+            <button class="btn btn-primary" (click)="saveSocialAccount()" [disabled]="saving || !newChannel.account_name || !newChannel.token">
+              <span *ngIf="saving"><i class="bi bi-arrow-repeat spin"></i> Saving...</span>
+              <span *ngIf="!saving"><i class="bi bi-check-lg"></i> {{ editingAccount ? 'Update Credentials' : 'Connect Channel' }}</span>
+            </button>
           </div>
         </div>
       </div>

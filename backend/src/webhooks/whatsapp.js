@@ -3,25 +3,26 @@ const { processChatbotFlow } = require('../controllers/chatbots.controller');
 const WhatsappService = require('../services/WhatsappService');
 
 // Helper: send bot reply with detailed logging + text fallback if interactive fails
-async function sendBotReply(to, result, bizId, convId) {
+async function sendBotReply(to, result, bizId, convId, socialAccountId = null) {
   try {
+    const bizParam = { businessId: bizId, socialAccountId };
     if (result.interactive) {
       console.log('[Bot] Sending interactive message to', to, JSON.stringify(result.interactive, null, 2));
-      const sendResult = await WhatsappService.sendInteractiveMessage(to, result.interactive, bizId);
+      const sendResult = await WhatsappService.sendInteractiveMessage(to, result.interactive, bizParam);
       if (!sendResult.success) {
         console.error('[Bot] Interactive send FAILED:', sendResult.message, '— falling back to text');
         // Fall back to plain text with button options listed
         const buttons = result.interactive.action?.buttons || [];
         const optionsText = buttons.map((b, i) => `${i + 1}. ${b.reply?.title}`).join('\n');
         const fallbackText = `${result.interactive.body?.text}\n\n${optionsText}`;
-        await WhatsappService.sendTextMessage(to, fallbackText, bizId);
+        await WhatsappService.sendTextMessage(to, fallbackText, bizParam);
         if (convId) await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, fallbackText]);
         return;
       }
       console.log('[Bot] Interactive message sent successfully');
     } else if (result.response) {
       console.log('[Bot] Sending text message to', to, ':', result.response);
-      const sendResult = await WhatsappService.sendTextMessage(to, result.response, bizId);
+      const sendResult = await WhatsappService.sendTextMessage(to, result.response, bizParam);
       if (!sendResult.success) {
         console.error('[Bot] Text send FAILED:', sendResult.message);
       }
@@ -91,17 +92,26 @@ async function handleWhatsappWebhook(req, res, io) {
           const from = msg.from;
           const msgId = msg.id;
           
-          // Find business by phone_id (with fallback for Meta test ID)
-          let [businesses] = await pool.query('SELECT id FROM businesses WHERE whatsapp_phone_id=?', [phoneId]);
-          if (!businesses.length && (phoneId === '123456123' || !phoneId)) {
-            [businesses] = await pool.query('SELECT id FROM businesses LIMIT 1');
+          // Find business and social account by phone_id (with fallback for Meta test ID)
+          let [accounts] = await pool.query('SELECT id, business_id FROM social_accounts WHERE platform="whatsapp" AND phone_id=? AND is_active=1', [phoneId]);
+          let bizId, socialAccountId = null;
+          if (accounts.length) {
+            bizId = accounts[0].business_id;
+            socialAccountId = accounts[0].id;
+          } else {
+            let [businesses] = await pool.query('SELECT id FROM businesses WHERE whatsapp_phone_id=?', [phoneId]);
+            if (!businesses.length && (phoneId === '123456123' || !phoneId)) {
+              [businesses] = await pool.query('SELECT id FROM businesses LIMIT 1');
+            }
+            if (businesses.length) {
+              bizId = businesses[0].id;
+            }
           }
           
-          if (!businesses.length) continue;
-          const bizId = businesses[0].id;
+          if (!bizId) continue;
 
           // Auto-mark as read
-          await WhatsappService.markAsRead(msgId, bizId);
+          await WhatsappService.markAsRead(msgId, { businessId: bizId, socialAccountId });
 
           let text = msg.text?.body || msg.caption || '';
           const msgType = msg.type || 'text';
@@ -130,11 +140,11 @@ async function handleWhatsappWebhook(req, res, io) {
           let [convos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND status!='resolved' LIMIT 1", [bizId, contactId]);
           let convId;
           if (!convos.length) {
-            const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at) VALUES (?, ?, 'whatsapp', NOW())", [bizId, contactId]);
+            const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at, social_account_id) VALUES (?, ?, 'whatsapp', NOW(), ?)", [bizId, contactId, socialAccountId]);
             convId = result.insertId;
           } else {
             convId = convos[0].id;
-            await pool.query('UPDATE conversations SET last_message_at=NOW() WHERE id=?', [convId]);
+            await pool.query('UPDATE conversations SET last_message_at=NOW(), social_account_id=COALESCE(social_account_id, ?) WHERE id=?', [socialAccountId, convId]);
           }
 
           // Store message
@@ -171,9 +181,9 @@ async function handleWhatsappWebhook(req, res, io) {
               }
               
               if (isSessionActive || isKeywordMatch) {
-                const result = await processChatbotFlow(bot, contactId, text, bizId);
+                const result = await processChatbotFlow(bot, contactId, text, { businessId: bizId, socialAccountId });
                 console.log('[Bot] Flow result:', JSON.stringify(result));
-                await sendBotReply(from, result, bizId, convId);
+                await sendBotReply(from, result, bizId, convId, socialAccountId);
                 botTriggered = true;
                 break; 
               }
@@ -187,9 +197,9 @@ async function handleWhatsappWebhook(req, res, io) {
               );
 
               if (welcomeBot) {
-                const result = await processChatbotFlow(welcomeBot, contactId, text, bizId);
+                const result = await processChatbotFlow(welcomeBot, contactId, text, { businessId: bizId, socialAccountId });
                 console.log('[Bot] Welcome flow result:', JSON.stringify(result));
-                await sendBotReply(from, result, bizId, convId);
+                await sendBotReply(from, result, bizId, convId, socialAccountId);
               }
             }
           }

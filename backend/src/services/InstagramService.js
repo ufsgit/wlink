@@ -7,10 +7,42 @@ class InstagramService {
     this.baseUrl = 'https://graph.facebook.com/v18.0';
   }
 
-  async getCredentials(businessId) {
-    const [rows] = await pool.query('SELECT ig_token, ig_account_id, fb_page_id FROM businesses WHERE id=?', [businessId]);
-    if (rows.length && rows[0].ig_token) {
-      return { token: rows[0].ig_token, accountId: rows[0].ig_account_id, pageId: rows[0].fb_page_id };
+  // Helper to parse business ID and social account ID
+  _resolveParams(businessIdOrObj) {
+    if (businessIdOrObj && typeof businessIdOrObj === 'object') {
+      return {
+        businessId: businessIdOrObj.businessId,
+        socialAccountId: businessIdOrObj.socialAccountId
+      };
+    }
+    return {
+      businessId: businessIdOrObj,
+      socialAccountId: null
+    };
+  }
+
+  async getCredentials(businessIdOrObj) {
+    const { businessId, socialAccountId } = this._resolveParams(businessIdOrObj);
+
+    if (socialAccountId) {
+      const [rows] = await pool.query('SELECT token, account_id, app_id AS pageId FROM social_accounts WHERE id=?', [socialAccountId]);
+      if (rows.length && rows[0].token) {
+        return { token: rows[0].token, accountId: rows[0].account_id, pageId: rows[0].pageId };
+      }
+    }
+
+    if (businessId) {
+      // Look for active instagram account in the new social_accounts table first
+      const [newRows] = await pool.query('SELECT token, account_id, app_id AS pageId FROM social_accounts WHERE business_id=? AND platform="instagram" AND is_active=1 LIMIT 1', [businessId]);
+      if (newRows.length && newRows[0].token) {
+        return { token: newRows[0].token, accountId: newRows[0].account_id, pageId: newRows[0].pageId };
+      }
+
+      // Backward compatibility fallback to business table columns
+      const [rows] = await pool.query('SELECT ig_token, ig_account_id, fb_page_id FROM businesses WHERE id=?', [businessId]);
+      if (rows.length && rows[0].ig_token) {
+        return { token: rows[0].ig_token, accountId: rows[0].ig_account_id, pageId: rows[0].fb_page_id };
+      }
     }
     return { token: null, accountId: null, pageId: null };
   }
@@ -100,9 +132,9 @@ class InstagramService {
     }
   }
 
-  async testConnection(businessId) {
+  async testConnection(businessId, socialAccountId = null) {
     try {
-      const { token, accountId } = await this.getCredentials(businessId);
+      const { token, accountId } = await this.getCredentials({ businessId, socialAccountId });
       if (!token || !accountId) return { success: false, message: 'Instagram credentials not configured' };
 
       const res = await axios.get(`${this.baseUrl}/${accountId}`, {

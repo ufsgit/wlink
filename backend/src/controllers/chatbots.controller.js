@@ -55,6 +55,7 @@ const testChatbot = async (req, res) => {
 };
 
 async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId) {
+  const bizId = typeof businessId === 'object' && businessId !== null ? businessId.businessId : businessId;
   // Bug fix: flow from DB is a JSON string — always parse it
   let flowRaw = chatbot.flow || { nodes: [], edges: [] };
   const flow = typeof flowRaw === 'string' ? JSON.parse(flowRaw) : flowRaw;
@@ -91,7 +92,7 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
        JOIN conversations c ON m.conversation_id = c.id 
        WHERE c.contact_id = ? AND c.business_id = ? 
        ORDER BY m.sent_at DESC LIMIT 10`,
-      [contactId, businessId]
+      [contactId, bizId]
     );
     
     const messages = historyRows.reverse().map(m => ({
@@ -103,7 +104,7 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
       messages.push({ role: 'user', content: inboundMessage });
     }
 
-    const aiResult = await OpenAIService.chat(businessId, messages, chatbot.openai_system_prompt || 'You are a professional assistant.');
+    const aiResult = await OpenAIService.chat(bizId, messages, chatbot.openai_system_prompt || 'You are a professional assistant.');
     if (aiResult.success) {
       response = aiResult.data;
     } else {
@@ -193,7 +194,7 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
   } else if (currentNode.type === 'transfer') {
     response = currentNode.content || 'Transferring you to a human agent...';
     // Update conversation status to 'open' and clear session
-    const [convos] = await pool.query("SELECT id FROM conversations WHERE contact_id=? AND business_id=? AND status!='resolved' LIMIT 1", [contactId, businessId]);
+    const [convos] = await pool.query("SELECT id FROM conversations WHERE contact_id=? AND business_id=? AND status!='resolved' LIMIT 1", [contactId, bizId]);
     if (convos.length) {
       await pool.query("UPDATE conversations SET status='open', assigned_to=NULL WHERE id=?", [convos[0].id]);
     }

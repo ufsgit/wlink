@@ -90,14 +90,118 @@ const testWhatsAppConnection = async (req, res) => {
   }
 };
 
-const testInstagramConnection = async (req, res) => {
+const getSocialAccounts = async (req, res) => {
   try {
-    const InstagramService = require('../services/InstagramService');
-    const result = await InstagramService.testConnection(req.user.businessId);
-    res.json(result);
+    const [rows] = await pool.query('SELECT * FROM social_accounts WHERE business_id=? ORDER BY created_at DESC', [req.user.businessId]);
+    res.json({ success: true, data: rows, message: 'OK' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
-module.exports = { getBusiness, updateBusiness, getTeam, inviteAgent, updateAgent, deleteAgent, getBilling, testWhatsAppConnection, testInstagramConnection };
+const createSocialAccount = async (req, res) => {
+  try {
+    const { platform, account_name, phone_number, phone_id, account_id, token, verify_token, waba_id, app_id, app_secret } = req.body;
+    const [result] = await pool.query(
+      `INSERT INTO social_accounts (business_id, platform, account_name, phone_number, phone_id, account_id, token, verify_token, waba_id, app_id, app_secret) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        req.user.businessId,
+        platform,
+        account_name,
+        phone_number || null,
+        phone_id || null,
+        account_id || null,
+        token,
+        verify_token || null,
+        waba_id || null,
+        app_id || null,
+        app_secret || null
+      ]
+    );
+    const [rows] = await pool.query('SELECT * FROM social_accounts WHERE id=?', [result.insertId]);
+    res.status(201).json({ success: true, data: rows[0], message: 'Social account connected' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+const updateSocialAccount = async (req, res) => {
+  try {
+    const { account_name, phone_number, phone_id, account_id, token, verify_token, waba_id, app_id, app_secret, is_active } = req.body;
+    await pool.query(
+      `UPDATE social_accounts SET 
+        account_name=?, phone_number=?, phone_id=?, account_id=?, token=?, verify_token=?, waba_id=?, app_id=?, app_secret=?, is_active=?
+       WHERE id=? AND business_id=?`,
+      [
+        account_name,
+        phone_number || null,
+        phone_id || null,
+        account_id || null,
+        token,
+        verify_token || null,
+        waba_id || null,
+        app_id || null,
+        app_secret || null,
+        is_active === undefined ? 1 : (is_active ? 1 : 0),
+        req.params.id,
+        req.user.businessId
+      ]
+    );
+    const [rows] = await pool.query('SELECT * FROM social_accounts WHERE id=?', [req.params.id]);
+    res.json({ success: true, data: rows[0], message: 'Social account updated' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+const deleteSocialAccount = async (req, res) => {
+  try {
+    await pool.query('DELETE FROM social_accounts WHERE id=? AND business_id=?', [req.params.id, req.user.businessId]);
+    res.json({ success: true, data: null, message: 'Social account deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+const testSocialAccountConnection = async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM social_accounts WHERE id=? AND business_id=?', [req.params.id, req.user.businessId]);
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Account not found', data: null });
+
+    const account = rows[0];
+    if (account.platform === 'whatsapp') {
+      const WhatsappService = require('../services/WhatsappService');
+      const result = await WhatsappService.testConnection(req.user.businessId, account.id);
+      res.json(result);
+    } else if (account.platform === 'instagram') {
+      const InstagramService = require('../services/InstagramService');
+      const result = await InstagramService.testConnection(req.user.businessId, account.id);
+      res.json(result);
+    } else if (account.platform === 'facebook') {
+      const FacebookService = require('../services/FacebookService');
+      const result = await FacebookService.testConnection(req.user.businessId, account.id);
+      res.json(result);
+    } else {
+      res.json({ success: false, message: 'Testing not supported for this platform', data: null });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+module.exports = { 
+  getBusiness, 
+  updateBusiness, 
+  getTeam, 
+  inviteAgent, 
+  updateAgent, 
+  deleteAgent, 
+  getBilling, 
+  testWhatsAppConnection,
+  getSocialAccounts,
+  createSocialAccount,
+  updateSocialAccount,
+  deleteSocialAccount,
+  testSocialAccountConnection
+};

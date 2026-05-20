@@ -7,9 +7,39 @@ class WhatsappService {
     this.baseUrl = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
   }
 
+  // Helper to parse business ID and social account ID
+  _resolveParams(businessIdOrObj) {
+    if (businessIdOrObj && typeof businessIdOrObj === 'object') {
+      return {
+        businessId: businessIdOrObj.businessId,
+        socialAccountId: businessIdOrObj.socialAccountId
+      };
+    }
+    return {
+      businessId: businessIdOrObj,
+      socialAccountId: null
+    };
+  }
+
   // Get credentials for a specific business from DB, fallback to env
-  async getCredentials(businessId) {
+  async getCredentials(businessIdOrObj) {
+    const { businessId, socialAccountId } = this._resolveParams(businessIdOrObj);
+
+    if (socialAccountId) {
+      const [rows] = await pool.query('SELECT token, phone_id FROM social_accounts WHERE id=?', [socialAccountId]);
+      if (rows.length && rows[0].token && rows[0].phone_id) {
+        return { token: rows[0].token, phoneId: rows[0].phone_id };
+      }
+    }
+
     if (businessId) {
+      // Look for active whatsapp account in the new social_accounts table first
+      const [newRows] = await pool.query('SELECT token, phone_id FROM social_accounts WHERE business_id=? AND platform="whatsapp" AND is_active=1 LIMIT 1', [businessId]);
+      if (newRows.length && newRows[0].token && newRows[0].phone_id) {
+        return { token: newRows[0].token, phoneId: newRows[0].phone_id };
+      }
+
+      // Backward compatibility fallback to business table columns
       const [rows] = await pool.query('SELECT whatsapp_token, whatsapp_phone_id FROM businesses WHERE id=?', [businessId]);
       if (rows.length && rows[0].whatsapp_token && rows[0].whatsapp_phone_id) {
         return { token: rows[0].whatsapp_token, phoneId: rows[0].whatsapp_phone_id };
@@ -27,9 +57,9 @@ class WhatsappService {
   }
 
   // Test connection by calling the Meta Graph API
-  async testConnection(businessId) {
+  async testConnection(businessId, socialAccountId = null) {
     try {
-      const { token, phoneId } = await this.getCredentials(businessId);
+      const { token, phoneId } = await this.getCredentials({ businessId, socialAccountId });
       if (!token || !phoneId) return { success: false, message: 'WhatsApp API credentials not configured' };
 
       const res = await axios.get(`${this.baseUrl}/${phoneId}`, {

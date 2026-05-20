@@ -27,19 +27,31 @@ async function handleInstagramWebhook(req, res, io) {
         queryId = '1139806642546903'; // Use your Page ID here
       }
 
-      const [businesses] = await pool.query(
-        'SELECT id, ig_account_id, fb_page_id FROM businesses WHERE ig_account_id=? OR fb_page_id=?', 
+      // Find business and social account by platform and ID
+      let [accounts] = await pool.query(
+        'SELECT * FROM social_accounts WHERE platform="instagram" AND (account_id=? OR app_id=?) AND is_active=1', 
         [queryId, queryId]
       );
-      
-      if (!businesses.length) {
-        console.log('⚠️ No business found for ID:', entryId);
-        continue;
+      let bizId, socialAccountId = null;
+      let igAccountId, fbPageId;
+      if (accounts.length) {
+        bizId = accounts[0].business_id;
+        socialAccountId = accounts[0].id;
+        igAccountId = accounts[0].account_id;
+        fbPageId = accounts[0].app_id;
+      } else {
+        const [businesses] = await pool.query(
+          'SELECT id, ig_account_id, fb_page_id FROM businesses WHERE ig_account_id=? OR fb_page_id=?', 
+          [queryId, queryId]
+        );
+        if (!businesses.length) {
+          console.log('⚠️ No business found for ID:', entryId);
+          continue;
+        }
+        bizId = businesses[0].id;
+        igAccountId = businesses[0].ig_account_id;
+        fbPageId = businesses[0].fb_page_id;
       }
-      
-      const bizId = businesses[0].id;
-      const igAccountId = businesses[0].ig_account_id;
-      const fbPageId = businesses[0].fb_page_id;
 
       // Handle both 'messaging' (standard) and 'changes' (webhook) formats
       const messaging = entry.messaging || [];
@@ -61,11 +73,19 @@ async function handleInstagramWebhook(req, res, io) {
 
           // ULTIMATE FALLBACK: Fetch manually if text/sender is missing
           if ((!text || !senderId) && mid) {
-            const [biz] = await pool.query('SELECT ig_token FROM businesses WHERE id = ?', [bizId]);
-            if (biz.length && biz[0].ig_token) {
+            let igToken = null;
+            if (socialAccountId) {
+              const [acc] = await pool.query('SELECT token FROM social_accounts WHERE id = ?', [socialAccountId]);
+              if (acc.length) igToken = acc[0].token;
+            }
+            if (!igToken) {
+              const [biz] = await pool.query('SELECT ig_token FROM businesses WHERE id = ?', [bizId]);
+              if (biz.length) igToken = biz[0].ig_token;
+            }
+            if (igToken) {
               try {
                 const axios = require('axios');
-                const response = await axios.get(`https://graph.facebook.com/v18.0/${mid}?fields=message,from,to&access_token=${biz[0].ig_token}`);
+                const response = await axios.get(`https://graph.facebook.com/v18.0/${mid}?fields=message,from,to&access_token=${igToken}`);
                 if (response.data) {
                   text = response.data.message || text;
                   senderId = response.data.from?.id || senderId;
@@ -113,11 +133,11 @@ async function handleInstagramWebhook(req, res, io) {
           let [convos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND channel='instagram' AND status!='resolved' LIMIT 1", [bizId, contactId]);
           let convId;
           if (!convos.length) {
-            const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, status, last_message_at) VALUES (?, ?, 'instagram', 'open', NOW())", [bizId, contactId]);
+            const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, status, last_message_at, social_account_id) VALUES (?, ?, 'instagram', 'open', NOW(), ?)", [bizId, contactId, socialAccountId]);
             convId = result.insertId;
           } else {
             convId = convos[0].id;
-            await pool.query('UPDATE conversations SET last_message_at=NOW() WHERE id=?', [convId]);
+            await pool.query('UPDATE conversations SET last_message_at=NOW(), social_account_id=COALESCE(social_account_id, ?) WHERE id=?', [socialAccountId, convId]);
           }
           
           // Save message
@@ -160,9 +180,9 @@ async function handleInstagramWebhook(req, res, io) {
               }
               
               if (isSessionActive || isKeywordMatch) {
-                const result = await processChatbotFlow(bot, contactId, text, bizId);
+                const result = await processChatbotFlow(bot, contactId, text, { businessId: bizId, socialAccountId });
                 console.log('[Instagram Bot] Flow result:', JSON.stringify(result));
-                await sendInstagramBotReply(senderId, result, bizId, convId);
+                await sendInstagramBotReply(senderId, result, bizId, convId, socialAccountId);
                 botTriggered = true;
                 break; 
               }
@@ -172,8 +192,8 @@ async function handleInstagramWebhook(req, res, io) {
             if (!botTriggered) {
               const welcomeBot = bots.find(b => b.is_welcome);
               if (welcomeBot) {
-                const result = await processChatbotFlow(welcomeBot, contactId, text, bizId);
-                await sendInstagramBotReply(senderId, result, bizId, convId);
+                const result = await processChatbotFlow(welcomeBot, contactId, text, { businessId: bizId, socialAccountId });
+                await sendInstagramBotReply(senderId, result, bizId, convId, socialAccountId);
               }
             }
           }
@@ -189,7 +209,7 @@ async function handleInstagramWebhook(req, res, io) {
   }
 }
 
-async function sendInstagramBotReply(recipientId, flowResult, businessId, conversationId) {
+async function sendInstagramBotReply(recipientId, flowResult, businessId, conversationId, socialAccountId = null) {
   const InstagramService = require('../services/InstagramService');
   const { response, interactive } = flowResult;
   if (!response) return;
@@ -205,7 +225,7 @@ async function sendInstagramBotReply(recipientId, flowResult, businessId, conver
       });
     }
 
-    const res = await InstagramService.sendTextMessage(recipientId, finalMessage, businessId);
+    const res = await InstagramService.sendTextMessage(recipientId, finalMessage, { businessId, socialAccountId });
     if (res.success) {
       await pool.query(
         'INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, ?, ?, ?)',

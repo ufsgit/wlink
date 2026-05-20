@@ -38,7 +38,7 @@ async function runMigrations() {
       opt_in_date TIMESTAMP NULL,
       opt_out_date TIMESTAMP NULL,
       opt_in_source ENUM('manual','link','whatsapp','import') DEFAULT 'manual',
-      channel_preference ENUM('whatsapp','sms','rcs','instagram','facebook','website') DEFAULT 'whatsapp',
+      channel_preference ENUM('whatsapp','sms','rcs') DEFAULT 'whatsapp',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (business_id) REFERENCES businesses(id)
     )`,
@@ -96,7 +96,6 @@ async function runMigrations() {
       business_id INT,
       template_id INT,
       name VARCHAR(255),
-      channel VARCHAR(50) DEFAULT 'whatsapp',
       target_tags JSON,
       target_contact_ids JSON,
       scheduled_at TIMESTAMP NULL,
@@ -355,6 +354,33 @@ async function runMigrations() {
   for (const query of queries) {
     await pool.query(query);
   }
+
+  // Create social_accounts table
+  await pool.query(`CREATE TABLE IF NOT EXISTS social_accounts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    business_id INT NOT NULL,
+    platform ENUM('whatsapp', 'facebook', 'instagram') NOT NULL,
+    account_name VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(20) NULL,
+    phone_id VARCHAR(100) NULL,
+    account_id VARCHAR(100) NULL,
+    token TEXT NOT NULL,
+    verify_token VARCHAR(100) NULL,
+    waba_id VARCHAR(100) NULL,
+    app_id VARCHAR(100) NULL,
+    app_secret VARCHAR(255) NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+  )`);
+
+  // Add social_account_id to conversations if it does not already exist
+  const [columns] = await pool.query("SHOW COLUMNS FROM conversations LIKE 'social_account_id'");
+  if (columns.length === 0) {
+    await pool.query("ALTER TABLE conversations ADD COLUMN social_account_id INT NULL");
+    await pool.query("ALTER TABLE conversations ADD CONSTRAINT fk_conversations_social_account FOREIGN KEY (social_account_id) REFERENCES social_accounts(id) ON DELETE SET NULL");
+  }
+
   console.log('✅ Database migrations completed');
 
   await seedData();

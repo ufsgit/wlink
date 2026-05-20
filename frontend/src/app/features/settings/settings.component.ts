@@ -27,6 +27,23 @@ export class SettingsComponent implements OnInit {
   showInvite = false;
   newAgent = { name: '', email: '', role: 'agent' };
 
+  // Channels Manager (Multi-account)
+  socialAccounts: any[] = [];
+  showAddChannelModal = false;
+  editingAccount: any = null;
+  newChannel: any = {
+    platform: 'whatsapp',
+    account_name: '',
+    phone_number: '',
+    phone_id: '',
+    account_id: '',
+    token: '',
+    verify_token: '',
+    waba_id: '',
+    app_id: '',
+    app_secret: ''
+  };
+
   webhookUrl = '';
   fbWebhookUrl = '';
   igWebhookUrl = '';
@@ -50,6 +67,7 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit() {
     this.loadBusiness();
+    this.loadSocialAccounts();
     const base = window.location.origin.replace('4200', '3000') + '/api/webhooks';
     this.webhookUrl = `${base}/whatsapp`;
     this.fbWebhookUrl = `${base}/facebook`;
@@ -64,6 +82,168 @@ export class SettingsComponent implements OnInit {
       error: () => {
         // Use default empty object
         this.business = { name: '', whatsapp_number: '', whatsapp_token: '', whatsapp_phone_id: '', fb_page_id: '', fb_token: '', ig_account_id: '', ig_token: '', ig_app_id: '', ig_app_secret: '', fb_verify_token: 'wlink_fb_verify_token', waba_id: '' };
+      }
+    });
+  }
+
+  loadSocialAccounts() {
+    this.api.get('/settings/social-accounts').subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.socialAccounts = res.data;
+        }
+      },
+      error: (err) => {
+        this.saveError = err.error?.message || 'Failed to load social accounts.';
+      }
+    });
+  }
+
+  openAddChannel() {
+    this.editingAccount = null;
+    this.newChannel = {
+      platform: 'whatsapp',
+      account_name: '',
+      phone_number: '',
+      phone_id: '',
+      account_id: '',
+      token: '',
+      verify_token: 'wlink_verify_token_' + Math.random().toString(36).substring(2, 9),
+      waba_id: '',
+      app_id: '',
+      app_secret: ''
+    };
+    this.showAddChannelModal = true;
+  }
+
+  openEditChannel(account: any) {
+    this.editingAccount = account;
+    this.newChannel = {
+      platform: account.platform,
+      account_name: account.account_name || '',
+      phone_number: account.phone_number || '',
+      phone_id: account.phone_id || '',
+      account_id: account.account_id || '',
+      token: account.token || '',
+      verify_token: account.verify_token || '',
+      waba_id: account.waba_id || '',
+      app_id: account.app_id || '',
+      app_secret: account.app_secret || ''
+    };
+    this.showAddChannelModal = true;
+  }
+
+  closeChannelModal() {
+    this.showAddChannelModal = false;
+    this.editingAccount = null;
+  }
+
+  saveSocialAccount() {
+    this.saving = true;
+    this.saveSuccess = '';
+    this.saveError = '';
+
+    const payload = this.newChannel;
+    const request = this.editingAccount 
+      ? this.api.put(`/settings/social-accounts/${this.editingAccount.id}`, payload)
+      : this.api.post('/settings/social-accounts', payload);
+
+    request.subscribe({
+      next: (res: any) => {
+        this.saving = false;
+        if (res.success) {
+          this.saveSuccess = this.editingAccount 
+            ? 'Channel updated successfully!' 
+            : 'New channel connected successfully!';
+          this.loadSocialAccounts();
+          this.closeChannelModal();
+          setTimeout(() => this.saveSuccess = '', 5000);
+        }
+      },
+      error: (err) => {
+        this.saving = false;
+        this.saveError = err.error?.message || 'Failed to save channel configuration.';
+        setTimeout(() => this.saveError = '', 7000);
+      }
+    });
+  }
+
+  deleteSocialAccount(id: number) {
+    if (!confirm('Are you sure you want to disconnect this channel? This will stop all message routing for this account.')) {
+      return;
+    }
+    this.api.delete(`/settings/social-accounts/${id}`).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.saveSuccess = 'Channel disconnected successfully.';
+          this.loadSocialAccounts();
+          setTimeout(() => this.saveSuccess = '', 5000);
+        }
+      },
+      error: (err) => {
+        this.saveError = err.error?.message || 'Failed to disconnect channel.';
+        setTimeout(() => this.saveError = '', 7000);
+      }
+    });
+  }
+
+  toggleSocialAccountActive(account: any) {
+    const updatedStatus = account.is_active ? 0 : 1;
+    this.api.put(`/settings/social-accounts/${account.id}`, {
+      account_name: account.account_name,
+      phone_number: account.phone_number,
+      phone_id: account.phone_id,
+      account_id: account.account_id,
+      token: account.token,
+      verify_token: account.verify_token,
+      waba_id: account.waba_id,
+      app_id: account.app_id,
+      app_secret: account.app_secret,
+      is_active: updatedStatus
+    }).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          account.is_active = updatedStatus;
+          this.saveSuccess = `Channel ${updatedStatus ? 'enabled' : 'disabled'} successfully.`;
+          setTimeout(() => this.saveSuccess = '', 3000);
+        }
+      },
+      error: (err) => {
+        this.saveError = err.error?.message || 'Failed to toggle channel status.';
+        setTimeout(() => this.saveError = '', 5000);
+      }
+    });
+  }
+
+  testSocialAccountConnection(account: any) {
+    account.testing = true;
+    account.testResult = null;
+    
+    this.api.post(`/settings/social-accounts/${account.id}/test`, {}).subscribe({
+      next: (res: any) => {
+        account.testing = false;
+        if (res.success) {
+          account.testResult = {
+            success: true,
+            message: account.platform === 'whatsapp' 
+              ? `Connected: ${res.data.verified_name || 'Verified'}`
+              : (account.platform === 'instagram'
+                  ? `Connected: @${res.data.username || 'Instagram'}`
+                  : `Connected: ${res.data.name || 'Facebook Page'}`)
+          };
+        } else {
+          account.testResult = {
+            success: false,
+            message: res.message || 'Connection failed.'
+          };
+        }
+      },
+      error: (err) => {
+        account.testing = false;
+        account.testResult = {
+          success: false,
+          message: err.error?.message || 'Connection failed. Verify API token.'
+        };
       }
     });
   }
@@ -207,12 +387,12 @@ export class SettingsComponent implements OnInit {
   }
 
   isIntegrated(key: string): boolean {
-    if (!this.business) return false;
     switch(key) {
-      case 'whatsapp': return !!this.business.whatsapp_token;
-      case 'instagram': return !!this.business.ig_account_id;
-      case 'facebook': return !!this.business.fb_page_id;
-      case 'openai': return true; // Mocked for now
+      case 'whatsapp':
+      case 'instagram':
+      case 'facebook':
+        return this.socialAccounts.some(acc => acc.platform === key);
+      case 'openai': return false; // Not implemented yet
       default: return false;
     }
   }
