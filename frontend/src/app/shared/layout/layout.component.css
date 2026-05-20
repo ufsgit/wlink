@@ -41,16 +41,20 @@
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  background: linear-gradient(135deg, #4F46E5, #1E1B4B);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: white;
   flex-shrink: 0;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 12px rgba(79, 70, 229, 0.25);
+  padding: 6px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.logo-container:hover .logo-icon {
+  transform: rotate(-6deg) scale(1.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 16px rgba(79, 70, 229, 0.35);
 }
 
 .logo-text {
@@ -59,6 +63,11 @@
   letter-spacing: -0.03em;
   color: #111827;
   white-space: nowrap;
+}
+
+.logo-dot {
+  color: #6366F1;
+  font-weight: 900;
 }
 
 .collapse-toggle {
@@ -149,6 +158,34 @@
   transition: all 0.3s;
 }
 
+.user-profile-clickable {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  padding: 6px;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-profile-clickable:hover {
+  background: #f1f5f9;
+}
+
+.user-profile-clickable:hover .user-avatar {
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  color: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
+}
+
+.sidebar-collapsed .user-profile-clickable {
+  justify-content: center;
+  padding: 4px 0;
+}
+
 .sidebar-collapsed .user-section {
   padding: 16px 12px;
   flex-direction: column;
@@ -164,7 +201,10 @@
   align-items: center;
   justify-content: center;
   color: #475569;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .user-info {

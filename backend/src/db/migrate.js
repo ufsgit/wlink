@@ -96,6 +96,7 @@ async function runMigrations() {
       business_id INT,
       template_id INT,
       name VARCHAR(255),
+      channel VARCHAR(50) DEFAULT 'whatsapp',
       target_tags JSON,
       target_contact_ids JSON,
       scheduled_at TIMESTAMP NULL,
