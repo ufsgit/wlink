@@ -1,6 +1,7 @@
 const pool = require('../db/pool');
 const { processChatbotFlow } = require('../controllers/chatbots.controller');
 const WhatsappService = require('../services/WhatsappService');
+const { normalizePhone } = require('../utils/phoneHelper');
 
 // Helper: send bot reply with detailed logging + text fallback if interactive fails
 async function sendBotReply(to, result, bizId, convId, socialAccountId = null) {
@@ -79,6 +80,18 @@ async function handleWhatsappWebhook(req, res, io) {
     for (const entry of entries) {
       const changes = entry.changes || [];
       for (const change of changes) {
+        if (change.field === 'message_template_status_update') {
+          const value = change.value;
+          const templateId = value.message_template_id;
+          const status = (value.event || '').toLowerCase();
+          
+          if (templateId && status) {
+            console.log(`[Whatsapp Webhook] Template Status Update: ${templateId} -> ${status}`);
+            await pool.query('UPDATE templates SET status=? WHERE wa_template_id=?', [status, templateId]);
+          }
+          continue;
+        }
+
         if (change.field !== 'messages') continue;
         const value = change.value;
         const messages = value.messages || [];
@@ -91,6 +104,11 @@ async function handleWhatsappWebhook(req, res, io) {
         for (const msg of messages) {
           const from = msg.from;
           const msgId = msg.id;
+
+          if (!from || from.trim() === '') {
+            console.log(`[Whatsapp Webhook] Skipped message ${msgId}: 'from' phone number is empty.`);
+            continue;
+          }
           
           // Find business and social account by phone_id (with fallback for Meta test ID)
           let [accounts] = await pool.query('SELECT id, business_id FROM social_accounts WHERE platform="whatsapp" AND phone_id=? AND is_active=1', [phoneId]);
@@ -127,21 +145,29 @@ async function handleWhatsappWebhook(req, res, io) {
           }
 
           // Find or create contact
-          let [contacts] = await pool.query('SELECT id FROM contacts WHERE business_id=? AND phone=?', [bizId, from]);
+          const normalizedFrom = normalizePhone(from);
+          let [contacts] = await pool.query('SELECT id FROM contacts WHERE business_id=? AND phone=?', [bizId, normalizedFrom]);
           let contactId;
           if (!contacts.length) {
-            const [result] = await pool.query("INSERT INTO contacts (business_id, phone, opted_in, opt_in_source, tags) VALUES (?, ?, 1, 'whatsapp', '[\"lead\"]')", [bizId, from]);
+            const [result] = await pool.query("INSERT INTO contacts (business_id, phone, opted_in, opt_in_source, tags) VALUES (?, ?, 1, 'whatsapp', '[\"lead\"]') ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)", [bizId, normalizedFrom]);
             contactId = result.insertId;
           } else {
             contactId = contacts[0].id;
           }
 
-          // Find or create conversation
+          // Find or create conversation (reopen resolved ones to avoid duplicates)
           let [convos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND status!='resolved' LIMIT 1", [bizId, contactId]);
           let convId;
           if (!convos.length) {
-            const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at, social_account_id) VALUES (?, ?, 'whatsapp', NOW(), ?)", [bizId, contactId, socialAccountId]);
-            convId = result.insertId;
+            // Try to reopen the most recent resolved conversation instead of creating a duplicate
+            let [resolvedConvos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND status='resolved' ORDER BY last_message_at DESC LIMIT 1", [bizId, contactId]);
+            if (resolvedConvos.length) {
+              convId = resolvedConvos[0].id;
+              await pool.query("UPDATE conversations SET status='open', last_message_at=NOW(), social_account_id=COALESCE(social_account_id, ?) WHERE id=?", [socialAccountId, convId]);
+            } else {
+              const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at, social_account_id) VALUES (?, ?, 'whatsapp', NOW(), ?)", [bizId, contactId, socialAccountId]);
+              convId = result.insertId;
+            }
           } else {
             convId = convos[0].id;
             await pool.query('UPDATE conversations SET last_message_at=NOW(), social_account_id=COALESCE(social_account_id, ?) WHERE id=?', [socialAccountId, convId]);
@@ -156,7 +182,13 @@ async function handleWhatsappWebhook(req, res, io) {
           // Emit to socket
           if (io) {
             const [newMsg] = await pool.query('SELECT * FROM messages WHERE id=?', [msgResult.insertId]);
-            io.to(`biz_${bizId}`).emit('new_message', { conversationId: convId, message: newMsg[0] });
+            const [contactInfo] = await pool.query('SELECT name, phone FROM contacts WHERE id=?', [contactId]);
+            const contactNameStr = contactInfo[0]?.name || contactInfo[0]?.phone || 'Someone';
+            io.to(`biz_${bizId}`).emit('new_message', { 
+              conversationId: convId, 
+              message: newMsg[0],
+              contactName: contactNameStr
+            });
             io.to(`biz_${bizId}`).emit('conversation_updated', { conversationId: convId });
           }
 
@@ -209,6 +241,9 @@ async function handleWhatsappWebhook(req, res, io) {
         for (const status of statuses) {
           const waId = status.id;
           const newStatus = status.status; // sent, delivered, read, failed
+          if (newStatus === 'failed') {
+            await pool.query('INSERT INTO temp_webhook_logs (payload) VALUES (?)', [JSON.stringify(status)]);
+          }
           await pool.query('UPDATE messages SET status=? WHERE wa_message_id=?', [newStatus, waId]);
           await pool.query('UPDATE broadcast_logs SET status=? WHERE wa_message_id=?', [newStatus, waId]);
           if (newStatus === 'delivered') {

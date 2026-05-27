@@ -7,6 +7,10 @@ const getDashboard = async (req, res) => {
     const [[{ openConversations }]] = await pool.query("SELECT COUNT(*) as openConversations FROM conversations WHERE business_id=? AND status='open'", [bizId]);
     const [[{ messagesToday }]] = await pool.query("SELECT COUNT(*) as messagesToday FROM messages m JOIN conversations c ON m.conversation_id=c.id WHERE c.business_id=? AND DATE(m.sent_at)=CURDATE()", [bizId]);
     const [[{ totalBroadcasts }]] = await pool.query('SELECT COUNT(*) as totalBroadcasts FROM broadcasts WHERE business_id=?', [bizId]);
+    const [[{ contactsYesterday }]] = await pool.query('SELECT COUNT(*) as contactsYesterday FROM contacts WHERE business_id=? AND DATE(created_at)=CURDATE() - INTERVAL 1 DAY', [bizId]);
+    const [[{ messagesYesterday }]] = await pool.query("SELECT COUNT(*) as messagesYesterday FROM messages m JOIN conversations c ON m.conversation_id=c.id WHERE c.business_id=? AND DATE(m.sent_at)=CURDATE() - INTERVAL 1 DAY", [bizId]);
+    const contactsGrowthPct = contactsYesterday > 0 ? Math.round(((totalContacts - contactsYesterday) / contactsYesterday) * 100) : 0;
+    const messagesGrowthPct = messagesYesterday > 0 ? Math.round(((messagesToday - messagesYesterday) / messagesYesterday) * 100) : 0;
     const [[broadcastStats]] = await pool.query('SELECT SUM(total_read) as totalRead, SUM(total_sent) as totalSent FROM broadcasts WHERE business_id=?', [bizId]);
     const readRate = broadcastStats.totalSent > 0 ? Math.round((broadcastStats.totalRead / broadcastStats.totalSent) * 100) : 0;
 
@@ -17,7 +21,7 @@ const getDashboard = async (req, res) => {
       [bizId]
     );
 
-    res.json({ success: true, data: { totalContacts, openConversations, messagesToday, totalBroadcasts, broadcastReadRate: readRate, recentConversations: recentConvs }, message: 'OK' });
+    res.json({ success: true, data: { totalContacts, openConversations, messagesToday, totalBroadcasts, broadcastReadRate: readRate, recentConversations: recentConvs, contactsGrowthPct, messagesGrowthPct }, message: 'OK' });
   } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
 };
 

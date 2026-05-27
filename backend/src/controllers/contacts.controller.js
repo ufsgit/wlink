@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('crypto');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const { normalizePhone } = require('../utils/phoneHelper');
 
 const paginate = (page, limit) => {
   const p = Math.max(1, parseInt(page) || 1);
@@ -46,9 +47,31 @@ const createContact = async (req, res) => {
   try {
     const { name, phone, email, tags, channel_preference } = req.body;
     const bizId = req.user.businessId;
+    const normalized = normalizePhone(phone);
+
+    if (!normalized) {
+      return res.status(400).json({
+        success: false,
+        message: 'Phone number is required',
+        data: null
+      });
+    }
+
+    const [existing] = await pool.query(
+      'SELECT id FROM contacts WHERE business_id = ? AND phone = ?',
+      [bizId, normalized]
+    );
+    if (existing.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'Contact with this phone number already exists',
+        data: null
+      });
+    }
+
     const [result] = await pool.query(
       'INSERT INTO contacts (business_id, name, phone, email, tags, channel_preference) VALUES (?, ?, ?, ?, ?, ?)',
-      [bizId, name, phone, email || null, JSON.stringify(tags || []), channel_preference || 'whatsapp']
+      [bizId, name, normalized || null, email || null, JSON.stringify(tags || []), channel_preference || 'whatsapp']
     );
     const [rows] = await pool.query('SELECT * FROM contacts WHERE id = ?', [result.insertId]);
     res.status(201).json({ success: true, data: rows[0], message: 'Contact created' });
@@ -60,9 +83,44 @@ const createContact = async (req, res) => {
 const updateContact = async (req, res) => {
   try {
     const { name, phone, email, tags, channel_preference } = req.body;
+    const bizId = req.user.businessId;
+
+    const [existingContactRow] = await pool.query('SELECT * FROM contacts WHERE id = ? AND business_id = ?', [req.params.id, bizId]);
+    if (!existingContactRow.length) {
+      return res.status(404).json({ success: false, message: 'Contact not found', data: null });
+    }
+    const existingContact = existingContactRow[0];
+
+    const newName = name !== undefined ? name : existingContact.name;
+    const newEmail = email !== undefined ? email : existingContact.email;
+    const newChannel = channel_preference !== undefined ? channel_preference : existingContact.channel_preference;
+    
+    let newTags = existingContact.tags;
+    if (tags !== undefined) {
+      newTags = tags; // can be string or array from frontend
+    }
+    // Ensure tags is a valid JSON string for MySQL
+    const finalTags = typeof newTags === 'string' ? newTags : JSON.stringify(newTags || []);
+
+    let normalizedPhone = existingContact.phone;
+    if (phone !== undefined) {
+      normalizedPhone = normalizePhone(phone);
+      if (!normalizedPhone) {
+        return res.status(400).json({ success: false, message: 'Phone number is required', data: null });
+      }
+
+      const [existing] = await pool.query(
+        'SELECT id FROM contacts WHERE business_id = ? AND phone = ? AND id != ?',
+        [bizId, normalizedPhone, req.params.id]
+      );
+      if (existing.length) {
+        return res.status(400).json({ success: false, message: 'Contact with this phone number already exists', data: null });
+      }
+    }
+
     await pool.query(
       'UPDATE contacts SET name=?, phone=?, email=?, tags=?, channel_preference=? WHERE id=? AND business_id=?',
-      [name, phone, email || null, JSON.stringify(tags || []), channel_preference || 'whatsapp', req.params.id, req.user.businessId]
+      [newName, normalizedPhone, newEmail, finalTags, newChannel, req.params.id, bizId]
     );
     const [rows] = await pool.query('SELECT * FROM contacts WHERE id = ?', [req.params.id]);
     res.json({ success: true, data: rows[0], message: 'Updated' });
@@ -72,11 +130,39 @@ const updateContact = async (req, res) => {
 };
 
 const deleteContact = async (req, res) => {
+  const conn = await pool.getConnection();
   try {
-    await pool.query('DELETE FROM contacts WHERE id = ? AND business_id = ?', [req.params.id, req.user.businessId]);
+    await conn.beginTransaction();
+    const id = req.params.id;
+    const bizId = req.user.businessId;
+
+    const [rows] = await conn.query('SELECT id FROM contacts WHERE id = ? AND business_id = ?', [id, bizId]);
+    if (!rows.length) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, message: 'Contact not found', data: null });
+    }
+
+    await conn.query('DELETE FROM broadcast_logs WHERE contact_id = ?', [id]);
+    await conn.query('DELETE FROM chatbot_sessions WHERE contact_id = ?', [id]);
+    await conn.query('DELETE FROM drip_enrollments WHERE contact_id = ?', [id]);
+    await conn.query('DELETE FROM orders WHERE contact_id = ?', [id]);
+
+    const [convs] = await conn.query('SELECT id FROM conversations WHERE contact_id = ?', [id]);
+    if (convs.length) {
+      const convIds = convs.map(c => c.id);
+      await conn.query('DELETE FROM messages WHERE conversation_id IN (?)', [convIds]);
+      await conn.query('DELETE FROM conversations WHERE contact_id = ?', [id]);
+    }
+
+    await conn.query('DELETE FROM contacts WHERE id = ?', [id]);
+
+    await conn.commit();
     res.json({ success: true, data: null, message: 'Deleted' });
   } catch (err) {
+    await conn.rollback();
     res.status(500).json({ success: false, message: err.message, data: null });
+  } finally {
+    conn.release();
   }
 };
 
@@ -90,12 +176,26 @@ const importContacts = async (req, res) => {
       const name = row.name || row.Name || '';
       const phone = row.phone || row.Phone || '';
       const email = row.email || row.Email || '';
-      const tags = row.tags ? JSON.stringify(row.tags.split('|').map(t => t.trim())) : '[]';
+      const parsedTags = row.tags ? row.tags.split('|').map(t => t.trim()) : [];
+      if (!parsedTags.includes('imported')) {
+        parsedTags.push('imported');
+      }
+      const tags = JSON.stringify(parsedTags);
       if (!phone) continue;
-      await pool.query(
-        'INSERT INTO contacts (business_id, name, phone, email, tags, opt_in_source) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name)',
-        [bizId, name, phone, email, tags, 'import']
-      );
+
+      const normalized = normalizePhone(phone);
+      const [existing] = await pool.query('SELECT id FROM contacts WHERE business_id=? AND phone=?', [bizId, normalized]);
+      if (existing.length) {
+        await pool.query(
+          'UPDATE contacts SET name=?, email=?, tags=JSON_MERGE_PRESERVE(tags, ?) WHERE id=?',
+          [name, email, tags, existing[0].id]
+        );
+      } else {
+        await pool.query(
+          'INSERT INTO contacts (business_id, name, phone, email, tags, opt_in_source) VALUES (?, ?, ?, ?, ?, ?)',
+          [bizId, name, normalized, email, tags, 'import']
+        );
+      }
       imported++;
     }
     fs.unlinkSync(req.file.path);
@@ -182,7 +282,7 @@ const getUniqueTags = async (req, res) => {
   try {
     const bizId = req.user.businessId;
     console.log(`[DEBUG] Fetching unique tags for Biz ID: ${bizId}`);
-    const [rows] = await pool.query('SELECT tags FROM contacts WHERE business_id = ? AND opted_in = 1', [bizId]);
+    const [rows] = await pool.query('SELECT tags FROM contacts WHERE business_id = ?', [bizId]);
     console.log(`[DEBUG] Found ${rows.length} contacts with tags`);
     const tags = new Set();
     rows.forEach(r => {

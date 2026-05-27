@@ -65,4 +65,60 @@ const submitTemplate = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
 };
 
-module.exports = { getTemplates, createTemplate, updateTemplate, deleteTemplate, submitTemplate };
+const syncTemplates = async (req, res) => {
+  try {
+    const bizId = req.user.businessId;
+    const result = await WhatsappService.syncTemplates(bizId);
+    
+    if (!result.success) {
+      return res.status(400).json({ success: false, message: result.message });
+    }
+
+    const metaTemplates = result.data || [];
+    let syncedCount = 0;
+
+    for (const t of metaTemplates) {
+      let headerType = 'none', headerContent = null, body = '', footer = null, buttons = [];
+      
+      const components = t.components || [];
+      for (const comp of components) {
+        if (comp.type === 'HEADER') {
+          headerType = (comp.format || 'TEXT').toLowerCase();
+          headerContent = comp.text || null;
+        } else if (comp.type === 'BODY') {
+          body = comp.text || '';
+        } else if (comp.type === 'FOOTER') {
+          footer = comp.text || null;
+        } else if (comp.type === 'BUTTONS') {
+          buttons = comp.buttons || [];
+        }
+      }
+
+      // Format status (Meta uses uppercase: APPROVED, REJECTED, PENDING)
+      let status = (t.status || 'pending').toLowerCase();
+      
+      // Upsert by name, language and business_id
+      const [existing] = await pool.query('SELECT id FROM templates WHERE business_id=? AND name=? AND language=?', [bizId, t.name, t.language]);
+      
+      if (existing.length > 0) {
+        await pool.query(
+          'UPDATE templates SET category=?, header_type=?, header_content=?, body=?, footer=?, buttons=?, status=?, wa_template_id=? WHERE id=?',
+          [t.category, headerType, headerContent, body, footer, JSON.stringify(buttons), status, t.id, existing[0].id]
+        );
+      } else {
+        await pool.query(
+          'INSERT INTO templates (business_id, name, category, language, header_type, header_content, body, footer, buttons, status, wa_template_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [bizId, t.name, t.category, t.language, headerType, headerContent, body, footer, JSON.stringify(buttons), status, t.id]
+        );
+      }
+      syncedCount++;
+    }
+
+    res.json({ success: true, message: `Synced ${syncedCount} templates`, data: { count: syncedCount } });
+  } catch (err) {
+    console.error(`[DEBUG] syncTemplates Error: ${err.message}`);
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+module.exports = { getTemplates, createTemplate, updateTemplate, deleteTemplate, submitTemplate, syncTemplates };

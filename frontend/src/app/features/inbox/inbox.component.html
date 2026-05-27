@@ -43,6 +43,16 @@
         <i class="bi bi-search"></i>
         <input type="text" placeholder="Search conversations..." [(ngModel)]="searchQuery" (input)="onSearch()">
       </div>
+
+      <!-- Chat Assignment Switcher -->
+      <div class="chat-type-switcher">
+        <button class="switcher-btn" [class.active]="currentAssignment === 'all'" (click)="filterByAssignment('all')">
+          <i class="bi bi-chat-left-text-fill"></i> All Chats
+        </button>
+        <button class="switcher-btn" [class.active]="currentAssignment === 'me'" (click)="filterByAssignment('me')">
+          <i class="bi bi-person-badge-fill"></i> Assigned to Me
+        </button>
+      </div>
     </div>
 
     <!-- Channel Filter Tabs -->
@@ -149,7 +159,7 @@
               <i class="bi bi-envelope-open me-2"></i> Mark as Unread
             </a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)">
+            <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)" (click)="deleteSelectedConversation(); showHeaderMenu = false">
               <i class="bi bi-trash me-2"></i> Delete Conversation
             </a></li>
           </ul>
@@ -265,6 +275,18 @@
             </div>
           </div>
         </div>
+        <div class="info-row" *ngIf="parsedTags(selectedConvo).length > 0">
+          <div class="info-row-icon"><i class="bi bi-tags"></i></div>
+          <div>
+            <div class="info-row-label">Tags</div>
+            <div class="tags-badge-display">
+              <span *ngFor="let t of parsedTags(selectedConvo)" class="tag-pill-display">
+                {{ t }}
+                <button class="remove-tag-btn" (click)="removeTagFromContact(t)" title="Remove Tag">&times;</button>
+              </span>
+            </div>
+          </div>
+        </div>
         <div class="info-row" *ngIf="selectedConvo.assigned_name">
           <div class="info-row-icon"><i class="bi bi-person-badge"></i></div>
           <div>
@@ -278,16 +300,26 @@
 
       <div class="info-section">
         <div class="info-section-title">Quick Actions</div>
-        <div class="quick-actions">
-          <button class="quick-action-btn" (click)="editContact()"><i class="bi bi-pencil-square"></i> Edit Contact</button>
-          <button class="quick-action-btn" (click)="addTag()"><i class="bi bi-tag"></i> Add Tag</button>
-          <button class="quick-action-btn" (click)="assignAgent()"><i class="bi bi-person-plus"></i> Assign Agent</button>
-          
-          <button *ngIf="selectedConvo.opted_in !== 0" class="quick-action-btn danger" (click)="blockContact()">
-            <i class="bi bi-slash-circle"></i> Block Contact
+        <div class="quick-actions-grid">
+          <button class="qa-card" (click)="editContact()">
+            <div class="qa-icon qa-blue"><i class="bi bi-pencil-square"></i></div>
+            <span class="qa-label">Edit Contact</span>
           </button>
-          <button *ngIf="selectedConvo.opted_in === 0" class="quick-action-btn" style="color: var(--success); border-color: rgba(16,185,129,0.2);" (click)="unblockContact()">
-            <i class="bi bi-check-circle"></i> Unblock Contact
+          <button class="qa-card" (click)="addTag()">
+            <div class="qa-icon qa-violet"><i class="bi bi-tag-fill"></i></div>
+            <span class="qa-label">Add Tag</span>
+          </button>
+          <button class="qa-card" (click)="assignAgent()">
+            <div class="qa-icon qa-indigo"><i class="bi bi-person-plus-fill"></i></div>
+            <span class="qa-label">Assign Agent</span>
+          </button>
+          <button *ngIf="selectedConvo.opted_in !== 0" class="qa-card qa-card-danger" (click)="blockContact()">
+            <div class="qa-icon qa-red"><i class="bi bi-slash-circle-fill"></i></div>
+            <span class="qa-label">Block Contact</span>
+          </button>
+          <button *ngIf="selectedConvo.opted_in === 0" class="qa-card qa-card-success" (click)="unblockContact()">
+            <div class="qa-icon qa-green"><i class="bi bi-check-circle-fill"></i></div>
+            <span class="qa-label">Unblock</span>
           </button>
         </div>
       </div>
@@ -313,44 +345,236 @@
   </ng-template>
 
   <!-- Product Picker Modal -->
-  <div class="product-modal-overlay" *ngIf="showProductPicker" (click)="showProductPicker = false">
-    <div class="product-modal" (click)="$event.stopPropagation()">
-      <div class="product-modal-header">
-        <h5><i class="bi bi-bag me-2"></i>Send Product</h5>
-        <button class="close-btn" (click)="showProductPicker = false">&times;</button>
+  <div class="premium-modal-overlay" *ngIf="showProductPicker" (click)="showProductPicker = false">
+    <div class="premium-modal" (click)="$event.stopPropagation()">
+      <div class="premium-modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge primary">
+            <i class="bi bi-bag-fill"></i>
+          </div>
+          <div>
+            <h5>Send Product</h5>
+            <p>Select a product to share with this contact</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="showProductPicker = false">&times;</button>
       </div>
-      <div class="product-modal-search">
-        <i class="bi bi-search"></i>
-        <input type="text" [(ngModel)]="productSearch" placeholder="Search products...">
+      
+      <!-- Search Input -->
+      <div style="padding: 18px 24px 0;">
+        <div class="input-wrapper-with-icon">
+          <i class="bi bi-search"></i>
+          <input type="text" [(ngModel)]="productSearch" placeholder="Search products by name or SKU...">
+        </div>
       </div>
-      <div class="product-modal-body">
+
+      <div class="premium-modal-body" style="padding-top: 18px;">
         <div *ngIf="loadingProducts" class="text-center py-4">
           <div class="spinner-border spinner-border-sm text-primary"></div>
           <p class="text-muted small mt-2">Loading products...</p>
         </div>
         <div *ngIf="!loadingProducts && filteredProducts.length === 0" class="text-center py-4">
-          <i class="bi bi-box-seam display-4 text-muted"></i>
+          <div class="modal-icon-badge danger" style="margin: 0 auto 12px; width: 44px; height: 44px;">
+            <i class="bi bi-box-seam"></i>
+          </div>
           <p class="text-muted mt-2">No products found</p>
         </div>
-        <div class="product-grid">
-          <div *ngFor="let product of filteredProducts" class="product-card" (click)="sendProduct(product)">
-            <div class="product-icon">
-              <i class="bi bi-box-seam"></i>
+        
+        <div class="premium-item-list" *ngIf="!loadingProducts && filteredProducts.length > 0">
+          <div *ngFor="let product of filteredProducts" class="premium-item-card" (click)="sendProduct(product)">
+            <div class="premium-item-icon blue">
+              <i class="bi bi-box-seam-fill"></i>
             </div>
-            <div class="product-details">
-              <div class="product-name">{{ product.name }}</div>
-              <div class="product-price">₹{{ product.price }}</div>
-              <div class="product-stock">
-                <span class="stock-dot" [class.in-stock]="product.stock > 0" [class.out-of-stock]="product.stock <= 0"></span>
-                {{ product.stock > 0 ? product.stock + ' in stock' : 'Out of stock' }}
+            <div class="premium-item-details">
+              <div class="premium-item-title">{{ product.name }}</div>
+              <div class="premium-item-subtitle">
+                <span style="font-weight: 700; color: #059669;">₹{{ product.price }}</span>
+                <span style="color: #cbd5e1;">•</span>
+                <span class="stock-dot" [class.in-stock]="product.stock > 0" [class.out-of-stock]="product.stock <= 0" style="display: inline-block; vertical-align: middle;"></span>
+                <span style="font-size: 0.76rem;">{{ product.stock > 0 ? product.stock + ' in stock' : 'Out of stock' }}</span>
               </div>
             </div>
-            <div class="product-send-icon">
-              <i class="bi bi-send"></i>
+            <div class="premium-item-arrow" style="color: #3b82f6;">
+              <i class="bi bi-send-fill"></i>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Agent Picker Modal -->
+  <div class="premium-modal-overlay" *ngIf="showAgentPicker" (click)="showAgentPicker = false">
+    <div class="premium-modal" (click)="$event.stopPropagation()">
+      <div class="premium-modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge primary">
+            <i class="bi bi-person-plus-fill"></i>
+          </div>
+          <div>
+            <h5>Assign Agent</h5>
+            <p>Select an agent to handle this conversation</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="showAgentPicker = false">&times;</button>
+      </div>
+      <div class="premium-modal-body" style="padding-top: 18px;">
+        <div *ngIf="loadingAgents" class="text-center py-4">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+          <p class="text-muted small mt-2">Loading agents...</p>
+        </div>
+        <div *ngIf="!loadingAgents && availableAgents.length === 0" class="text-center py-4">
+          <div class="modal-icon-badge danger" style="margin: 0 auto 12px; width: 44px; height: 44px;">
+            <i class="bi bi-person-x"></i>
+          </div>
+          <p class="text-muted mt-2">No active agents found</p>
+        </div>
+        
+        <div class="premium-item-list" *ngIf="!loadingAgents && availableAgents.length > 0">
+          <div *ngFor="let agent of availableAgents" class="premium-item-card" (click)="selectAgentToAssign(agent)">
+            <div class="premium-item-icon indigo">
+              <i class="bi bi-person-badge-fill"></i>
+            </div>
+            <div class="premium-item-details">
+              <div class="premium-item-title">{{ agent.name }}</div>
+              <div class="premium-item-subtitle">
+                <span class="role-badge" [ngClass]="agent.role">
+                  {{ agent.role }}
+                </span>
+              </div>
+            </div>
+            <div class="premium-item-arrow">
+              <i class="bi bi-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Contact Modal -->
+  <div class="premium-modal-overlay" *ngIf="showEditContactModal" (click)="showEditContactModal = false">
+    <div class="premium-modal" (click)="$event.stopPropagation()">
+      <div class="premium-modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge primary">
+            <i class="bi bi-pencil-square"></i>
+          </div>
+          <div>
+            <h5>Edit Contact Details</h5>
+            <p>Update the contact information for this conversation</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="showEditContactModal = false">&times;</button>
+      </div>
+      <div class="premium-modal-body">
+        <div class="input-field-group">
+          <label>Full Name</label>
+          <div class="input-wrapper-with-icon">
+            <i class="bi bi-person"></i>
+            <input type="text" [(ngModel)]="editContactName" placeholder="Enter contact name..." (keyup.enter)="saveContactEdit()">
+          </div>
+        </div>
+      </div>
+      <div class="premium-modal-footer">
+        <button class="btn-cancel" (click)="showEditContactModal = false">Cancel</button>
+        <button class="btn-primary-gradient" (click)="saveContactEdit()" [disabled]="!editContactName.trim()">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Tag Modal -->
+  <div class="premium-modal-overlay" *ngIf="showAddTagModal" (click)="showAddTagModal = false">
+    <div class="premium-modal" (click)="$event.stopPropagation()">
+      <div class="premium-modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge primary">
+            <i class="bi bi-tag"></i>
+          </div>
+          <div>
+            <h5>Add Custom Tag</h5>
+            <p>Categorize this contact for easy filtering</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="showAddTagModal = false">&times;</button>
+      </div>
+      <div class="premium-modal-body">
+        <div class="input-field-group">
+          <label>Tag Label</label>
+          <div class="input-wrapper-with-icon">
+            <i class="bi bi-tag-fill"></i>
+            <input type="text" [(ngModel)]="newTagName" placeholder="e.g. VIP, Warm Lead, Support..." (keyup.enter)="saveTag()">
+          </div>
+        </div>
+
+        <div class="suggested-tags-container" style="margin-top: 20px;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 10px; display: block;">
+            Select from Suggested or Existing Tags
+          </label>
+          <div class="tags-badge-grid">
+            <span *ngFor="let tag of availableTagsToSelect" 
+                  class="tag-pill-selectable" 
+                  [class.selected]="newTagName === tag"
+                  (click)="newTagName = tag">
+              {{ tag }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="premium-modal-footer">
+        <button class="btn-cancel" (click)="showAddTagModal = false">Cancel</button>
+        <button class="btn-primary-gradient" (click)="saveTag()" [disabled]="!newTagName.trim()">
+          Add Tag
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Dialog -->
+  <div class="premium-modal-overlay" *ngIf="showConfirmModal" (click)="showConfirmModal = false">
+    <div class="premium-modal confirmation" (click)="$event.stopPropagation()">
+      <div class="premium-modal-header border-0 pb-0">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge" [ngClass]="confirmType">
+            <i class="bi" [ngClass]="{
+              'bi-exclamation-triangle': confirmType === 'danger',
+              'bi-check-circle': confirmType === 'success',
+              'bi-info-circle': confirmType === 'primary'
+            }"></i>
+          </div>
+          <div>
+            <h5>{{ confirmTitle }}</h5>
+            <p>Please confirm your action below</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="showConfirmModal = false">&times;</button>
+      </div>
+      <div class="premium-modal-body py-3">
+        <p class="confirmation-message">{{ confirmMessage }}</p>
+      </div>
+      <div class="premium-modal-footer border-0 pt-0">
+        <button class="btn-cancel" (click)="showConfirmModal = false">Cancel</button>
+          <button class="btn-confirm-action" [ngClass]="confirmType" (click)="confirmActionCallback()">
+          Confirm Action
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium Toast Notification Container -->
+  <div class="premium-toast-container">
+    <div *ngFor="let toast of toasts" class="premium-toast" [ngClass]="toast.type">
+      <div class="toast-icon">
+        <i class="bi" [ngClass]="{
+          'bi-check-circle-fill': toast.type === 'success',
+          'bi-exclamation-circle-fill': toast.type === 'danger',
+          'bi-info-circle-fill': toast.type === 'info'
+        }"></i>
+      </div>
+      <div class="toast-message">{{ toast.message }}</div>
+      <button class="toast-close" (click)="removeToast(toast.id)">&times;</button>
     </div>
   </div>
 </div>

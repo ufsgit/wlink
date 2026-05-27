@@ -3,12 +3,7 @@
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'whatsapp'" (click)="activeTab = 'whatsapp'">
       <i class="bi bi-cpu me-2"></i>Channels Manager
     </a>
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'profile'" (click)="activeTab = 'profile'">
-      <i class="bi bi-person me-2"></i>Profile
-    </a>
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'business'" (click)="activeTab = 'business'">
-      <i class="bi bi-building me-2"></i>Business
-    </a>
+
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'team'" (click)="activeTab = 'team'; loadTeam()">
       <i class="bi bi-people me-2"></i>Team
     </a>
@@ -18,9 +13,7 @@
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'integrations'" (click)="activeTab = 'integrations'">
       <i class="bi bi-plug me-2"></i>Integrations
     </a>
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'billing'" (click)="activeTab = 'billing'; loadBilling()">
-      <i class="bi bi-credit-card me-2"></i>Billing
-    </a>
+
   </div>
 
   <div class="settings-content">
@@ -280,14 +273,14 @@
 
               <div class="form-group mb-3">
                 <label class="form-label">WhatsApp Business Account ID (WABA ID)</label>
-                <input type="text" class="form-control" [(ngModel)]="newChannel.waba_id" placeholder="15-digit WABA ID" required>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.waba_id" placeholder="15-digit WABA ID" required autocomplete="off">
                 <span class="form-hint">Found in Meta Developer Dashboard or WhatsApp Business Manager</span>
               </div>
 
               <div class="form-group mb-3">
                 <label class="form-label">Permanent Access Token</label>
                 <div class="token-input">
-                  <input [type]="showToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required>
+                  <input [type]="showToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required autocomplete="new-password">
                   <button class="toggle-visibility" (click)="showToken = !showToken">
                     <i class="bi" [class.bi-eye]="!showToken" [class.bi-eye-slash]="showToken"></i>
                   </button>
@@ -300,7 +293,7 @@
             <div *ngIf="newChannel.platform === 'instagram'">
               <div class="form-group mb-3">
                 <label class="form-label">Instagram Business Account ID</label>
-                <input type="text" class="form-control" [(ngModel)]="newChannel.account_id" placeholder="IG Account ID" required>
+                <input type="text" class="form-control" [(ngModel)]="newChannel.account_id" placeholder="IG Account ID" required autocomplete="off">
                 <span class="form-hint">Instagram Account ID linked to Facebook Page</span>
               </div>
 
@@ -313,7 +306,7 @@
               <div class="form-group mb-3">
                 <label class="form-label">Facebook Page Access Token</label>
                 <div class="token-input">
-                  <input [type]="showIgToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAAS..." required>
+                  <input [type]="showIgToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAAS..." required autocomplete="new-password">
                   <button class="toggle-visibility" (click)="showIgToken = !showIgToken">
                     <i class="bi" [class.bi-eye]="!showIgToken" [class.bi-eye-slash]="showIgToken"></i>
                   </button>
@@ -329,7 +322,7 @@
               <div class="form-group mb-3">
                 <label class="form-label">Instagram App Secret <span class="optional">(optional)</span></label>
                 <div class="token-input">
-                  <input [type]="showIgSecret ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.verify_token" placeholder="Instagram/Meta App Secret">
+                  <input [type]="showIgSecret ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.verify_token" placeholder="Instagram/Meta App Secret" autocomplete="new-password">
                   <button class="toggle-visibility" (click)="showIgSecret = !showIgSecret">
                     <i class="bi" [class.bi-eye]="!showIgSecret" [class.bi-eye-slash]="showIgSecret"></i>
                   </button>
@@ -348,7 +341,7 @@
               <div class="form-group mb-3">
                 <label class="form-label">Facebook Page Access Token</label>
                 <div class="token-input">
-                  <input [type]="showFbToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required>
+                  <input [type]="showFbToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required autocomplete="new-password">
                   <button class="toggle-visibility" (click)="showFbToken = !showFbToken">
                     <i class="bi" [class.bi-eye]="!showFbToken" [class.bi-eye-slash]="showFbToken"></i>
                   </button>

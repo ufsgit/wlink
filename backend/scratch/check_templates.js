@@ -2,7 +2,7 @@ const pool = require('../src/db/pool');
 
 async function main() {
   try {
-    const [rows] = await pool.query("SELECT * FROM broadcasts WHERE business_id = 3");
+    const [rows] = await pool.query('SELECT * FROM templates');
     console.log(JSON.stringify(rows, null, 2));
   } catch (err) {
     console.error(err);

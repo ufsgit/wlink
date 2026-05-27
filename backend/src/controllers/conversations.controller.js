@@ -167,4 +167,29 @@ const createConversation = async (req, res) => {
   }
 };
 
-module.exports = { getConversations, getMessages, sendMessage, assignConversation, updateStatus, createConversation };
+const deleteConversation = async (req, res) => {
+  try {
+    const convId = req.params.id;
+    const bizId = req.user.businessId;
+    
+    // Verify conversation belongs to this business
+    const [convRows] = await pool.query('SELECT id FROM conversations WHERE id = ? AND business_id = ?', [convId, bizId]);
+    if (!convRows.length) return res.status(404).json({ success: false, message: 'Conversation not found', data: null });
+
+    // Delete messages first due to foreign key constraints
+    await pool.query('DELETE FROM messages WHERE conversation_id = ?', [convId]);
+    
+    // Delete conversation
+    await pool.query('DELETE FROM conversations WHERE id = ? AND business_id = ?', [convId, bizId]);
+
+    if (req.app.get('io')) {
+      req.app.get('io').to(`biz_${bizId}`).emit('conversation_deleted', { conversationId: convId });
+    }
+
+    res.json({ success: true, data: null, message: 'Conversation deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+module.exports = { getConversations, getMessages, sendMessage, assignConversation, updateStatus, createConversation, deleteConversation };

@@ -25,7 +25,7 @@ export class ContactsComponent implements OnInit {
     name: '',
     phone: '',
     email: '',
-    tags: 'lead',
+    tags: ['lead'],
     channel_preference: 'whatsapp'
   };
 
@@ -67,7 +67,7 @@ export class ContactsComponent implements OnInit {
 
   openAddModal() {
     this.editingContactId = null;
-    this.newContact = { name: '', phone: '', email: '', tags: 'lead', channel_preference: 'whatsapp' };
+    this.newContact = { name: '', phone: '', email: '', tags: ['lead'], channel_preference: 'whatsapp' };
     this.showModal = true;
   }
 
@@ -78,7 +78,7 @@ export class ContactsComponent implements OnInit {
       name: contact.name || '',
       phone: contact.phone || '',
       email: contact.email || '',
-      tags: tagsArray.join(', '),
+      tags: [...tagsArray],
       channel_preference: contact.channel_preference || 'whatsapp'
     };
     this.showModal = true;
@@ -92,7 +92,7 @@ export class ContactsComponent implements OnInit {
 
     const payload = {
       ...this.newContact,
-      tags: this.newContact.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t)
+      tags: this.newContact.tags
     };
 
     const request = this.editingContactId 
@@ -154,5 +154,24 @@ export class ContactsComponent implements OnInit {
       },
       error: (err) => alert(err.error?.message || 'Error opening chat')
     });
+  }
+
+  toggleTag(tag: string) {
+    const idx = this.newContact.tags.indexOf(tag);
+    if (idx > -1) {
+      this.newContact.tags.splice(idx, 1);
+    } else {
+      this.newContact.tags.push(tag);
+    }
+  }
+
+  addNewTag(tag: string) {
+    const trimmed = tag.trim();
+    if (trimmed && !this.newContact.tags.includes(trimmed)) {
+      this.newContact.tags.push(trimmed);
+      if (!this.allTags.includes(trimmed)) {
+        this.allTags.push(trimmed);
+      }
+    }
   }
 }

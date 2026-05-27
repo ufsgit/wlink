@@ -63,7 +63,7 @@ const getAudienceCount = async (req, res) => {
 const sendBroadcast = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT b.*, t.name as tname, t.body as tbody FROM broadcasts b JOIN templates t ON b.template_id=t.id WHERE b.id=? AND b.business_id=?',
+      'SELECT b.*, t.name as tname, t.body as tbody, t.language as tlanguage FROM broadcasts b JOIN templates t ON b.template_id=t.id WHERE b.id=? AND b.business_id=?',
       [req.params.id, req.user.businessId]
     );
     if (!rows.length) return res.status(404).json({ success: false, message: 'Not found', data: null });
@@ -73,11 +73,14 @@ const sendBroadcast = async (req, res) => {
     // Resolve contacts
     let contacts = [];
     const targetTags = typeof broadcast.target_tags === 'string' ? JSON.parse(broadcast.target_tags) : (broadcast.target_tags || []);
+    const targetContactIds = typeof broadcast.target_contact_ids === 'string' ? JSON.parse(broadcast.target_contact_ids) : (broadcast.target_contact_ids || []);
 
     // Fetch all opted-in contacts for this business
     const [allContacts] = await pool.query('SELECT id, phone, tags FROM contacts WHERE business_id=? AND opted_in=1', [broadcast.business_id]);
 
-    if (targetTags.length > 0) {
+    if (targetContactIds.length > 0) {
+      contacts = allContacts.filter(c => targetContactIds.includes(c.id));
+    } else if (targetTags.length > 0) {
       contacts = allContacts.filter(c => {
         let ct = c.tags;
         if (typeof ct === 'string') {
@@ -96,6 +99,7 @@ const sendBroadcast = async (req, res) => {
     const InstagramService = require('../services/InstagramService');
     const FacebookService = require('../services/FacebookService');
 
+    const io = req.app.get('io');
     let sent = 0, failed = 0;
     for (const contact of contacts) {
       let result;
@@ -104,7 +108,7 @@ const sendBroadcast = async (req, res) => {
       } else if (channel === 'messenger') {
         result = await FacebookService.sendTextMessage(contact.phone, broadcast.tbody, broadcast.business_id);
       } else {
-        result = await WhatsappService.sendTemplateMessage(contact.phone, broadcast.tname, 'en', broadcast.business_id);
+        result = await WhatsappService.sendTemplateMessage(contact.phone, broadcast.tname, broadcast.tlanguage || 'en', [], broadcast.business_id);
       }
 
       const status = result.success ? 'sent' : 'failed';
@@ -114,6 +118,31 @@ const sendBroadcast = async (req, res) => {
         'INSERT INTO broadcast_logs (broadcast_id, contact_id, status, wa_message_id) VALUES (?, ?, ?, ?)',
         [broadcast.id, contact.id, status, result.data?.messages?.[0]?.id || result.data?.message_id || null]
       );
+
+      if (result.success) {
+        // Find or create conversation
+        let [convos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND status!='resolved' LIMIT 1", [broadcast.business_id, contact.id]);
+        let convId;
+        if (!convos.length) {
+          const [resConv] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at) VALUES (?, ?, ?, NOW())", [broadcast.business_id, contact.id, channel]);
+          convId = resConv.insertId;
+        } else {
+          convId = convos[0].id;
+          await pool.query('UPDATE conversations SET last_message_at=NOW() WHERE id=?', [convId]);
+        }
+
+        const msgContent = channel === 'whatsapp' ? `Broadcast Template: ${broadcast.tname}` : broadcast.tbody;
+        const [msgResult] = await pool.query(
+          'INSERT INTO messages (conversation_id, direction, content, message_type, wa_message_id, status) VALUES (?, \'outbound\', ?, ?, ?, ?)',
+          [convId, msgContent, channel === 'whatsapp' ? 'template' : 'text', result.data?.messages?.[0]?.id || result.data?.message_id || null, status]
+        );
+
+        if (io) {
+          const [newMsg] = await pool.query('SELECT * FROM messages WHERE id=?', [msgResult.insertId]);
+          io.to(`biz_${broadcast.business_id}`).emit('new_message', { conversationId: convId, message: newMsg[0] });
+          io.to(`biz_${broadcast.business_id}`).emit('conversation_updated', { conversationId: convId });
+        }
+      }
     }
 
     await pool.query(

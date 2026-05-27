@@ -1,7 +1,9 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ApiService } from '../../core/services/api.service';
+import { SocketService } from '../../core/services/socket.service';
 import { Observable, filter } from 'rxjs';
 
 @Component({
@@ -11,20 +13,15 @@ import { Observable, filter } from 'rxjs';
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.css']
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit {
   user$: Observable<any>;
   pageTitle = 'Dashboard';
   isCollapsed = false;
 
-  // Support & Notification States
-  showSupportModal = false;
+  // Notification States
   showNotificationDropdown = false;
 
-  notifications = [
-    { id: 1, title: 'Campaign Completed', message: 'Your "Summer Promo" WhatsApp campaign has completed successfully.', time: '10m ago', unread: true, icon: 'bi-megaphone', type: 'success' },
-    { id: 2, title: 'Low Credits Warning', message: 'Your SMS account balance is running low (under $5.00).', time: '1h ago', unread: true, icon: 'bi-exclamation-triangle', type: 'warning' },
-    { id: 3, title: 'New Contact Synced', message: 'Contact "Test Instagram User" was imported from Instagram.', time: '2h ago', unread: false, icon: 'bi-person-plus', type: 'info' }
-  ];
+  notifications: any[] = [];
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -38,9 +35,7 @@ export class LayoutComponent {
     this.isCollapsed = !this.isCollapsed;
   }
 
-  toggleSupportModal() {
-    this.showSupportModal = !this.showSupportModal;
-  }
+
 
   toggleNotificationDropdown(event: MouseEvent) {
     event.stopPropagation();
@@ -57,28 +52,105 @@ export class LayoutComponent {
 
   readNotification(n: any) {
     n.unread = false;
+    if (n.convoId) {
+      this.router.navigate(['/inbox'], { queryParams: { convoId: n.convoId } });
+      this.showNotificationDropdown = false;
+    }
   }
 
   clearAllNotifications() {
     this.notifications = [];
   }
 
-  openLiveChat() {
-    alert('Initiating live chat with a WLink support engineer...');
+
+
+  ngOnInit() {
+    this.setupSocketNotifications();
   }
 
-  submitQuickSupport(event: Event) {
-    event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const textarea = form.querySelector('textarea') as HTMLTextAreaElement;
-    if (textarea.value.trim()) {
-      alert('Support Ticket Submitted!\n\nThank you for reaching out. A WLink support representative will contact you shortly.');
-      textarea.value = '';
-      this.showSupportModal = false;
+  setupSocketNotifications() {
+    if ('Notification' in window) {
+      Notification.requestPermission();
+    }
+
+    // Ensure socket is initialized FIRST
+    this.socket.connect();
+
+    this.user$.subscribe(user => {
+      if (user?.businessId) {
+        this.socket.joinBusiness(user.businessId);
+      }
+    });
+
+    this.socket.on('new_message').subscribe((data: any) => {
+      if (data && data.message && data.message.direction === 'inbound') {
+        const contactName = data.contactName || data.contact?.name || data.conversation?.contact_name || 'Someone';
+        const msgText = data.message.content || 'Sent an attachment';
+        const convoId = data.conversationId || data.conversation?.id || data.message.conversation_id;
+
+        // Add to dropdown
+        this.notifications.unshift({
+          id: Date.now(),
+          type: 'message',
+          icon: 'bi-chat-left-text',
+          title: `New message from ${contactName}`,
+          message: msgText.substring(0, 50) + (msgText.length > 50 ? '...' : ''),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          unread: true,
+          convoId: convoId
+        });
+
+        // Trigger change detection manually just in case
+        this.cdr.detectChanges();
+
+        this.playNotificationSound();
+
+        // Browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const notification = new Notification(`New message from ${contactName}`, {
+            body: msgText
+          });
+          
+          notification.onclick = () => {
+            window.focus();
+            this.router.navigate(['/inbox'], { queryParams: { convoId: convoId } });
+            notification.close();
+          };
+        }
+      }
+    });
+  }
+
+  playNotificationSound() {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+      oscillator.frequency.exponentialRampToValueAtTime(1760, audioContext.currentTime + 0.1); // A6
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (e) {
+      console.error('Audio playback failed', e);
     }
   }
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(
+    private authService: AuthService, 
+    private router: Router, 
+    private socket: SocketService,
+    private cdr: ChangeDetectorRef
+  ) {
     this.user$ = this.authService.currentUser$;
     
     this.router.events.pipe(

@@ -90,8 +90,8 @@ const PORT = process.env.PORT || 3000;
 async function bootstrap() {
   try {
     await runMigrations();
-    startBroadcastJob();
-    startDripJob();
+    startBroadcastJob(io);
+    startDripJob(io);
     startSmsJob();
     server.listen(PORT, () => console.log(`🚀 WLink API running on port ${PORT}`));
   } catch (err) {

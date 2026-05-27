@@ -159,9 +159,28 @@
         <input type="email" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.email" placeholder="john@example.com">
       </div>
       <div class="form-group mb-4 pb-2">
-        <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Tags <span class="text-muted fw-normal">(comma separated)</span></label>
-        <input type="text" class="form-control form-control-lg premium-input w-100" [(ngModel)]="newContact.tags" placeholder="VIP, Customer, Leads">
-        <p class="small text-muted mt-2"><i class="bi bi-info-circle me-1"></i> Use commas to add multiple categories.</p>
+        <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Tags</label>
+        
+        <!-- Tag Selection Pills -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span *ngFor="let tag of allTags" 
+                class="badge rounded-pill p-2" 
+                [ngClass]="newContact.tags.includes(tag) ? 'bg-success text-white' : 'bg-light text-dark border'"
+                (click)="toggleTag(tag)"
+                style="cursor: pointer; font-weight: 500; font-size: 0.85rem; transition: all 0.2s ease;">
+            {{ tag }} <i class="bi" [ngClass]="newContact.tags.includes(tag) ? 'bi-check-circle-fill ms-1' : 'bi-plus-circle ms-1'"></i>
+          </span>
+          <span *ngIf="allTags.length === 0" class="text-muted small">No existing tags. Add one below.</span>
+        </div>
+
+        <!-- Add New Tag -->
+        <div class="input-group shadow-sm">
+          <input type="text" class="form-control premium-input border-end-0" placeholder="Type a new tag..." #newTagInput (keyup.enter)="addNewTag(newTagInput.value); newTagInput.value=''">
+          <button class="btn btn-light border border-start-0 text-success fw-bold px-3" type="button" (click)="addNewTag(newTagInput.value); newTagInput.value=''">
+            <i class="bi bi-plus-lg"></i> Add
+          </button>
+        </div>
+        <p class="small text-muted mt-2"><i class="bi bi-info-circle me-1"></i> Click existing tags to select them, or type a new one and click Add.</p>
       </div>
       <div class="form-group mb-4 pb-2">
         <label class="form-label fw-bold text-dark mb-3" style="font-size: 0.95rem;">Preferred Channel</label>

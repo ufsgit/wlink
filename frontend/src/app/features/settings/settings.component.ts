@@ -58,9 +58,6 @@ export class SettingsComponent implements OnInit {
     { key: 'whatsapp', name: 'WhatsApp Business', desc: 'Official WhatsApp Business API integration', icon: 'bi-whatsapp', color: '#25D366' },
     { key: 'instagram', name: 'Instagram DM', desc: 'Connect your Instagram Business account', icon: 'bi-instagram', color: '#E1306C' },
     { key: 'facebook', name: 'Facebook Messenger', desc: 'Chat with customers on your Facebook Page', icon: 'bi-messenger', color: '#0084FF' },
-    { key: 'openai', name: 'OpenAI (GPT-4)', desc: 'Power your chatbots with AI intelligence', icon: 'bi-robot', color: '#10b981' },
-    { key: 'woocommerce', name: 'WooCommerce', desc: 'Sync products and orders automatically', icon: 'bi-cart3', color: '#9333ea' },
-    { key: 'shopify', name: 'Shopify', desc: 'Import your Shopify catalog', icon: 'bi-bag', color: '#95BF47' },
   ];
 
   constructor(private api: ApiService) {}

@@ -9,5 +9,6 @@ router.get('/:id/messages', c.getMessages);
 router.post('/:id/messages', c.sendMessage);
 router.patch('/:id/assign', c.assignConversation);
 router.patch('/:id/status', c.updateStatus);
+router.delete('/:id', c.deleteConversation);
 
 module.exports = router;

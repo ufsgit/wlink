@@ -52,6 +52,30 @@ class WhatsappService {
     };
   }
 
+  // Get WABA credentials specifically for Meta Business APIs (like fetching templates)
+  async getWabaCredentials(businessIdOrObj) {
+    const { businessId, socialAccountId } = this._resolveParams(businessIdOrObj);
+
+    if (socialAccountId) {
+      const [rows] = await pool.query('SELECT token, waba_id FROM social_accounts WHERE id=?', [socialAccountId]);
+      if (rows.length && rows[0].token && rows[0].waba_id) {
+        return { token: rows[0].token, wabaId: rows[0].waba_id };
+      }
+    }
+
+    if (businessId) {
+      const [newRows] = await pool.query('SELECT token, waba_id FROM social_accounts WHERE business_id=? AND platform="whatsapp" AND is_active=1 LIMIT 1', [businessId]);
+      if (newRows.length && newRows[0].token && newRows[0].waba_id) {
+        return { token: newRows[0].token, wabaId: newRows[0].waba_id };
+      }
+    }
+    
+    return {
+      token: process.env.WHATSAPP_TOKEN || '',
+      wabaId: process.env.WABA_ID || ''
+    };
+  }
+
   getHeaders(token) {
     return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
   }
@@ -184,6 +208,19 @@ class WhatsappService {
 
       const res = await axios.post(`${this.baseUrl}/${phoneId}/message_templates`, payload, { headers: this.getHeaders(token) });
       return { success: true, data: res.data };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.error?.message || err.message };
+    }
+  }
+
+  async syncTemplates(businessId) {
+    const { token, wabaId } = await this.getWabaCredentials(businessId);
+    if (!token || !wabaId) return { success: false, message: 'WhatsApp API credentials or WABA ID not configured' };
+    try {
+      const res = await axios.get(`${this.baseUrl}/${wabaId}/message_templates`, {
+        headers: this.getHeaders(token)
+      });
+      return { success: true, data: res.data.data || [] };
     } catch (err) {
       return { success: false, message: err.response?.data?.error?.message || err.message };
     }

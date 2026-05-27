@@ -1,5 +1,6 @@
 const pool = require('../db/pool');
 const { processChatbotFlow } = require('../controllers/chatbots.controller');
+const { normalizePhone } = require('../utils/phoneHelper');
 
 async function handleFacebookWebhook(req, res, io) {
   if (req.method === 'GET') {
@@ -50,21 +51,29 @@ async function handleFacebookWebhook(req, res, io) {
           if (!senderId || !text) continue;
 
           // Find or create contact
-          let [contacts] = await pool.query('SELECT id FROM contacts WHERE business_id=? AND phone=?', [bizId, senderId]);
+          const normalizedSenderId = normalizePhone(senderId);
+          let [contacts] = await pool.query('SELECT id FROM contacts WHERE business_id=? AND phone=?', [bizId, normalizedSenderId]);
           let contactId;
           if (!contacts.length) {
-            const [result] = await pool.query('INSERT INTO contacts (business_id, phone, name) VALUES (?, ?, ?)', [bizId, senderId, `FB_${senderId}`]);
+            const [result] = await pool.query('INSERT INTO contacts (business_id, phone, name) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)', [bizId, normalizedSenderId, `FB_${normalizedSenderId}`]);
             contactId = result.insertId;
           } else {
             contactId = contacts[0].id;
           }
 
-          // Find or create conversation
+          // Find or create conversation (reopen resolved ones to avoid duplicates)
           let [convos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND channel='facebook' AND status!='resolved' LIMIT 1", [bizId, contactId]);
           let convId;
           if (!convos.length) {
-            const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at, social_account_id) VALUES (?, ?, 'facebook', NOW(), ?)", [bizId, contactId, socialAccountId]);
-            convId = result.insertId;
+            // Try to reopen the most recent resolved conversation
+            let [resolvedConvos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND channel='facebook' AND status='resolved' ORDER BY last_message_at DESC LIMIT 1", [bizId, contactId]);
+            if (resolvedConvos.length) {
+              convId = resolvedConvos[0].id;
+              await pool.query("UPDATE conversations SET status='open', last_message_at=NOW(), social_account_id=COALESCE(social_account_id, ?) WHERE id=?", [socialAccountId, convId]);
+            } else {
+              const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at, social_account_id) VALUES (?, ?, 'facebook', NOW(), ?)", [bizId, contactId, socialAccountId]);
+              convId = result.insertId;
+            }
           } else {
             convId = convos[0].id;
             await pool.query('UPDATE conversations SET last_message_at=NOW(), social_account_id=COALESCE(social_account_id, ?) WHERE id=?', [socialAccountId, convId]);

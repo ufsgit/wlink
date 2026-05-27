@@ -26,6 +26,7 @@ export class InboxComponent implements OnInit, OnDestroy {
   searchQuery = '';
   showChannelFilter = false;
   showHeaderMenu = false;
+  currentAssignment = 'all'; // 'all' or 'me'
 
   // Product Picker
   showProductPicker = false;
@@ -35,7 +36,39 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   // Quick Actions & Input Extras
   showEmojiPicker = false;
+  showAgentPicker = false;
+  loadingAgents = false;
+  availableAgents: any[] = [];
   agents: any[] = [];
+
+  // Custom Modal/Dialog States
+  showEditContactModal = false;
+  editContactName = '';
+  showAddTagModal = false;
+  newTagName = '';
+  suggestedTags = ['VIP', 'Warm Lead', 'Cold Lead', 'Support', 'Customer', 'Follow Up', 'Prospect', 'Spam'];
+  showConfirmModal = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmType = 'danger'; // 'danger' | 'success' | 'primary'
+  confirmActionCallback: () => void = () => {};
+
+  // Toast notifications
+  toasts: Array<{ id: number; message: string; type: 'success' | 'danger' | 'info' }> = [];
+  private nextToastId = 0;
+
+  showToast(message: string, type: 'success' | 'danger' | 'info' = 'success') {
+    const id = this.nextToastId++;
+    this.toasts.push({ id, message, type });
+    setTimeout(() => {
+      this.removeToast(id);
+    }, 4000);
+  }
+
+  removeToast(id: number) {
+    this.toasts = this.toasts.filter(t => t.id !== id);
+  }
+
   emojis = ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '🙈', '🙉', '🙊', '💋', '💌', '💘', '💝', '💖', '💗', '💓', '💞', '💕', '💟', '❣️', '💔', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💯', '💢', '💥', '💫', '💦', '💨', '🕳️', '💣', '💬', '👁️‍🗨️', '🗨️', '🗯️', '💭', '💤'];
 
   constructor(
@@ -96,6 +129,13 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.loadConversations();
   }
 
+  filterByAssignment(type: string) {
+    this.currentAssignment = type;
+    this.selectedConvo = null; // Reset selection
+    this.messages = [];
+    this.loadConversations();
+  }
+
   onSearch() {
     this.loadConversations();
   }
@@ -105,6 +145,7 @@ export class InboxComponent implements OnInit, OnDestroy {
     const params: any = {};
     if (this.currentChannel) params.channel = this.currentChannel;
     if (this.searchQuery) params.search = this.searchQuery;
+    if (this.currentAssignment === 'me') params.assigned_to = 'me';
 
     this.api.get('/conversations', params).subscribe({
       next: (res: any) => {
@@ -127,7 +168,7 @@ export class InboxComponent implements OnInit, OnDestroy {
         console.error('Failed to load conversations', err);
         // We don't alert here if it's a 401 because the interceptor handles it
         if (err.status !== 401) {
-          alert('Failed to load conversations: ' + (err.error?.message || 'Server error'));
+          this.showToast('Failed to load conversations: ' + (err.error?.message || 'Server error'), 'danger');
         }
       }
     });
@@ -171,7 +212,7 @@ export class InboxComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        alert('Failed to send: ' + (err.error?.message || 'Error'));
+        this.showToast('Failed to send: ' + (err.error?.message || 'Error'), 'danger');
       }
     });
   }
@@ -198,9 +239,9 @@ export class InboxComponent implements OnInit, OnDestroy {
       next: () => {
         this.selectedConvo.assigned_to = this.currentUser.id;
         this.selectedConvo.assigned_name = this.currentUser.name;
-        alert('Conversation assigned to you');
+        this.showToast('Conversation assigned to you successfully', 'success');
       },
-      error: (err) => alert('Failed to assign: ' + (err.error?.message || 'Error'))
+      error: (err) => this.showToast('Failed to assign conversation: ' + (err.error?.message || 'Error'), 'danger')
     });
   }
 
@@ -245,7 +286,7 @@ export class InboxComponent implements OnInit, OnDestroy {
           if (convo) convo.last_message = `🛍️ ${product.name}`;
         }
       },
-      error: (err) => alert('Failed to send product: ' + (err.error?.message || 'Error'))
+      error: (err) => this.showToast('Failed to send product: ' + (err.error?.message || 'Error'), 'danger')
     });
 
     this.showProductPicker = false;
@@ -254,95 +295,190 @@ export class InboxComponent implements OnInit, OnDestroy {
   // Quick Actions
   editContact() {
     if (!this.selectedConvo) return;
-    const newName = window.prompt('Enter new name for contact:', this.selectedConvo.contact_name);
-    if (newName && newName !== this.selectedConvo.contact_name) {
-      this.api.put(`/contacts/${this.selectedConvo.contact_id}`, { name: newName }).subscribe({
-        next: () => {
-          this.selectedConvo.contact_name = newName;
-          const convo = this.conversations.find(c => c.id === this.selectedConvo.id);
-          if (convo) convo.contact_name = newName;
-        },
-        error: (err) => alert('Failed to update contact: ' + (err.error?.message || 'Error'))
-      });
-    }
+    this.editContactName = this.selectedConvo.contact_name || '';
+    this.showEditContactModal = true;
+  }
+
+  saveContactEdit() {
+    if (!this.selectedConvo || !this.editContactName.trim()) return;
+    const newName = this.editContactName.trim();
+    this.api.put(`/contacts/${this.selectedConvo.contact_id}`, { name: newName }).subscribe({
+      next: () => {
+        this.selectedConvo.contact_name = newName;
+        const convo = this.conversations.find(c => c.id === this.selectedConvo.id);
+        if (convo) convo.contact_name = newName;
+        this.showEditContactModal = false;
+        this.showToast('Contact details updated successfully', 'success');
+      },
+      error: (err) => this.showToast('Failed to update contact: ' + (err.error?.message || 'Error'), 'danger')
+    });
   }
 
   addTag() {
     if (!this.selectedConvo) return;
-    const tag = window.prompt('Enter tag name:');
-    if (tag) {
-      // Get current tags or empty array
-      let tags = [];
-      try {
-        tags = typeof this.selectedConvo.tags === 'string' ? JSON.parse(this.selectedConvo.tags) : (this.selectedConvo.tags || []);
-      } catch(e) { tags = []; }
-      
-      if (!tags.includes(tag)) {
-        tags.push(tag);
-        this.api.put(`/contacts/${this.selectedConvo.contact_id}`, { tags: JSON.stringify(tags) }).subscribe({
-          next: () => {
-            this.selectedConvo.tags = tags;
-            alert('Tag added successfully');
-          },
-          error: (err) => alert('Failed to add tag: ' + (err.error?.message || 'Error'))
-        });
-      }
+    this.newTagName = '';
+    this.showAddTagModal = true;
+  }
+
+  saveTag() {
+    if (!this.selectedConvo || !this.newTagName.trim()) return;
+    const tag = this.newTagName.trim();
+    let tags = [];
+    try {
+      tags = typeof this.selectedConvo.tags === 'string' ? JSON.parse(this.selectedConvo.tags) : (this.selectedConvo.tags || []);
+    } catch(e) { tags = []; }
+    
+    if (!tags.includes(tag)) {
+      tags.push(tag);
+      this.api.put(`/contacts/${this.selectedConvo.contact_id}`, { tags: JSON.stringify(tags) }).subscribe({
+        next: () => {
+          this.selectedConvo.tags = tags;
+          this.showAddTagModal = false;
+          this.showToast('Tag added successfully', 'success');
+        },
+        error: (err) => this.showToast('Failed to add tag: ' + (err.error?.message || 'Error'), 'danger')
+      });
+    } else {
+      this.showAddTagModal = false;
     }
+  }
+
+  parsedTags(convo: any): string[] {
+    if (!convo || !convo.tags) return [];
+    try {
+      return typeof convo.tags === 'string' ? JSON.parse(convo.tags) : convo.tags;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  removeTagFromContact(tag: string) {
+    if (!this.selectedConvo) return;
+    let tags: string[] = [];
+    try {
+      tags = typeof this.selectedConvo.tags === 'string' ? JSON.parse(this.selectedConvo.tags) : (this.selectedConvo.tags || []);
+    } catch(e) { tags = []; }
+    
+    tags = tags.filter(t => t !== tag);
+    this.api.put(`/contacts/${this.selectedConvo.contact_id}`, { tags: JSON.stringify(tags) }).subscribe({
+      next: () => {
+        this.selectedConvo.tags = tags;
+        this.showToast('Tag removed successfully', 'success');
+      },
+      error: (err) => this.showToast('Failed to remove tag: ' + (err.error?.message || 'Error'), 'danger')
+    });
+  }
+
+  get availableTagsToSelect(): string[] {
+    const tagsSet = new Set<string>(this.suggestedTags);
+    this.conversations.forEach(convo => {
+      if (convo.tags) {
+        try {
+          const parsed = typeof convo.tags === 'string' ? JSON.parse(convo.tags) : convo.tags;
+          if (Array.isArray(parsed)) {
+            parsed.forEach((tag: string) => {
+              if (tag && tag.trim()) {
+                tagsSet.add(tag.trim());
+              }
+            });
+          }
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+    });
+    return Array.from(tagsSet);
   }
 
   assignAgent() {
     if (!this.selectedConvo) return;
-    this.api.get('/users?role=agent').subscribe({
+    this.showAgentPicker = true;
+    this.loadingAgents = true;
+    this.availableAgents = [];
+    this.api.get('/settings/team').subscribe({
       next: (res: any) => {
-        const agents = res.data || [];
-        if (agents.length === 0) {
-          alert('No agents available');
-          return;
-        }
-        let msg = 'Select an agent to assign:\n';
-        agents.forEach((a: any, i: number) => msg += `${i+1}. ${a.name} (${a.email})\n`);
-        const choice = window.prompt(msg);
-        if (choice) {
-          const idx = parseInt(choice) - 1;
-          if (agents[idx]) {
-            this.api.patch(`/conversations/${this.selectedConvo.id}/assign`, { agent_id: agents[idx].id }).subscribe({
-              next: () => {
-                this.selectedConvo.assigned_name = agents[idx].name;
-                alert(`Assigned to ${agents[idx].name}`);
-              },
-              error: (err) => alert('Failed to assign: ' + (err.error?.message || 'Error'))
-            });
-          }
-        }
+        const allUsers = res.data || [];
+        // Filter to only include active team members who can be assigned (agents or admins)
+        this.availableAgents = allUsers.filter((u: any) => u.is_active && (u.role === 'agent' || u.role === 'admin' || u.role === 'superadmin'));
+        this.loadingAgents = false;
       },
-      error: (err) => alert('Failed to load agents: ' + (err.error?.message || 'Error'))
+      error: (err) => {
+        this.loadingAgents = false;
+        this.showAgentPicker = false;
+        this.showToast('Failed to load agents: ' + (err.error?.message || 'Error'), 'danger');
+      }
+    });
+  }
+
+  selectAgentToAssign(agent: any) {
+    if (!this.selectedConvo || !agent) return;
+    this.api.patch(`/conversations/${this.selectedConvo.id}/assign`, { agent_id: agent.id }).subscribe({
+      next: () => {
+        this.selectedConvo.assigned_name = agent.name;
+        this.showAgentPicker = false;
+        this.showToast(`Assigned conversation to ${agent.name}`, 'success');
+      },
+      error: (err) => this.showToast('Failed to assign: ' + (err.error?.message || 'Error'), 'danger')
     });
   }
 
   blockContact() {
     if (!this.selectedConvo) return;
-    if (confirm(`Are you sure you want to block ${this.selectedConvo.contact_name}?`)) {
+    this.confirmTitle = 'Block Contact';
+    this.confirmMessage = `Are you sure you want to block ${this.selectedConvo.contact_name}? They will no longer receive automated notifications or broadcasts.`;
+    this.confirmType = 'danger';
+    this.confirmActionCallback = () => {
       this.api.post(`/contacts/${this.selectedConvo.contact_id}/optout`, {}).subscribe({
         next: () => {
           this.selectedConvo.opted_in = 0;
-          alert('Contact blocked successfully');
+          this.showConfirmModal = false;
+          this.showToast('Contact blocked successfully', 'success');
         },
-        error: (err) => alert('Failed to block contact: ' + (err.error?.message || 'Error'))
+        error: (err) => this.showToast('Failed to block contact: ' + (err.error?.message || 'Error'), 'danger')
       });
-    }
+    };
+    this.showConfirmModal = true;
+  }
+
+  deleteSelectedConversation() {
+    if (!this.selectedConvo) return;
+    this.confirmTitle = 'Delete Conversation';
+    this.confirmMessage = `Are you sure you want to permanently delete the conversation with ${this.selectedConvo.contact_name || this.selectedConvo.contact_phone}? This will permanently delete all messages and cannot be undone.`;
+    this.confirmType = 'danger';
+    this.confirmActionCallback = () => {
+      this.api.delete(`/conversations/${this.selectedConvo.id}`).subscribe({
+        next: () => {
+          this.conversations = this.conversations.filter(c => c.id !== this.selectedConvo.id);
+          this.selectedConvo = null;
+          this.messages = [];
+          if (this.conversations.length > 0) {
+            this.selectConversation(this.conversations[0]);
+          }
+          this.showConfirmModal = false;
+          this.showToast('Conversation deleted successfully', 'success');
+        },
+        error: (err) => this.showToast('Failed to delete conversation: ' + (err.error?.message || 'Error'), 'danger')
+      });
+    };
+    this.showConfirmModal = true;
   }
 
   unblockContact() {
     if (!this.selectedConvo) return;
-    if (confirm(`Are you sure you want to unblock ${this.selectedConvo.contact_name}?`)) {
+    this.confirmTitle = 'Unblock Contact';
+    this.confirmMessage = `Are you sure you want to unblock ${this.selectedConvo.contact_name}? They will be eligible to receive automated updates.`;
+    this.confirmType = 'success';
+    this.confirmActionCallback = () => {
       this.api.post(`/contacts/${this.selectedConvo.contact_id}/optin`, { source: 'manual' }).subscribe({
         next: () => {
           this.selectedConvo.opted_in = 1;
-          alert('Contact unblocked successfully');
+          this.showConfirmModal = false;
+          this.showToast('Contact unblocked successfully', 'success');
         },
-        error: (err) => alert('Failed to unblock contact: ' + (err.error?.message || 'Error'))
+        error: (err) => this.showToast('Failed to unblock contact: ' + (err.error?.message || 'Error'), 'danger')
       });
-    }
+    };
+    this.showConfirmModal = true;
   }
 
   // Input Extras
@@ -361,7 +497,7 @@ export class InboxComponent implements OnInit, OnDestroy {
     input.onchange = (e: any) => {
       const file = e.target.files[0];
       if (file) {
-        alert(`File selected: ${file.name}. (File upload logic would go here)`);
+        this.showToast(`File selected: ${file.name}. Uploading feature is simulated.`, 'info');
       }
     };
     input.click();
