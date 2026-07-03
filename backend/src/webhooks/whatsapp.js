@@ -16,21 +16,25 @@ async function sendBotReply(to, result, bizId, convId, socialAccountId = null) {
         const buttons = result.interactive.action?.buttons || [];
         const optionsText = buttons.map((b, i) => `${i + 1}. ${b.reply?.title}`).join('\n');
         const fallbackText = `${result.interactive.body?.text}\n\n${optionsText}`;
-        await WhatsappService.sendTextMessage(to, fallbackText, bizParam);
-        if (convId) await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, fallbackText]);
+        const textResult = await WhatsappService.sendTextMessage(to, fallbackText, bizParam);
+        if (textResult.success && convId) {
+          await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, fallbackText]);
+        }
         return;
       }
       console.log('[Bot] Interactive message sent successfully');
+      // Save interactive body text to DB on success
+      if (convId) {
+        await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, result.interactive.body?.text || 'Interactive Message']);
+      }
     } else if (result.response) {
       console.log('[Bot] Sending text message to', to, ':', result.response);
       const sendResult = await WhatsappService.sendTextMessage(to, result.response, bizParam);
       if (!sendResult.success) {
         console.error('[Bot] Text send FAILED:', sendResult.message);
+      } else if (convId) {
+        await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, result.response]);
       }
-    }
-    // Save bot message to DB
-    if (result.response && convId) {
-      await pool.query("INSERT INTO messages (conversation_id, direction, content, message_type) VALUES (?, 'outbound', ?, 'text')", [convId, result.response]);
     }
   } catch (err) {
     console.error('[Bot] sendBotReply error:', err.message);
@@ -132,15 +136,50 @@ async function handleWhatsappWebhook(req, res, io) {
           await WhatsappService.markAsRead(msgId, { businessId: bizId, socialAccountId });
 
           let text = msg.text?.body || msg.caption || '';
-          const msgType = msg.type || 'text';
+          let msgType = msg.type || 'text';
+
+          // WhatsApp Cloud API can send voice notes as 'audio' with voice:true,
+          // but some API versions may use 'voice'. Normalize for DB ENUM compatibility.
+          if (msgType === 'voice') msgType = 'audio';
+          if (msgType === 'sticker') msgType = 'image';
+          // Reaction messages are not storable, skip them
+          if (msgType === 'reaction') continue;
 
           // Handle interactive responses
           if (msgType === 'interactive') {
             const interactive = msg.interactive;
             if (interactive.type === 'button_reply') {
-              text = interactive.button_reply.title; // or .id
+              // Use the button ID for precise matching (fallback to title if ID missing)
+              text = interactive.button_reply.id || interactive.button_reply.title;
             } else if (interactive.type === 'list_reply') {
-              text = interactive.list_reply.title; // or .id
+              // Use the list reply ID for precise matching
+              text = interactive.list_reply.id || interactive.list_reply.title;
+            }
+          }
+
+          // Handle media — use the ORIGINAL msg.type to find the correct object key,
+          // since WhatsApp nests media under the original type key (e.g., msg.audio, msg.image)
+          let mediaUrl = null;
+          const originalType = msg.type || 'text';
+          if (['audio', 'voice', 'image', 'video', 'document', 'sticker'].includes(originalType)) {
+            // WhatsApp nests the media object under msg[originalType]
+            const mediaObj = msg[originalType] || msg.audio || msg.voice || msg.image || msg.video || msg.document || msg.sticker;
+            console.log(`[Webhook] Media message detected: type=${originalType}, normalized=${msgType}, mediaId=${mediaObj?.id || 'NONE'}, mime=${mediaObj?.mime_type || 'unknown'}`);
+            if (mediaObj && mediaObj.id) {
+              try {
+                mediaUrl = await WhatsappService.downloadMedia(mediaObj.id, { businessId: bizId, socialAccountId });
+                console.log(`[Webhook] Media downloaded successfully: ${mediaUrl}`);
+              } catch (err) {
+                console.error('[Webhook] Failed to download media:', err.message || err);
+              }
+            } else {
+              console.error('[Webhook] Media object missing or has no ID:', JSON.stringify(msg));
+            }
+            // Set a descriptive text for voice/audio messages so they're visible in conversation list
+            if (!text && (originalType === 'audio' || originalType === 'voice')) {
+              text = '🎤 Voice message';
+            } else if (!text && originalType === 'sticker') {
+              text = '🏷️ Sticker';
             }
           }
 
@@ -163,21 +202,22 @@ async function handleWhatsappWebhook(req, res, io) {
             let [resolvedConvos] = await pool.query("SELECT id FROM conversations WHERE business_id=? AND contact_id=? AND status='resolved' ORDER BY last_message_at DESC LIMIT 1", [bizId, contactId]);
             if (resolvedConvos.length) {
               convId = resolvedConvos[0].id;
-              await pool.query("UPDATE conversations SET status='open', last_message_at=NOW(), social_account_id=COALESCE(social_account_id, ?) WHERE id=?", [socialAccountId, convId]);
+              await pool.query("UPDATE conversations SET status='open', last_message_at=FROM_UNIXTIME(?), social_account_id=COALESCE(social_account_id, ?) WHERE id=?", [msg.timestamp, socialAccountId, convId]);
             } else {
-              const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at, social_account_id) VALUES (?, ?, 'whatsapp', NOW(), ?)", [bizId, contactId, socialAccountId]);
+              const [result] = await pool.query("INSERT INTO conversations (business_id, contact_id, channel, last_message_at, social_account_id) VALUES (?, ?, 'whatsapp', FROM_UNIXTIME(?), ?)", [bizId, contactId, msg.timestamp, socialAccountId]);
               convId = result.insertId;
             }
           } else {
             convId = convos[0].id;
-            await pool.query('UPDATE conversations SET last_message_at=NOW(), social_account_id=COALESCE(social_account_id, ?) WHERE id=?', [socialAccountId, convId]);
+            await pool.query('UPDATE conversations SET last_message_at=FROM_UNIXTIME(?), social_account_id=COALESCE(social_account_id, ?) WHERE id=?', [msg.timestamp, socialAccountId, convId]);
           }
 
           // Store message
           const [msgResult] = await pool.query(
-            'INSERT INTO messages (conversation_id, direction, content, message_type, wa_message_id) VALUES (?, ?, ?, ?, ?)',
-            [convId, 'inbound', text, msgType, msg.id]
+            'INSERT INTO messages (conversation_id, direction, content, message_type, wa_message_id, media_url, sent_at) VALUES (?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?))',
+            [convId, 'inbound', text, msgType, msg.id, mediaUrl, msg.timestamp]
           );
+
 
           // Emit to socket
           if (io) {
@@ -204,7 +244,11 @@ async function handleWhatsappWebhook(req, res, io) {
             for (const bot of bots) {
               const keywords = bot.trigger_keywords || [];
               const isSessionActive = session && session.chatbot_id === bot.id;
-              const isKeywordMatch = keywords.some(k => text.toLowerCase().includes(k.toLowerCase()));
+              const isKeywordMatch = keywords.some(k => {
+                if (k === '*') return true;
+                const escapedK = k.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                return new RegExp(`(?:^|\\W)${escapedK}(?:$|\\W)`, 'i').test(text);
+              });
 
               // If keyword matched and session is active, reset session to start fresh from node 1
               if (isKeywordMatch && isSessionActive) {

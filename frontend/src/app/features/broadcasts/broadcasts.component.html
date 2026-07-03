@@ -158,8 +158,8 @@
     </div>
     <div class="modal-footer bg-light border-top-0 p-4">
       <button class="btn btn-light px-4 py-2 shadow-sm" (click)="showModal = false" style="border-radius: 12px; font-weight: 600;">Cancel</button>
-      <button class="btn btn-primary px-4 py-2 shadow-sm ms-2" (click)="saveBroadcast()" [disabled]="!newBroadcast.name || !newBroadcast.template_id" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #6366F1, #4F46E5); border: none;">
-        {{ newBroadcast.scheduled_at ? 'Schedule Campaign' : 'Launch Now' }}
+      <button class="btn btn-primary px-4 py-2 shadow-sm ms-2" (click)="saveBroadcast()" [disabled]="!newBroadcast.name || !newBroadcast.template_id || saving" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #6366F1, #4F46E5); border: none;">
+        {{ saving ? 'Launching...' : (newBroadcast.scheduled_at ? 'Schedule Campaign' : 'Launch Now') }}
       </button>
     </div>
   </div>

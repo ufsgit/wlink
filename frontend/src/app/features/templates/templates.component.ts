@@ -14,6 +14,7 @@ export class TemplatesComponent implements OnInit {
   templates: any[] = [];
   loading = false;
   showModal = false;
+  showGuide = true;
 
   newTemplate: any = {
     name: '',

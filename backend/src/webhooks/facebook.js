@@ -106,7 +106,11 @@ async function handleFacebookWebhook(req, res, io) {
             for (const bot of bots) {
               const keywords = bot.trigger_keywords || [];
               const isSessionActive = session && session.chatbot_id === bot.id;
-              const isKeywordMatch = keywords.some(k => text.toLowerCase().includes(k.toLowerCase()));
+              const isKeywordMatch = keywords.some(k => {
+                if (k === '*') return true;
+                const escapedK = k.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                return new RegExp(`(?:^|\\W)${escapedK}(?:$|\\W)`, 'i').test(text);
+              });
 
               // If keyword matched and session is active, reset session to start fresh
               if (isKeywordMatch && isSessionActive) {

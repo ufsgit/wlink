@@ -42,6 +42,19 @@ async function runMigrations() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (business_id) REFERENCES businesses(id)
     )`,
+    `CREATE TABLE IF NOT EXISTS contact_history (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      contact_id INT NOT NULL,
+      business_id INT NOT NULL,
+      user_id INT NULL,
+      field_name VARCHAR(100) NOT NULL,
+      old_value TEXT,
+      new_value TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE,
+      FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    )`,
     `CREATE TABLE IF NOT EXISTS opt_in_links (
       id INT AUTO_INCREMENT PRIMARY KEY,
       business_id INT,
@@ -69,7 +82,7 @@ async function runMigrations() {
       direction ENUM('inbound','outbound'),
       content TEXT,
       media_url VARCHAR(500),
-      message_type ENUM('text','image','video','document','template','interactive','location'),
+      message_type ENUM('text','image','video','document','template','interactive','location','audio'),
       status ENUM('sent','delivered','read','failed') DEFAULT 'sent',
       wa_message_id VARCHAR(100),
       sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -380,6 +393,58 @@ async function runMigrations() {
     await pool.query("ALTER TABLE conversations ADD COLUMN social_account_id INT NULL");
     await pool.query("ALTER TABLE conversations ADD CONSTRAINT fk_conversations_social_account FOREIGN KEY (social_account_id) REFERENCES social_accounts(id) ON DELETE SET NULL");
   }
+
+  // Add assigned_to to contacts if it does not already exist
+  const [contactColumns] = await pool.query("SHOW COLUMNS FROM contacts LIKE 'assigned_to'");
+  if (contactColumns.length === 0) {
+    await pool.query("ALTER TABLE contacts ADD COLUMN assigned_to INT NULL");
+    await pool.query("ALTER TABLE contacts ADD CONSTRAINT fk_contacts_assigned_to FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL");
+  }
+
+  // Extend message_type ENUM to include 'voice' and 'sticker' (safety net)
+  try {
+    await pool.query("ALTER TABLE messages MODIFY COLUMN message_type ENUM('text','image','video','document','template','interactive','location','audio','voice','sticker')");
+  } catch (e) {
+    // Ignore if already modified or column doesn't exist
+  }
+
+  // Add address column to contacts if not exists
+  const [addrCol] = await pool.query("SHOW COLUMNS FROM contacts LIKE 'address'");
+  if (addrCol.length === 0) {
+    await pool.query("ALTER TABLE contacts ADD COLUMN address TEXT NULL");
+  }
+
+  // Create lead_fields table for custom field definitions
+  await pool.query(`CREATE TABLE IF NOT EXISTS lead_fields (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    business_id INT NOT NULL,
+    label VARCHAR(120) NOT NULL,
+    field_key VARCHAR(80) NOT NULL,
+    field_type ENUM('text','number','dropdown','date','dob','email','phone','textarea') NOT NULL DEFAULT 'text',
+    options JSON NULL,
+    is_required TINYINT(1) DEFAULT 0,
+    display_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_biz_key (business_id, field_key),
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+  )`);
+
+  // Create contact_custom_values table for per-contact values
+  await pool.query(`CREATE TABLE IF NOT EXISTS contact_custom_values (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    contact_id INT NOT NULL,
+    business_id INT NOT NULL,
+    field_id INT NOT NULL,
+    value TEXT NULL,
+    UNIQUE KEY uq_contact_field (contact_id, field_id),
+    FOREIGN KEY (field_id) REFERENCES lead_fields(id) ON DELETE CASCADE,
+    FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+  )`);
+
+  // Extend channel_preference ENUM to include instagram, facebook, website
+  try {
+    await pool.query("ALTER TABLE contacts MODIFY COLUMN channel_preference ENUM('whatsapp','sms','rcs','instagram','facebook','website') DEFAULT 'whatsapp'");
+  } catch (e) { /* Ignore if already extended */ }
 
   console.log('✅ Database migrations completed');
 

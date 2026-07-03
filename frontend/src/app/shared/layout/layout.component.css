@@ -145,7 +145,26 @@
   font-size: 1.2rem;
   width: 22px;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.submenu-icon {
+  transition: transform 0.3s ease !important;
+}
+
+.submenu-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.submenu {
+  animation: slideDown 0.3s ease forwards;
+  transform-origin: top;
+  overflow: hidden;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: scaleY(0.95); }
+  to { opacity: 1; transform: scaleY(1); }
 }
 
 .user-section {
@@ -269,6 +288,7 @@
   letter-spacing: -0.025em;
   background: linear-gradient(135deg, #0F172A 0%, #4F46E5 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
 }

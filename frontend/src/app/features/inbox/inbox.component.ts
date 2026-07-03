@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { SocketService } from '../../core/services/socket.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-inbox',
@@ -52,6 +53,18 @@ export class InboxComponent implements OnInit, OnDestroy {
   confirmMessage = '';
   confirmType = 'danger'; // 'danger' | 'success' | 'primary'
   confirmActionCallback: () => void = () => {};
+
+  // Template Picker
+  showTemplatePicker = false;
+  templates: any[] = [];
+  loadingTemplates = false;
+  templateSearch = '';
+  sendingTemplate = false;
+
+  // Voice Recording
+  isRecording = false;
+  private mediaRecorder: any = null;
+  private audioChunks: Blob[] = [];
 
   // Toast notifications
   toasts: Array<{ id: number; message: string; type: 'success' | 'danger' | 'info' }> = [];
@@ -292,6 +305,65 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.showProductPicker = false;
   }
 
+  // Template Picker
+  openTemplatePicker() {
+    if (!this.selectedConvo) return;
+    this.showTemplatePicker = true;
+    this.templateSearch = '';
+    this.loadTemplates();
+  }
+
+  loadTemplates() {
+    this.loadingTemplates = true;
+    this.api.get('/templates', { status: 'approved' }).subscribe({
+      next: (res: any) => {
+        this.templates = res.data || [];
+        this.loadingTemplates = false;
+      },
+      error: () => {
+        this.loadingTemplates = false;
+        this.showToast('Failed to load templates', 'danger');
+      }
+    });
+  }
+
+  get filteredTemplates() {
+    if (!this.templateSearch.trim()) return this.templates;
+    const q = this.templateSearch.toLowerCase();
+    return this.templates.filter((t: any) =>
+      t.name?.toLowerCase().includes(q) || t.body?.toLowerCase().includes(q) || t.category?.toLowerCase().includes(q)
+    );
+  }
+
+  sendTemplate(template: any) {
+    if (!this.selectedConvo || this.sendingTemplate) return;
+    this.sendingTemplate = true;
+
+    this.api.post(`/conversations/${this.selectedConvo.id}/messages/template`, {
+      template_name: template.name,
+      template_language: template.language || 'en',
+      template_id: template.id
+    }).subscribe({
+      next: (res: any) => {
+        this.sendingTemplate = false;
+        if (res.success) {
+          if (!this.messages.find(m => m.id === res.data.id)) {
+            this.messages.push(res.data);
+            this.scrollToBottom();
+          }
+          const convo = this.conversations.find(c => c.id === this.selectedConvo.id);
+          if (convo) convo.last_message = res.data.content;
+          this.showToast(`Template "${template.name}" sent successfully`, 'success');
+        }
+        this.showTemplatePicker = false;
+      },
+      error: (err) => {
+        this.sendingTemplate = false;
+        this.showToast('Failed to send template: ' + (err.error?.message || 'Error'), 'danger');
+      }
+    });
+  }
+
   // Quick Actions
   editContact() {
     if (!this.selectedConvo) return;
@@ -492,12 +564,46 @@ export class InboxComponent implements OnInit, OnDestroy {
   }
 
   attachFile() {
+    if (!this.selectedConvo) return;
     const input = document.createElement('input');
     input.type = 'file';
+    input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx';
+    
     input.onchange = (e: any) => {
       const file = e.target.files[0];
       if (file) {
-        this.showToast(`File selected: ${file.name}. Uploading feature is simulated.`, 'info');
+        this.showToast(`Uploading ${file.name}...`, 'info');
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        this.api.upload('/upload', formData).subscribe({
+          next: (res: any) => {
+             if (res.success && res.url) {
+                let type = 'document';
+                if (file.type.startsWith('image/')) type = 'image';
+                else if (file.type.startsWith('video/')) type = 'video';
+                else if (file.type.startsWith('audio/')) type = 'audio';
+                
+                // Extract relative path so backend can build public ngrok URL
+                const relativeUrl = res.url.startsWith('http') ? new URL(res.url).pathname : res.url;
+                this.api.post(`/conversations/${this.selectedConvo.id}/messages`, {
+                   content: '',
+                   message_type: type,
+                   media_url: relativeUrl
+                }).subscribe({
+                   next: (msgRes) => {
+                     this.showToast('File sent successfully', 'success');
+                   },
+                   error: (err) => {
+                     this.showToast('Failed to send file: ' + (err.error?.message || err.message), 'danger');
+                   }
+                });
+             }
+          },
+          error: (err) => {
+             this.showToast('Upload failed', 'danger');
+          }
+        });
       }
     };
     input.click();
@@ -509,5 +615,83 @@ export class InboxComponent implements OnInit, OnDestroy {
         this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
       } catch(err) { }
     }, 100);
+  }
+
+  getMediaUrl(url: string | null | undefined): string {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const hostUrl = environment.baseUrl.replace(/\/api$/, '');
+    return url.startsWith('/') ? hostUrl + url : hostUrl + '/' + url;
+  }
+
+  toggleVoiceRecording() {
+    if (!this.selectedConvo) return;
+
+    if (this.isRecording) {
+      // Stop recording
+      this.isRecording = false;
+      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+        this.mediaRecorder.stop();
+      }
+    } else {
+      // Start recording
+      this.audioChunks = [];
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        // Determine best supported MIME type for WhatsApp compatibility
+        let options: any;
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          options = { mimeType: 'audio/mp4' };
+        } else if (MediaRecorder.isTypeSupported('audio/ogg; codecs=opus')) {
+          options = { mimeType: 'audio/ogg; codecs=opus' };
+        } else if (MediaRecorder.isTypeSupported('audio/webm; codecs=opus')) {
+          options = { mimeType: 'audio/webm; codecs=opus' };
+        }
+        
+        this.mediaRecorder = new MediaRecorder(stream, options);
+        this.mediaRecorder.ondataavailable = (event: any) => {
+          if (event.data.size > 0) {
+            this.audioChunks.push(event.data);
+          }
+        };
+        this.mediaRecorder.onstop = () => {
+          stream.getTracks().forEach((t: any) => t.stop());
+          
+          const actualMimeType = this.mediaRecorder.mimeType || 'audio/webm';
+          let ext = 'webm';
+          if (actualMimeType.includes('mp4')) ext = 'm4a';
+          if (actualMimeType.includes('ogg')) ext = 'ogg';
+
+          const blob = new Blob(this.audioChunks, { type: actualMimeType });
+          const file = new File([blob], `voice_${Date.now()}.${ext}`, { type: actualMimeType });
+
+          this.showToast('Sending voice message...', 'info');
+          const formData = new FormData();
+          formData.append('file', file);
+
+          this.api.upload('/upload', formData).subscribe({
+            next: (res: any) => {
+              if (res.success && res.url) {
+                // Extract relative path so backend can build public ngrok URL
+                const relativeUrl = res.url.startsWith('http') ? new URL(res.url).pathname : res.url;
+                this.api.post(`/conversations/${this.selectedConvo.id}/messages`, {
+                  content: '',
+                  message_type: 'audio',
+                  media_url: relativeUrl
+                }).subscribe({
+                  next: () => this.showToast('Voice message sent!', 'success'),
+                  error: (err) => this.showToast('Failed to send voice message', 'danger')
+                });
+              }
+            },
+            error: () => this.showToast('Upload failed', 'danger')
+          });
+        };
+        this.mediaRecorder.start();
+        this.isRecording = true;
+        this.showToast('Recording... Click mic again to stop', 'info');
+      }).catch(err => {
+        this.showToast('Microphone access denied', 'danger');
+      });
+    }
   }
 }

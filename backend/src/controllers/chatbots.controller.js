@@ -127,13 +127,22 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
     const selectedByTitle = buttons.findIndex(b => b.title?.toLowerCase() === msgTrimmed);
     const selectedByBtnId = buttons.findIndex(b => b.id === msgTrimmed);
 
+    // Prefer ID match first, then auto-generated ID, then number, then title
     let selectedButton = null;
-    if (!isNaN(selectedByNumber) && selectedByNumber >= 0 && selectedByNumber < buttons.length) {
+    const autoGenPrefix = `${currentNode.id}_btn_`.toLowerCase();
+    
+    if (selectedByBtnId >= 0) {
+      selectedButton = buttons[selectedByBtnId];
+    } else if (msgTrimmed.startsWith(autoGenPrefix)) {
+      const btnIndexStr = msgTrimmed.replace(autoGenPrefix, '');
+      const btnIndex = parseInt(btnIndexStr) - 1;
+      if (!isNaN(btnIndex) && btnIndex >= 0 && btnIndex < buttons.length) {
+        selectedButton = buttons[btnIndex];
+      }
+    } else if (!isNaN(selectedByNumber) && selectedByNumber >= 0 && selectedByNumber < buttons.length) {
       selectedButton = buttons[selectedByNumber];
     } else if (selectedByTitle >= 0) {
       selectedButton = buttons[selectedByTitle];
-    } else if (selectedByBtnId >= 0) {
-      selectedButton = buttons[selectedByBtnId];
     }
 
     if (selectedButton) {
@@ -150,10 +159,14 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
             type: 'button',
             body: { text: nextNode.content.trim() },
             action: {
-              buttons: nextButtons.map((b, i) => ({
-                type: 'reply',
-                reply: { id: `btn_${i + 1}`, title: String(b.title || `Option ${i + 1}`).trim().substring(0, 20) }
-              }))
+                buttons: nextButtons.map((b, i) => ({
+                  type: 'reply',
+                  reply: {
+                    // Unique ID encoding next node ID
+                    id: `${nextNode.id}_btn_${i + 1}`,
+                    title: String(b.title || `Option ${i + 1}`).trim().substring(0, 20)
+                  }
+                }))
             }
           };
         }
@@ -171,7 +184,8 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
             buttons: buttons.map((b, i) => ({
               type: 'reply',
               reply: {
-                id: `btn_${i + 1}`,
+                // Use a unique ID that encodes the node ID to avoid collisions across different interactive nodes
+                id: `${currentNode.id}_btn_${i + 1}`,
                 title: String(b.title || `Option ${i + 1}`).trim().substring(0, 20)
               }
             }))
@@ -217,5 +231,6 @@ async function processChatbotFlow(chatbot, contactId, inboundMessage, businessId
   }
   return { response, interactive, currentNode: currentNodeId, nextNode: nextNodeId };
 }
+
 
 module.exports = { getChatbots, createChatbot, updateChatbot, deleteChatbot, testChatbot, processChatbotFlow };

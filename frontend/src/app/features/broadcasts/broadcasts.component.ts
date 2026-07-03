@@ -13,6 +13,7 @@ import { ApiService } from '../../core/services/api.service';
 export class BroadcastsComponent implements OnInit {
   broadcasts: any[] = [];
   loading = false;
+  saving = false;
   showModal = false;
   activeChannel = 'whatsapp';
 
@@ -81,7 +82,8 @@ export class BroadcastsComponent implements OnInit {
   }
 
   saveBroadcast() {
-    if (!this.newBroadcast.name || !this.newBroadcast.template_id) return;
+    if (!this.newBroadcast.name || !this.newBroadcast.template_id || this.saving) return;
+    this.saving = true;
 
     const payload = {
       ...this.newBroadcast,
@@ -98,16 +100,24 @@ export class BroadcastsComponent implements OnInit {
                 this.loadBroadcasts();
                 this.showModal = false;
                 this.resetForm();
-              }
+                this.saving = false;
+              },
+              error: () => this.saving = false
             });
           } else {
             this.loadBroadcasts();
             this.showModal = false;
             this.resetForm();
+            this.saving = false;
           }
+        } else {
+          this.saving = false;
         }
       },
-      error: (err) => alert(err.error?.message || 'Error creating broadcast')
+      error: (err) => {
+        this.saving = false;
+        alert(err.error?.message || 'Error creating broadcast');
+      }
     });
   }
 

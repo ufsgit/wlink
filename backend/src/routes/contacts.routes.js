@@ -10,6 +10,7 @@ router.get('/tags', c.getUniqueTags);
 router.post('/', c.createContact);
 router.post('/import', upload.single('file'), c.importContacts);
 router.post('/optin-link', c.createOptInLink);
+router.get('/:id/history', c.getContactHistory);
 router.get('/:id', c.getContact);
 router.put('/:id', c.updateContact);
 router.delete('/:id', c.deleteContact);

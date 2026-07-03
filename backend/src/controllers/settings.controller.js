@@ -190,6 +190,63 @@ const testSocialAccountConnection = async (req, res) => {
   }
 };
 
+
+const getLeadFields = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM lead_fields WHERE business_id=? ORDER BY display_order ASC, id ASC',
+      [req.user.businessId]
+    );
+    const fields = rows.map(f => ({
+      ...f,
+      options: typeof f.options === 'string' ? JSON.parse(f.options || '[]') : (f.options || [])
+    }));
+    res.json({ success: true, data: fields, message: 'OK' });
+  } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
+};
+
+const createLeadField = async (req, res) => {
+  try {
+    const { label, field_type, options, is_required, display_order } = req.body;
+    if (!label || !field_type) return res.status(400).json({ success: false, message: 'label and field_type are required', data: null });
+    // Generate a slug key from label
+    const field_key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').substring(0, 80);
+    const optionsJson = field_type === 'dropdown' && Array.isArray(options) ? JSON.stringify(options) : null;
+    const [result] = await pool.query(
+      'INSERT INTO lead_fields (business_id, label, field_key, field_type, options, is_required, display_order) VALUES (?,?,?,?,?,?,?)',
+      [req.user.businessId, label, field_key, field_type, optionsJson, is_required ? 1 : 0, display_order || 0]
+    );
+    const [rows] = await pool.query('SELECT * FROM lead_fields WHERE id=?', [result.insertId]);
+    const field = { ...rows[0], options: typeof rows[0].options === 'string' ? JSON.parse(rows[0].options || '[]') : (rows[0].options || []) };
+    res.status(201).json({ success: true, data: field, message: 'Lead field created' });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ success: false, message: 'A field with a similar name already exists.', data: null });
+    res.status(500).json({ success: false, message: err.message, data: null });
+  }
+};
+
+const updateLeadField = async (req, res) => {
+  try {
+    const { label, field_type, options, is_required, display_order } = req.body;
+    const optionsJson = field_type === 'dropdown' && Array.isArray(options) ? JSON.stringify(options) : null;
+    await pool.query(
+      'UPDATE lead_fields SET label=?, field_type=?, options=?, is_required=?, display_order=? WHERE id=? AND business_id=?',
+      [label, field_type, optionsJson, is_required ? 1 : 0, display_order || 0, req.params.id, req.user.businessId]
+    );
+    const [rows] = await pool.query('SELECT * FROM lead_fields WHERE id=?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Not found', data: null });
+    const field = { ...rows[0], options: typeof rows[0].options === 'string' ? JSON.parse(rows[0].options || '[]') : (rows[0].options || []) };
+    res.json({ success: true, data: field, message: 'Lead field updated' });
+  } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
+};
+
+const deleteLeadField = async (req, res) => {
+  try {
+    await pool.query('DELETE FROM lead_fields WHERE id=? AND business_id=?', [req.params.id, req.user.businessId]);
+    res.json({ success: true, data: null, message: 'Lead field deleted' });
+  } catch (err) { res.status(500).json({ success: false, message: err.message, data: null }); }
+};
+
 module.exports = { 
   getBusiness, 
   updateBusiness, 
@@ -203,5 +260,10 @@ module.exports = {
   createSocialAccount,
   updateSocialAccount,
   deleteSocialAccount,
-  testSocialAccountConnection
+  testSocialAccountConnection,
+  getLeadFields,
+  createLeadField,
+  updateLeadField,
+  deleteLeadField
 };
+

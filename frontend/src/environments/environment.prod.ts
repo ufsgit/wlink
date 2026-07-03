@@ -1,6 +1,10 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.urbanchat.in/api',
-  socketUrl: 'https://api.urbanchat.in',
-  baseUrl: 'https://api.urbanchat.in'
+  apiUrl: 'http://localhost:3000/api',
+  baseUrl: 'http://localhost:3000/api',
+  socketUrl: 'http://localhost:3000',
+  
+  // apiUrl: 'https://whatsappapi.trackbox.in/api',
+  // baseUrl: 'https://whatsappapi.trackbox.in/api',
+  // socketUrl: 'https://whatsappapi.trackbox.in',
 };

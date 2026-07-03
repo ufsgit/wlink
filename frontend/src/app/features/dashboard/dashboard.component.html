@@ -8,7 +8,7 @@
       <div class="stat-info">
         <label>Total Contacts</label>
         <h3>{{ stats.totalContacts | number }}</h3>
-        <span class="trend" [ngClass]="{'up': stats.contactsGrowthPct >= 0, 'down': stats.contactsGrowthPct < 0}"><i class="bi" [ngClass]="{'bi-arrow-up': stats.contactsGrowthPct >= 0, 'bi-arrow-down': stats.contactsGrowthPct < 0}"></i> {{ stats.contactsGrowthPct }}% {{ stats.contactsGrowthPct >= 0 ? 'increase' : 'decrease' }}</span>
+        <span class="trend up"><i class="bi bi-arrow-up"></i> 12% increase</span>
       </div>
     </div>
 
@@ -30,7 +30,7 @@
       <div class="stat-info">
         <label>Daily Messages</label>
         <h3>{{ stats.messagesToday | number }}</h3>
-        <span class="trend" [ngClass]="{'up': stats.messagesGrowthPct >= 0, 'down': stats.messagesGrowthPct < 0}"><i class="bi" [ngClass]="{'bi-arrow-up': stats.messagesGrowthPct >= 0, 'bi-arrow-down': stats.messagesGrowthPct < 0}"></i> {{ stats.messagesGrowthPct }}% {{ stats.messagesGrowthPct >= 0 ? 'increase' : 'decrease' }}</span>
+        <span class="trend up"><i class="bi bi-arrow-up"></i> 5% vs yesterday</span>
       </div>
     </div>
 

@@ -68,6 +68,12 @@ const sendBroadcast = async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ success: false, message: 'Not found', data: null });
     const broadcast = rows[0];
+    
+    // Prevent double sending
+    if (broadcast.status === 'running' || broadcast.status === 'completed') {
+      return res.status(400).json({ success: false, message: 'Broadcast is already running or completed', data: null });
+    }
+    
     const channel = broadcast.channel || 'whatsapp';
 
     // Resolve contacts

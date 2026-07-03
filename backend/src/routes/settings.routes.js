@@ -20,4 +20,10 @@ router.put('/social-accounts/:id', requireRole('admin', 'superadmin'), c.updateS
 router.delete('/social-accounts/:id', requireRole('admin', 'superadmin'), c.deleteSocialAccount);
 router.post('/social-accounts/:id/test', requireRole('admin', 'superadmin'), c.testSocialAccountConnection);
 
+// Lead Fields (Custom Fields) Routes
+router.get('/lead-fields', c.getLeadFields);
+router.post('/lead-fields', requireRole('admin', 'superadmin'), c.createLeadField);
+router.put('/lead-fields/:id', requireRole('admin', 'superadmin'), c.updateLeadField);
+router.delete('/lead-fields/:id', requireRole('admin', 'superadmin'), c.deleteLeadField);
+
 module.exports = router;

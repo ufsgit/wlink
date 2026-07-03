@@ -14,6 +14,144 @@
     </div>
   </div>
 
+  <!-- ═══ META APPROVAL GUIDE ═══════════════════════════════════════════ -->
+  <div class="approval-guide-banner mb-4">
+    <div class="guide-header" (click)="showGuide = !showGuide" style="cursor:pointer;">
+      <div class="guide-header-left">
+        <div class="guide-icon"><i class="bi bi-shield-check"></i></div>
+        <div>
+          <h5 class="mb-0">📋 How to Get Your Template Approved by Meta</h5>
+          <p class="mb-0">Follow these rules to avoid rejection and get approved fast.</p>
+        </div>
+      </div>
+      <i class="bi" [ngClass]="showGuide ? 'bi-chevron-up' : 'bi-chevron-down'" style="font-size:1.1rem; color:#6366f1;"></i>
+    </div>
+
+    <div class="guide-body" *ngIf="showGuide">
+
+      <!-- Quick Rules Grid -->
+      <div class="guide-rules-grid">
+
+        <!-- Name -->
+        <div class="guide-rule-card">
+          <div class="rule-icon" style="background:rgba(99,102,241,0.08); color:#6366f1;">
+            <i class="bi bi-input-cursor-text"></i>
+          </div>
+          <div>
+            <div class="rule-title">Template Name</div>
+            <div class="rule-desc">Use only <strong>lowercase letters, numbers and underscores</strong>. No spaces or special characters.</div>
+            <div class="rule-examples">
+              <span class="ex-good">✅ order_confirmation</span>
+              <span class="ex-good">✅ welcome_v2</span>
+              <span class="ex-bad">❌ Order Confirmation</span>
+              <span class="ex-bad">❌ welcome-msg!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div class="guide-rule-card">
+          <div class="rule-icon" style="background:rgba(16,185,129,0.08); color:#059669;">
+            <i class="bi bi-tag"></i>
+          </div>
+          <div>
+            <div class="rule-title">Category Selection</div>
+            <div class="rule-desc">Pick the <strong>correct category</strong> — Meta checks if content matches.</div>
+            <div class="rule-examples">
+              <span class="ex-good">✅ UTILITY — orders, OTPs, reminders</span>
+              <span class="ex-good">✅ MARKETING — offers, promotions</span>
+              <span class="ex-good">✅ AUTHENTICATION — login codes</span>
+              <span class="ex-bad">❌ Using UTILITY for pure promotions</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="guide-rule-card">
+          <div class="rule-icon" style="background:rgba(245,158,11,0.08); color:#b45309;">
+            <i class="bi bi-chat-text"></i>
+          </div>
+          <div>
+            <div class="rule-title">Body Text Rules</div>
+            <div class="rule-desc">Be clear and honest. Avoid spam-trigger words and excessive caps.</div>
+            <div class="rule-examples">
+              <span class="ex-good">✅ "Hi &#123;&#123;1&#125;&#125;, your order #&#123;&#123;2&#125;&#125; has been confirmed."</span>
+              <span class="ex-bad">❌ "BUY NOW!!! LIMITED OFFER!!!"</span>
+              <span class="ex-bad">❌ Vague variables like "Click &#123;&#123;1&#125;&#125;" with no context</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Variables -->
+        <div class="guide-rule-card">
+          <div class="rule-icon" style="background:rgba(6,182,212,0.08); color:#0891b2;">
+            <i class="bi bi-braces"></i>
+          </div>
+          <div>
+            <div class="rule-title">Variables &#123;&#123;1&#125;&#125;</div>
+            <div class="rule-desc">Variables must be sequential starting from <code>&#123;&#123;1&#125;&#125;</code>. The surrounding text must make the variable's meaning obvious.</div>
+            <div class="rule-examples">
+              <span class="ex-good">✅ "Hello &#123;&#123;1&#125;&#125;, your OTP is &#123;&#123;2&#125;&#125;."</span>
+              <span class="ex-bad">❌ Starting at &#123;&#123;2&#125;&#125; or skipping numbers</span>
+              <span class="ex-bad">❌ Entire body is just "&#123;&#123;1&#125;&#125;"</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="guide-rule-card">
+          <div class="rule-icon" style="background:rgba(124,58,237,0.08); color:#7c3aed;">
+            <i class="bi bi-card-text"></i>
+          </div>
+          <div>
+            <div class="rule-title">Footer (Marketing)</div>
+            <div class="rule-desc">For <strong>MARKETING</strong> templates, always include an opt-out line in the footer. Meta may reject without it.</div>
+            <div class="rule-examples">
+              <span class="ex-good">✅ "Reply STOP to unsubscribe"</span>
+              <span class="ex-good">✅ "To opt out, reply STOP"</span>
+              <span class="ex-bad">❌ Leaving footer empty on marketing templates</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="guide-rule-card">
+          <div class="rule-icon" style="background:rgba(239,68,68,0.08); color:#dc2626;">
+            <i class="bi bi-ui-checks"></i>
+          </div>
+          <div>
+            <div class="rule-title">Buttons (Optional)</div>
+            <div class="rule-desc">Max 3 buttons. Button text must match the button action clearly.</div>
+            <div class="rule-examples">
+              <span class="ex-good">✅ Quick Reply: "Yes" / "No" / "Stop"</span>
+              <span class="ex-good">✅ URL: "Track Order" → your website</span>
+              <span class="ex-bad">❌ URL button with a non-HTTPS link</span>
+              <span class="ex-bad">❌ More than 3 buttons</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Tips Row -->
+      <div class="guide-tips-row mt-4">
+        <div class="guide-tip tip-green">
+          <i class="bi bi-lightning-charge-fill"></i>
+          <div><strong>Fastest Approval:</strong> Use UTILITY category with transactional content (orders, appointments, OTPs). Usually approved within minutes.</div>
+        </div>
+        <div class="guide-tip tip-blue">
+          <i class="bi bi-arrow-repeat"></i>
+          <div><strong>After Creating:</strong> Click <strong>Submit to Meta</strong> on the template card. Then use <strong>Sync from Meta</strong> to check approval status.</div>
+        </div>
+        <div class="guide-tip tip-red">
+          <i class="bi bi-x-octagon-fill"></i>
+          <div><strong>Auto-Rejected By Meta:</strong> Deceptive content, phishing URLs, drug/weapon references, political content, adult content.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
   <div class="template-grid">
     <!-- Loading State -->
     <div *ngIf="loading" class="text-center py-5 w-100" style="grid-column: 1 / -1;">

@@ -48,6 +48,31 @@ export class SettingsComponent implements OnInit {
   fbWebhookUrl = '';
   igWebhookUrl = '';
 
+  // ── Lead Fields ──────────────────────────────────
+  leadFields: any[] = [];
+  leadFieldsLoading = false;
+  showAddFieldModal = false;
+  editingField: any = null;
+  fieldSaving = false;
+  newField: any = {
+    label: '',
+    field_type: 'text',
+    options: '',
+    is_required: false,
+    display_order: 0
+  };
+  readonly FIELD_TYPES = [
+    { value: 'text',     label: 'Text',         icon: 'bi-type' },
+    { value: 'number',   label: 'Number',       icon: 'bi-123' },
+    { value: 'dropdown', label: 'Dropdown',     icon: 'bi-chevron-down' },
+    { value: 'date',     label: 'Date',         icon: 'bi-calendar3' },
+    { value: 'dob',      label: 'Date of Birth', icon: 'bi-cake2' },
+    { value: 'email',    label: 'Email',        icon: 'bi-envelope' },
+    { value: 'phone',    label: 'Phone',        icon: 'bi-telephone' },
+    { value: 'textarea', label: 'Textarea',     icon: 'bi-textarea-t' },
+  ];
+  // ─────────────────────────────────────────────────
+
   billingPlans = [
     { key: 'starter', name: 'Starter', price: 999, contacts: 1000, broadcasts: 5, agents: 1 },
     { key: 'pro', name: 'Pro', price: 2999, contacts: 10000, broadcasts: 50, agents: 5 },
@@ -58,6 +83,9 @@ export class SettingsComponent implements OnInit {
     { key: 'whatsapp', name: 'WhatsApp Business', desc: 'Official WhatsApp Business API integration', icon: 'bi-whatsapp', color: '#25D366' },
     { key: 'instagram', name: 'Instagram DM', desc: 'Connect your Instagram Business account', icon: 'bi-instagram', color: '#E1306C' },
     { key: 'facebook', name: 'Facebook Messenger', desc: 'Chat with customers on your Facebook Page', icon: 'bi-messenger', color: '#0084FF' },
+    { key: 'openai', name: 'OpenAI (GPT-4)', desc: 'Power your chatbots with AI intelligence', icon: 'bi-robot', color: '#10b981' },
+    { key: 'woocommerce', name: 'WooCommerce', desc: 'Sync products and orders automatically', icon: 'bi-cart3', color: '#9333ea' },
+    { key: 'shopify', name: 'Shopify', desc: 'Import your Shopify catalog', icon: 'bi-bag', color: '#95BF47' },
   ];
 
   constructor(private api: ApiService) {}
@@ -397,11 +425,114 @@ export class SettingsComponent implements OnInit {
   connectIntegration(key: string) {
     if (['whatsapp', 'instagram', 'facebook'].includes(key)) {
       this.activeTab = 'whatsapp';
-      // Smooth scroll to credentials
       setTimeout(() => {
         const el = document.querySelector('.api-form-section');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     }
+  }
+
+  // ── Lead Fields ──────────────────────────────────────────────────────────
+
+  loadLeadFields() {
+    this.leadFieldsLoading = true;
+    this.api.get('/settings/lead-fields').subscribe({
+      next: (res: any) => {
+        if (res.success) this.leadFields = res.data;
+        this.leadFieldsLoading = false;
+      },
+      error: () => this.leadFieldsLoading = false
+    });
+  }
+
+  openAddFieldModal() {
+    this.editingField = null;
+    this.newField = { label: '', field_type: 'text', options: '', is_required: false, display_order: this.leadFields.length };
+    this.showAddFieldModal = true;
+  }
+
+  openEditFieldModal(field: any) {
+    this.editingField = field;
+    this.newField = {
+      label: field.label,
+      field_type: field.field_type,
+      options: Array.isArray(field.options) ? field.options.join('\n') : '',
+      is_required: !!field.is_required,
+      display_order: field.display_order || 0
+    };
+    this.showAddFieldModal = true;
+  }
+
+  closeFieldModal() {
+    this.showAddFieldModal = false;
+    this.editingField = null;
+    this.fieldSaving = false;
+  }
+
+  saveLeadField() {
+    if (!this.newField.label || !this.newField.field_type) {
+      this.saveError = 'Label and field type are required.';
+      setTimeout(() => this.saveError = '', 4000);
+      return;
+    }
+    this.fieldSaving = true;
+    this.saveError = '';
+    this.saveSuccess = '';
+
+    const payload = {
+      label: this.newField.label,
+      field_type: this.newField.field_type,
+      options: this.newField.field_type === 'dropdown'
+        ? this.newField.options.split('\n').map((o: string) => o.trim()).filter((o: string) => o)
+        : [],
+      is_required: this.newField.is_required,
+      display_order: parseInt(this.newField.display_order) || 0
+    };
+
+    const req = this.editingField
+      ? this.api.put(`/settings/lead-fields/${this.editingField.id}`, payload)
+      : this.api.post('/settings/lead-fields', payload);
+
+    req.subscribe({
+      next: (res: any) => {
+        this.fieldSaving = false;
+        if (res.success) {
+          this.saveSuccess = this.editingField ? 'Field updated successfully!' : 'New field added!';
+          this.loadLeadFields();
+          this.closeFieldModal();
+          setTimeout(() => this.saveSuccess = '', 4000);
+        }
+      },
+      error: (err: any) => {
+        this.fieldSaving = false;
+        this.saveError = err.error?.message || 'Failed to save field.';
+        setTimeout(() => this.saveError = '', 5000);
+      }
+    });
+  }
+
+  deleteLeadField(id: number) {
+    if (!confirm('Delete this field? All saved values for this field will also be removed from contacts.')) return;
+    this.api.delete(`/settings/lead-fields/${id}`).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.saveSuccess = 'Field deleted.';
+          this.loadLeadFields();
+          setTimeout(() => this.saveSuccess = '', 3000);
+        }
+      },
+      error: (err: any) => {
+        this.saveError = err.error?.message || 'Failed to delete field.';
+        setTimeout(() => this.saveError = '', 5000);
+      }
+    });
+  }
+
+  getFieldTypeLabel(type: string): string {
+    return this.FIELD_TYPES.find(t => t.value === type)?.label || type;
+  }
+
+  getFieldTypeIcon(type: string): string {
+    return this.FIELD_TYPES.find(t => t.value === type)?.icon || 'bi-type';
   }
 }

@@ -3,9 +3,19 @@
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'whatsapp'" (click)="activeTab = 'whatsapp'">
       <i class="bi bi-cpu me-2"></i>Channels Manager
     </a>
-
+    <!-- 
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'profile'" (click)="activeTab = 'profile'">
+      <i class="bi bi-person me-2"></i>Profile
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'business'" (click)="activeTab = 'business'">
+      <i class="bi bi-building me-2"></i>Business
+    </a>
+    -->
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'team'" (click)="activeTab = 'team'; loadTeam()">
       <i class="bi bi-people me-2"></i>Team
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'lead-fields'" (click)="activeTab = 'lead-fields'; loadLeadFields()">
+      <i class="bi bi-list-columns me-2"></i>Lead Fields
     </a>
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'api'" (click)="activeTab = 'api'">
       <i class="bi bi-code-slash me-2"></i>API & Webhooks
@@ -13,7 +23,11 @@
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'integrations'" (click)="activeTab = 'integrations'">
       <i class="bi bi-plug me-2"></i>Integrations
     </a>
-
+    <!-- 
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'billing'" (click)="activeTab = 'billing'; loadBilling()">
+      <i class="bi bi-credit-card me-2"></i>Billing
+    </a>
+    -->
   </div>
 
   <div class="settings-content">
@@ -273,14 +287,14 @@
 
               <div class="form-group mb-3">
                 <label class="form-label">WhatsApp Business Account ID (WABA ID)</label>
-                <input type="text" class="form-control" [(ngModel)]="newChannel.waba_id" placeholder="15-digit WABA ID" required autocomplete="off">
+                <input type="text" class="form-control" [(ngModel)]="newChannel.waba_id" placeholder="15-digit WABA ID" required>
                 <span class="form-hint">Found in Meta Developer Dashboard or WhatsApp Business Manager</span>
               </div>
 
               <div class="form-group mb-3">
                 <label class="form-label">Permanent Access Token</label>
                 <div class="token-input">
-                  <input [type]="showToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required autocomplete="new-password">
+                  <input [type]="showToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required>
                   <button class="toggle-visibility" (click)="showToken = !showToken">
                     <i class="bi" [class.bi-eye]="!showToken" [class.bi-eye-slash]="showToken"></i>
                   </button>
@@ -293,7 +307,7 @@
             <div *ngIf="newChannel.platform === 'instagram'">
               <div class="form-group mb-3">
                 <label class="form-label">Instagram Business Account ID</label>
-                <input type="text" class="form-control" [(ngModel)]="newChannel.account_id" placeholder="IG Account ID" required autocomplete="off">
+                <input type="text" class="form-control" [(ngModel)]="newChannel.account_id" placeholder="IG Account ID" required>
                 <span class="form-hint">Instagram Account ID linked to Facebook Page</span>
               </div>
 
@@ -306,7 +320,7 @@
               <div class="form-group mb-3">
                 <label class="form-label">Facebook Page Access Token</label>
                 <div class="token-input">
-                  <input [type]="showIgToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAAS..." required autocomplete="new-password">
+                  <input [type]="showIgToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAAS..." required>
                   <button class="toggle-visibility" (click)="showIgToken = !showIgToken">
                     <i class="bi" [class.bi-eye]="!showIgToken" [class.bi-eye-slash]="showIgToken"></i>
                   </button>
@@ -322,7 +336,7 @@
               <div class="form-group mb-3">
                 <label class="form-label">Instagram App Secret <span class="optional">(optional)</span></label>
                 <div class="token-input">
-                  <input [type]="showIgSecret ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.verify_token" placeholder="Instagram/Meta App Secret" autocomplete="new-password">
+                  <input [type]="showIgSecret ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.verify_token" placeholder="Instagram/Meta App Secret">
                   <button class="toggle-visibility" (click)="showIgSecret = !showIgSecret">
                     <i class="bi" [class.bi-eye]="!showIgSecret" [class.bi-eye-slash]="showIgSecret"></i>
                   </button>
@@ -341,7 +355,7 @@
               <div class="form-group mb-3">
                 <label class="form-label">Facebook Page Access Token</label>
                 <div class="token-input">
-                  <input [type]="showFbToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required autocomplete="new-password">
+                  <input [type]="showFbToken ? 'text' : 'password'" class="form-control" [(ngModel)]="newChannel.token" placeholder="EAABxyz..." required>
                   <button class="toggle-visibility" (click)="showFbToken = !showFbToken">
                     <i class="bi" [class.bi-eye]="!showFbToken" [class.bi-eye-slash]="showFbToken"></i>
                   </button>
@@ -639,6 +653,173 @@
               [class.btn-manage]="isIntegrated(intg.key)"
               (click)="connectIntegration(intg.key)">
               {{ isIntegrated(intg.key) ? 'Manage Settings' : 'Connect App' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== LEAD FIELDS ===================== -->
+    <div *ngIf="activeTab === 'lead-fields'" class="lead-fields-tab">
+      <!-- Header -->
+      <div class="team-header-container">
+        <div>
+          <h3 class="section-title mb-0">Lead Field Manager</h3>
+          <p class="section-desc">Define custom fields that appear on every contact's lead detail view. Add dropdowns, dates, text fields and more.</p>
+        </div>
+        <button class="btn btn-primary" (click)="openAddFieldModal()">
+          <i class="bi bi-plus-lg me-2"></i> Add New Field
+        </button>
+      </div>
+
+      <!-- Alerts -->
+      <div class="alert-info-box mt-3" *ngIf="saveSuccess">
+        <i class="bi bi-check-circle-fill"></i> {{ saveSuccess }}
+      </div>
+      <div class="alert-error-box mt-3" *ngIf="saveError">
+        <i class="bi bi-x-circle-fill"></i> {{ saveError }}
+      </div>
+
+      <!-- Loading -->
+      <div class="text-center py-5" *ngIf="leadFieldsLoading">
+        <div class="spinner-border text-success"></div>
+      </div>
+
+      <!-- Fields Table -->
+      <div class="team-table-card mt-4" *ngIf="!leadFieldsLoading">
+
+        <!-- Empty state -->
+        <div *ngIf="leadFields.length === 0" class="lf-empty-state">
+          <div class="lf-empty-icon"><i class="bi bi-list-columns"></i></div>
+          <h4>No Custom Fields Yet</h4>
+          <p>Add fields like &quot;Course Selected&quot;, &quot;Date of Birth&quot;, &quot;City&quot;, etc. to enrich your lead profiles.</p>
+          <button class="btn btn-primary mt-2" (click)="openAddFieldModal()">
+            <i class="bi bi-plus-lg me-2"></i> Add Your First Field
+          </button>
+        </div>
+
+        <!-- Fields List -->
+        <table class="table custom-table" *ngIf="leadFields.length > 0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Field Label</th>
+              <th>Type</th>
+              <th>Options / Info</th>
+              <th>Required</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let field of leadFields; let i = index">
+              <td class="text-muted" style="font-size:0.8rem;">{{ i + 1 }}</td>
+              <td>
+                <div class="lf-field-name">
+                  <i class="bi" [ngClass]="getFieldTypeIcon(field.field_type)"></i>
+                  <span>{{ field.label }}</span>
+                </div>
+                <div class="lf-field-key">key: {{ field.field_key }}</div>
+              </td>
+              <td>
+                <span class="lf-type-badge" [attr.data-type]="field.field_type">
+                  {{ getFieldTypeLabel(field.field_type) }}
+                </span>
+              </td>
+              <td class="text-muted" style="font-size:0.82rem;">
+                <span *ngIf="field.field_type === 'dropdown' && field.options?.length">
+                  {{ field.options.join(', ') }}
+                </span>
+                <span *ngIf="field.field_type !== 'dropdown'" style="color:#cbd5e1;">—</span>
+              </td>
+              <td>
+                <span class="lf-req-badge" [class.required]="field.is_required" [class.optional]="!field.is_required">
+                  {{ field.is_required ? 'Required' : 'Optional' }}
+                </span>
+              </td>
+              <td class="text-end">
+                <button class="action-btn text-primary me-2" (click)="openEditFieldModal(field)" title="Edit Field">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="action-btn text-danger" (click)="deleteLeadField(field.id)" title="Delete Field">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Info Box -->
+      <div class="lf-info-box mt-4" *ngIf="leadFields.length > 0">
+        <i class="bi bi-lightbulb-fill"></i>
+        <div>
+          <strong>How it works:</strong> These fields appear in the <em>Lead Details</em> panel when you click the eye icon on any contact, and also in the Add/Edit Contact form. Values are stored per contact.
+        </div>
+      </div>
+
+      <!-- Add / Edit Field Modal -->
+      <div class="custom-modal" *ngIf="showAddFieldModal">
+        <div class="modal-backdrop" (click)="closeFieldModal()"></div>
+        <div class="lf-modal-card shadow-lg">
+          <div class="lf-modal-header">
+            <div>
+              <h4 class="mb-0">{{ editingField ? 'Edit Field' : 'Add New Field' }}</h4>
+              <p class="text-muted small mb-0">{{ editingField ? 'Update this custom lead field' : 'Define a new field for your lead profiles' }}</p>
+            </div>
+            <button class="close-btn" (click)="closeFieldModal()">&times;</button>
+          </div>
+
+          <div class="lf-modal-body">
+            <!-- Label -->
+            <div class="form-group mb-4">
+              <label class="lf-form-label">Field Label <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="newField.label" placeholder="e.g. Course Selected, Date of Birth, City">
+              <span class="form-hint">This label will be shown on the contact detail panel and forms.</span>
+            </div>
+
+            <!-- Field Type -->
+            <div class="form-group mb-4">
+              <label class="lf-form-label">Field Type <span class="text-danger">*</span></label>
+              <div class="lf-type-grid">
+                <label class="lf-type-option" *ngFor="let ft of FIELD_TYPES"
+                  [class.selected]="newField.field_type === ft.value">
+                  <input type="radio" name="fieldType" [value]="ft.value" [(ngModel)]="newField.field_type">
+                  <i class="bi" [ngClass]="ft.icon"></i>
+                  <span>{{ ft.label }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Dropdown Options (only for dropdown) -->
+            <div class="form-group mb-4" *ngIf="newField.field_type === 'dropdown'">
+              <label class="lf-form-label">Dropdown Options <span class="text-danger">*</span></label>
+              <textarea class="form-control" rows="5" [(ngModel)]="newField.options"
+                placeholder="Enter each option on a new line:
+Engineering
+Medical
+Arts
+Commerce"></textarea>
+              <span class="form-hint">One option per line. These will appear as choices in the dropdown.</span>
+            </div>
+
+            <!-- Required Toggle -->
+            <div class="lf-required-toggle">
+              <div>
+                <div class="lf-toggle-label">Required Field</div>
+                <div class="lf-toggle-hint">Contact cannot be saved without filling this field</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" [(ngModel)]="newField.is_required">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="lf-modal-footer">
+            <button class="btn btn-outline-secondary" (click)="closeFieldModal()" [disabled]="fieldSaving">Cancel</button>
+            <button class="btn btn-primary" (click)="saveLeadField()" [disabled]="fieldSaving || !newField.label">
+              <span *ngIf="fieldSaving"><i class="bi bi-arrow-repeat spin"></i> Saving...</span>
+              <span *ngIf="!fieldSaving"><i class="bi bi-check-lg me-1"></i>{{ editingField ? 'Update Field' : 'Add Field' }}</span>
             </button>
           </div>
         </div>

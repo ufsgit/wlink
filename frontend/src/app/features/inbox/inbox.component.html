@@ -179,9 +179,33 @@
 
       <div *ngFor="let msg of messages" class="msg-wrapper" [class.sent]="msg.direction === 'outbound'">
         <div class="msg-bubble">
-          <div class="msg-content">{{ msg.content }}</div>
+          <div class="msg-content">
+            <ng-container *ngIf="msg.message_type === 'audio' || msg.message_type === 'voice'">
+              <audio controls [src]="getMediaUrl(msg.media_url)" style="max-width: 250px; outline: none;"></audio>
+            </ng-container>
+            <ng-container *ngIf="msg.message_type === 'image'">
+              <img [src]="getMediaUrl(msg.media_url)" style="max-width: 250px; border-radius: 8px; cursor: pointer;" />
+              <div *ngIf="msg.content" style="margin-top: 5px;">{{ msg.content }}</div>
+            </ng-container>
+            <ng-container *ngIf="msg.message_type === 'video'">
+              <video controls [src]="getMediaUrl(msg.media_url)" style="max-width: 250px; border-radius: 8px;"></video>
+              <div *ngIf="msg.content" style="margin-top: 5px;">{{ msg.content }}</div>
+            </ng-container>
+            <ng-container *ngIf="msg.message_type === 'document'">
+              <a [href]="getMediaUrl(msg.media_url)" target="_blank" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px;">
+                 <i class="bi bi-file-earmark-text" style="font-size: 1.5rem;"></i> Download Document
+              </a>
+              <div *ngIf="msg.content" style="margin-top: 5px;">{{ msg.content }}</div>
+            </ng-container>
+            <ng-container *ngIf="msg.message_type !== 'audio' && msg.message_type !== 'voice' && msg.message_type !== 'image' && msg.message_type !== 'video' && msg.message_type !== 'document'">
+              <div *ngIf="msg.message_type === 'template'" class="template-msg-label">
+                <i class="bi bi-file-earmark-text-fill"></i> Template
+              </div>
+              {{ msg.content }}
+            </ng-container>
+          </div>
           <div class="msg-meta">
-            <span class="msg-time">{{ msg.sent_at || msg.created_at | date:'shortTime' }}</span>
+            <span class="msg-time">{{ (msg.sent_at || msg.created_at) | date:'shortTime' }}</span>
             <span class="msg-status" *ngIf="msg.direction === 'outbound'">
               <i class="bi" [ngClass]="{
                 'bi-check': msg.status === 'sent',
@@ -203,7 +227,10 @@
         </div>
         <button class="btn-action" title="Emoji" (click)="toggleEmojiPicker()"><i class="bi bi-emoji-smile"></i></button>
         <button class="btn-action" title="Attach file" (click)="attachFile()"><i class="bi bi-paperclip"></i></button>
-        <button class="btn-action" title="Send Product" (click)="openProductPicker()"><i class="bi bi-bag"></i></button>
+        <button class="btn-action" title="Send Template" (click)="openTemplatePicker()"><i class="bi bi-file-earmark-text"></i></button>
+        <button class="btn-action" [class.recording]="isRecording" title="Voice message" (click)="toggleVoiceRecording()">
+          <i class="bi" [ngClass]="isRecording ? 'bi-stop-circle-fill' : 'bi-mic'"></i>
+        </button>
       </div>
       <div class="input-wrapper">
         <input type="text" 
@@ -343,6 +370,69 @@
       </div>
     </div>
   </ng-template>
+
+  <!-- Template Picker Modal -->
+  <div class="premium-modal-overlay" *ngIf="showTemplatePicker" (click)="showTemplatePicker = false">
+    <div class="premium-modal template-picker-modal" (click)="$event.stopPropagation()">
+      <div class="premium-modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge template-badge">
+            <i class="bi bi-file-earmark-text-fill"></i>
+          </div>
+          <div>
+            <h5>Send Template</h5>
+            <p>Select an approved WhatsApp template to send</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="showTemplatePicker = false">&times;</button>
+      </div>
+
+      <!-- Search Input -->
+      <div style="padding: 18px 24px 0;">
+        <div class="input-wrapper-with-icon">
+          <i class="bi bi-search"></i>
+          <input type="text" [(ngModel)]="templateSearch" placeholder="Search templates by name or content...">
+        </div>
+      </div>
+
+      <div class="premium-modal-body" style="padding-top: 18px; max-height: 400px; overflow-y: auto;">
+        <div *ngIf="loadingTemplates" class="text-center py-4">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+          <p class="text-muted small mt-2">Loading templates...</p>
+        </div>
+        <div *ngIf="!loadingTemplates && filteredTemplates.length === 0" class="text-center py-4">
+          <div class="modal-icon-badge danger" style="margin: 0 auto 12px; width: 44px; height: 44px;">
+            <i class="bi bi-file-earmark-x"></i>
+          </div>
+          <p class="text-muted mt-2">No approved templates found</p>
+          <p class="text-muted" style="font-size: 0.78rem;">Create and submit templates in the Templates page first</p>
+        </div>
+
+        <div class="template-list" *ngIf="!loadingTemplates && filteredTemplates.length > 0">
+          <div *ngFor="let template of filteredTemplates" class="template-card" (click)="sendTemplate(template)" [class.sending]="sendingTemplate">
+            <div class="template-card-header">
+              <div class="template-card-name">{{ template.name }}</div>
+              <div class="template-card-badges">
+                <span class="template-category-badge">{{ template.category }}</span>
+                <span class="template-lang-badge">{{ template.language || 'en' }}</span>
+              </div>
+            </div>
+            <div class="template-card-body" *ngIf="template.body">
+              {{ template.body.length > 120 ? (template.body.substring(0, 120) + '...') : template.body }}
+            </div>
+            <div class="template-card-footer">
+              <span class="template-status-badge approved">
+                <i class="bi bi-check-circle-fill"></i> Approved
+              </span>
+              <button class="template-send-btn" [disabled]="sendingTemplate">
+                <i class="bi bi-send-fill"></i> Send
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Product Picker Modal -->
   <div class="premium-modal-overlay" *ngIf="showProductPicker" (click)="showProductPicker = false">

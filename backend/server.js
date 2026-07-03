@@ -27,14 +27,30 @@ const io = new Server(server, { cors: { origin: '*', methods: ['GET', 'POST'] } 
 app.set('io', io);
 
 // Middleware
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
 app.use(cors({ origin: '*' }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, filePath) => {
+    // Allow any origin to fetch uploaded media (required for cross-origin and ngrok)
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Type');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    
+    // Fix for WhatsApp API: Ensure correct MIME type for audio files
+    if (filePath.endsWith('.ogg')) {
+      res.setHeader('Content-Type', 'audio/ogg; codecs=opus');
+    } else if (filePath.endsWith('.webm')) {
+      res.setHeader('Content-Type', 'audio/webm; codecs=opus');
+    } else if (filePath.endsWith('.m4a') || filePath.endsWith('.mp4')) {
+      res.setHeader('Content-Type', 'audio/mp4');
+    }
+  }
+}));
 
 // Public routes
 app.get('/c/:shortCode', redirect);
@@ -58,6 +74,7 @@ app.use('/api/contacts', require('./src/routes/contacts.routes'));
 app.use('/api/conversations', require('./src/routes/conversations.routes'));
 app.use('/api/templates', require('./src/routes/templates.routes'));
 app.use('/api/broadcasts', require('./src/routes/broadcasts.routes'));
+app.use('/api/upload', require('./src/routes/upload.routes'));
 app.use('/api/chatbots', require('./src/routes/chatbots.routes'));
 app.use('/api/drip', require('./src/routes/drip.routes'));
 app.use('/api/ecommerce', require('./src/routes/ecommerce.routes'));

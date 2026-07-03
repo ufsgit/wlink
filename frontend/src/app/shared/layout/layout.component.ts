@@ -5,6 +5,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { SocketService } from '../../core/services/socket.service';
 import { Observable, filter } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-layout',
@@ -15,8 +16,10 @@ import { Observable, filter } from 'rxjs';
 })
 export class LayoutComponent implements OnInit {
   user$: Observable<any>;
+  currentUser: any;
   pageTitle = 'Dashboard';
   isCollapsed = false;
+  isReportsOpen = false;
 
   // Notification States
   showNotificationDropdown = false;
@@ -33,6 +36,11 @@ export class LayoutComponent implements OnInit {
 
   toggleSidebar() {
     this.isCollapsed = !this.isCollapsed;
+  }
+
+  toggleReports(event: Event) {
+    event.preventDefault();
+    this.isReportsOpen = !this.isReportsOpen;
   }
 
 
@@ -62,6 +70,24 @@ export class LayoutComponent implements OnInit {
     this.notifications = [];
   }
 
+  showSupportModal = false;
+
+  toggleSupportModal() {
+    this.showSupportModal = !this.showSupportModal;
+  }
+
+  openLiveChat() {
+    // Implement live chat opening logic
+    console.log('Opening live chat');
+  }
+
+  submitQuickSupport(event: Event) {
+    event.preventDefault();
+    // Implement quick support submission
+    console.log('Submitting quick support');
+    this.showSupportModal = false;
+  }
+
 
 
   ngOnInit() {
@@ -77,6 +103,7 @@ export class LayoutComponent implements OnInit {
     this.socket.connect();
 
     this.user$.subscribe(user => {
+      this.currentUser = user;
       if (user?.businessId) {
         this.socket.joinBusiness(user.businessId);
       }
@@ -116,6 +143,54 @@ export class LayoutComponent implements OnInit {
             this.router.navigate(['/inbox'], { queryParams: { convoId: convoId } });
             notification.close();
           };
+        }
+      }
+    });
+
+    this.socket.on('contact_assigned').subscribe((data: any) => {
+      if (data && data.assigned_to && this.currentUser) {
+        const currentId = Number(this.currentUser.id || this.currentUser.userId);
+        if (Number(data.assigned_to) === currentId) {
+          const contactName = data.contact?.name || 'A contact';
+        
+        // Add to dropdown
+        this.notifications.unshift({
+          id: Date.now(),
+          type: 'system',
+          icon: 'bi-person-check',
+          title: `New Assignment`,
+          message: `${contactName} was assigned to you`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          unread: true
+        });
+
+        // Trigger change detection
+        this.cdr.detectChanges();
+        this.playNotificationSound();
+
+        // In-app Toast notification
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 5000,
+          timerProgressBar: true,
+          icon: 'info',
+          title: 'New Assignment',
+          text: `${contactName} was assigned to you`
+        });
+
+        // Browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const notification = new Notification('New Assignment', {
+            body: `${contactName} was assigned to you`
+          });
+          notification.onclick = () => {
+            window.focus();
+            this.router.navigate(['/contacts']);
+            notification.close();
+          };
+        }
         }
       }
     });

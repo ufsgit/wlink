@@ -1,5 +1,8 @@
 const axios = require('axios');
 const pool = require('../db/pool');
+const fs = require('fs');
+const path = require('path');
+const FormData = require('form-data');
 require('dotenv').config();
 
 class WhatsappService {
@@ -140,12 +143,51 @@ class WhatsappService {
     const { token, phoneId } = await this.getCredentials(businessId);
     if (!token || !phoneId) return { success: false, message: 'WhatsApp not configured' };
     try {
+      let mediaPayload;
+      
+      // If the media is local, upload it directly to Meta to avoid Ngrok access issues
+      if (mediaUrl && mediaUrl.includes('/uploads/')) {
+        const filename = mediaUrl.substring(mediaUrl.lastIndexOf('/uploads/') + 9);
+        const localPath = path.join(__dirname, '../../uploads', filename);
+        
+        if (fs.existsSync(localPath)) {
+          console.log('[DEBUG] Uploading local media directly to Meta:', filename);
+          const form = new FormData();
+          form.append('messaging_product', 'whatsapp');
+          
+          let mimeType = 'audio/mp4'; // default for our converted voice notes
+          if (filename.endsWith('.mp4')) mimeType = 'video/mp4';
+          else if (filename.endsWith('.pdf')) mimeType = 'application/pdf';
+          else if (filename.endsWith('.png')) mimeType = 'image/png';
+          else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) mimeType = 'image/jpeg';
+          else if (filename.endsWith('.mp3')) mimeType = 'audio/mpeg';
+          
+          form.append('type', mimeType);
+          form.append('file', fs.createReadStream(localPath), { contentType: mimeType });
+
+          const uploadRes = await axios.post(`${this.baseUrl}/${phoneId}/media`, form, {
+            headers: { ...this.getHeaders(token), ...form.getHeaders() }
+          });
+          
+          if (uploadRes.data && uploadRes.data.id) {
+            console.log('[DEBUG] Media uploaded, ID:', uploadRes.data.id);
+            mediaPayload = type === 'audio' ? { id: uploadRes.data.id } : { id: uploadRes.data.id, caption };
+          }
+        }
+      }
+
+      // Fallback to link if upload failed or wasn't a local file
+      if (!mediaPayload) {
+        mediaPayload = type === 'audio' ? { link: mediaUrl } : { link: mediaUrl, caption };
+      }
+
       const res = await axios.post(`${this.baseUrl}/${phoneId}/messages`, {
         messaging_product: 'whatsapp', to, type,
-        [type]: { link: mediaUrl, caption }
+        [type]: mediaPayload
       }, { headers: this.getHeaders(token) });
       return { success: true, data: res.data };
     } catch (err) {
+      console.error('[DEBUG] sendMediaMessage Error:', err.response?.data || err.message);
       return { success: false, message: err.response?.data?.error?.message || err.message };
     }
   }
@@ -250,6 +292,54 @@ class WhatsappService {
       return { success: true };
     } catch (err) {
       return { success: false, message: err.response?.data?.error?.message || err.message };
+    }
+  }
+  async downloadMedia(mediaId, businessIdOrObj) {
+    const { token } = await this.getCredentials(businessIdOrObj);
+    if (!token) throw new Error('WhatsApp not configured');
+
+    const fs = require('fs');
+    const path = require('path');
+
+    try {
+      // 1. Get media URL
+      const res = await axios.get(`${this.baseUrl}/${mediaId}`, {
+        headers: this.getHeaders(token)
+      });
+      
+      const mediaUrl = res.data.url;
+      const mimeType = res.data.mime_type || '';
+      
+      let ext = mimeType.split('/')[1]?.split(';')[0] || 'bin';
+      if (mimeType.includes('audio/ogg')) ext = 'ogg';
+      if (mimeType.includes('audio/mp4')) ext = 'm4a';
+
+      // 2. Download binary data
+      const filename = `${mediaId}.${ext}`;
+      const uploadDir = path.join(__dirname, '../../uploads');
+      const filepath = path.join(uploadDir, filename);
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const response = await axios({
+        method: 'GET',
+        url: mediaUrl,
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'stream'
+      });
+      
+      const writer = fs.createWriteStream(filepath);
+      response.data.pipe(writer);
+      
+      return new Promise((resolve, reject) => {
+        writer.on('finish', () => resolve(`/uploads/${filename}`));
+        writer.on('error', reject);
+      });
+    } catch (err) {
+      console.error(`[WhatsappService] downloadMedia FAILED for mediaId=${mediaId}:`, err.response?.status, err.response?.data || err.message);
+      return null;
     }
   }
 }

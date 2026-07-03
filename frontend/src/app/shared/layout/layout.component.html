@@ -60,6 +60,65 @@
           <i class="bi bi-file-earmark-text"></i>
           <span *ngIf="!isCollapsed">Templates</span>
         </a>
+        <!-- 
+        <a routerLink="/drip" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Drip Campaigns' : ''">
+          <i class="bi bi-funnel"></i>
+          <span *ngIf="!isCollapsed">Drip Campaigns</span>
+        </a>
+        <a routerLink="/ecommerce" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Ecommerce' : ''">
+          <i class="bi bi-cart3"></i>
+          <span *ngIf="!isCollapsed">Ecommerce</span>
+        </a>
+        <a routerLink="/rcs" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'RCS Business' : ''">
+          <i class="bi bi-chat-left-text"></i>
+          <span *ngIf="!isCollapsed">RCS Business</span>
+        </a>
+        <a routerLink="/sms" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'SMS' : ''">
+          <i class="bi bi-chat-square-text"></i>
+          <span *ngIf="!isCollapsed">SMS</span>
+        </a>
+        <a routerLink="/ivr" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'IVR Flows' : ''">
+          <i class="bi bi-telephone-outbound"></i>
+          <span *ngIf="!isCollapsed">IVR Flows</span>
+        </a>
+        <a routerLink="/ctwa" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Click to WhatsApp' : ''">
+          <i class="bi bi-link-45deg"></i>
+          <span *ngIf="!isCollapsed">Click to WhatsApp</span>
+        </a>
+        <a routerLink="/affiliates" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Affiliates' : ''">
+          <i class="bi bi-award"></i>
+          <span *ngIf="!isCollapsed">Affiliates</span>
+        </a>
+        <a routerLink="/analytics" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Analytics' : ''">
+          <i class="bi bi-graph-up"></i>
+          <span *ngIf="!isCollapsed">Analytics</span>
+        </a>
+        -->
+        <!-- Reports Menu -->
+        <div class="nav-group">
+          <a href="#" class="nav-item has-submenu" (click)="toggleReports($event)" [class.active]="isReportsOpen" [title]="isCollapsed ? 'Reports' : ''">
+            <i class="bi bi-bar-chart-line"></i>
+            <span *ngIf="!isCollapsed">Reports</span>
+            <i class="bi bi-chevron-down submenu-icon ms-auto" *ngIf="!isCollapsed" [class.rotated]="isReportsOpen" style="font-size: 0.8rem; width: auto; margin-left: auto;"></i>
+          </a>
+          <div class="submenu" *ngIf="isReportsOpen && !isCollapsed" style="padding-left: 2rem;">
+            <a routerLink="/reports/work" routerLinkActive="active" class="nav-item submenu-item" style="padding: 8px 12px; font-size: 0.85rem;" [title]="isCollapsed ? 'Work Report' : ''">
+              <i class="bi bi-dot"></i> Work report
+            </a>
+            <a routerLink="/reports/conversation" routerLinkActive="active" class="nav-item submenu-item" style="padding: 8px 12px; font-size: 0.85rem;" [title]="isCollapsed ? 'Conversation Report' : ''">
+              <i class="bi bi-dot"></i> Conversation report
+            </a>
+            <a routerLink="/reports/employee" routerLinkActive="active" class="nav-item submenu-item" style="padding: 8px 12px; font-size: 0.85rem;" [title]="isCollapsed ? 'Employee Report' : ''">
+              <i class="bi bi-dot"></i> Employee report
+            </a>
+            <a routerLink="/reports/enquiry" routerLinkActive="active" class="nav-item submenu-item" style="padding: 8px 12px; font-size: 0.85rem;" [title]="isCollapsed ? 'Enquiry Report' : ''">
+              <i class="bi bi-dot"></i> Enquiry report
+            </a>
+            <a routerLink="/reports/status" routerLinkActive="active" class="nav-item submenu-item" style="padding: 8px 12px; font-size: 0.85rem;" [title]="isCollapsed ? 'Status Report' : ''">
+              <i class="bi bi-dot"></i> Status report
+            </a>
+          </div>
+        </div>
 
         <a routerLink="/settings" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Settings' : ''">
           <i class="bi bi-gear"></i>
@@ -90,7 +149,12 @@
         {{ pageTitle }}
       </div>
       <div class="top-actions">
-        <!-- Removed Support Button -->
+        <!-- Support Button 
+        <button class="support-btn" (click)="toggleSupportModal()" title="Help & Support">
+          <i class="bi bi-question-circle"></i>
+          <span>Support</span>
+        </button>
+        -->
 
         <!-- Notification Bell & Dropdown Wrapper -->
         <div class="notification-wrapper">
@@ -143,4 +207,84 @@
     </div>
   </main>
 
+  <!-- Help & Support Center Modal -->
+  <div class="support-modal-backdrop" *ngIf="showSupportModal" (click)="toggleSupportModal()">
+    <div class="support-modal-card" (click)="$event.stopPropagation()">
+      <div class="support-modal-header">
+        <div class="support-header-title">
+          <i class="bi bi-headset"></i>
+          <div>
+            <h3>Help & Support</h3>
+            <p>Get in touch or browse documentation</p>
+          </div>
+        </div>
+        <button class="support-close-btn" (click)="toggleSupportModal()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="support-modal-body">
+        <!-- Support channels grid -->
+        <div class="support-grid">
+          <a href="https://docs.wlink.demo" target="_blank" class="support-card">
+            <div class="support-card-icon docs">
+              <i class="bi bi-book"></i>
+            </div>
+            <div class="support-card-info">
+              <h4>Documentation</h4>
+              <p>Explore guides, APIs, and tutorials</p>
+            </div>
+            <i class="bi bi-arrow-right-short support-arrow"></i>
+          </a>
+
+          <div class="support-card" (click)="openLiveChat()">
+            <div class="support-card-icon chat">
+              <i class="bi bi-chat-left-text"></i>
+            </div>
+            <div class="support-card-info">
+              <h4>Live Chat Support</h4>
+              <p>Chat with our support engineers</p>
+            </div>
+            <i class="bi bi-arrow-right-short support-arrow"></i>
+          </div>
+
+          <a href="mailto:support@wlink.demo" class="support-card">
+            <div class="support-card-icon email">
+              <i class="bi bi-envelope"></i>
+            </div>
+            <div class="support-card-info">
+              <h4>Email Support</h4>
+              <p>Send us a ticket, response in 1 hour</p>
+            </div>
+            <i class="bi bi-arrow-right-short support-arrow"></i>
+          </a>
+
+          <div class="support-card status">
+            <div class="support-card-icon systems">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="support-card-info">
+              <h4>System Status</h4>
+              <p>All channels operating normally</p>
+            </div>
+            <span class="status-pulse-pill">
+              <span class="pulse-dot"></span>
+              Operational
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Form -->
+        <div class="support-quick-message">
+          <h5>Quick Message</h5>
+          <form (submit)="submitQuickSupport($event)">
+            <textarea class="form-control premium-input" placeholder="How can we help you today?" required></textarea>
+            <button type="submit" class="btn btn-primary btn-sm submit-support-btn">
+              <i class="bi bi-send"></i> Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
