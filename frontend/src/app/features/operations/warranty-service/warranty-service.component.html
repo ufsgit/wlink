@@ -6,6 +6,9 @@
       <h2 class="fw-bold mb-2" style="color: #1e293b;">Warranty & Service</h2>
       <p class="text-muted mb-0" style="font-size: 0.95rem;">Track claims and resolve product issues</p>
     </div>
+    <button class="btn btn-primary" (click)="openRegistrationModal()" style="padding: 10px 24px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); border: none; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+      <i class="bi bi-shield-plus me-2"></i> Register Warranty
+    </button>
   </div>
 
   <!-- KPI Cards -->
@@ -93,9 +96,9 @@
           <tr>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Claim ID</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Customer</th>
-            <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Product</th>
-            <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Issue</th>
-            <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Date</th>
+            <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Product / Issue</th>
+            <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">AMC Status</th>
+            <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Spare Parts</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Status</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8; text-align: right;">Actions</th>
           </tr>
@@ -104,32 +107,34 @@
           <tr *ngFor="let claim of filteredClaims" style="transition: all 0.2s ease;">
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9;">
               <span class="fw-bold" style="color: #3b82f6;">{{ claim.id }}</span>
+              <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">{{ claim.date }}</div>
             </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; font-weight: 500; color: #1e293b;">
               {{ claim.customer }}
             </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; color: #475569;">
-              {{ claim.product }}
+              <div style="font-weight: 600; color: #334155;">{{ claim.product }}</div>
+              <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">{{ claim.issue }}</div>
+            </td>
+            <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9;">
+              <span [class]="getAmcClass(claim.amcStatus)">{{ claim.amcStatus }}</span>
             </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; color: #475569;">
-              {{ claim.issue }}
-            </td>
-            <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; color: #475569;">
-              {{ claim.date }}
+              <div *ngIf="claim.spareParts.length > 0">
+                <span *ngFor="let part of claim.spareParts" class="badge bg-light text-dark border border-secondary border-opacity-25 rounded-pill me-1 mb-1">{{ part }}</span>
+              </div>
+              <div *ngIf="claim.spareParts.length === 0" style="color: #94a3b8; font-style: italic; font-size: 0.85rem;">None</div>
             </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9;">
               <span [class]="getStatusClass(claim.status)">{{ claim.status }}</span>
             </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; text-align: right; white-space: nowrap;">
               <div class="d-flex justify-content-end align-items-center">
-                <button class="btn btn-sm btn-light" (click)="approveClaim(claim)" [disabled]="claim.status === 'Approved'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Approve">
+                <button class="btn btn-sm btn-light" (click)="openApprovalModal(claim, 'Approved')" [disabled]="claim.status === 'Approved'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Approve">
                   <i class="bi bi-check-lg text-success"></i>
                 </button>
-                <button class="btn btn-sm btn-light" (click)="rejectClaim(claim)" [disabled]="claim.status === 'Rejected'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Reject">
+                <button class="btn btn-sm btn-light" (click)="openApprovalModal(claim, 'Rejected')" [disabled]="claim.status === 'Rejected'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Reject">
                   <i class="bi bi-x-lg text-danger"></i>
-                </button>
-                <button class="btn btn-sm btn-light" (click)="viewDetails(claim)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="View Details">
-                  <i class="bi bi-eye text-primary"></i>
                 </button>
               </div>
             </td>
@@ -165,42 +170,83 @@
 }
 </style>
 
-<!-- View Claim Modal -->
-<div *ngIf="isViewModalOpen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-out;">
+<!-- Registration Modal -->
+<div *ngIf="isRegistrationModalOpen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-out;">
   <div style="width: 100%; max-width: 500px; margin: 20px; animation: slideUp 0.3s ease-out;">
     <div style="background: white; border-radius: 20px; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); overflow: hidden;">
       <div style="border-bottom: 1px solid #f1f5f9; padding: 24px; background: #faf8f8; display: flex; justify-content: space-between; align-items: center;">
-        <h5 class="fw-bold mb-0" style="color: #1e293b; font-size: 1.15rem;">Claim Details - {{ selectedClaim?.id }}</h5>
-        <button type="button" class="btn-close" (click)="closeViewModal()" aria-label="Close" style="font-size: 0.85rem;"></button>
+        <h5 class="fw-bold mb-0" style="color: #1e293b; font-size: 1.15rem;">Register New Warranty</h5>
+        <button type="button" class="btn-close" (click)="closeRegistrationModal()" aria-label="Close" style="font-size: 0.85rem;"></button>
       </div>
-      <div style="padding: 24px;" *ngIf="selectedClaim">
-        <div class="row g-4">
-          <div class="col-md-6">
-            <label style="display: block; margin-bottom: 4px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Customer Name</label>
-            <div style="font-size: 1.05rem; color: #0f172a; font-weight: 500;">{{ selectedClaim.customer }}</div>
-          </div>
-          <div class="col-md-6">
-            <label style="display: block; margin-bottom: 4px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Date Filed</label>
-            <div style="font-size: 1.05rem; color: #0f172a; font-weight: 500;">{{ selectedClaim.date }}</div>
-          </div>
+      <div style="padding: 24px;">
+        <div class="row g-3">
           <div class="col-md-12">
-            <label style="display: block; margin-bottom: 4px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Product</label>
-            <div style="font-size: 1.05rem; color: #0f172a; font-weight: 500;">{{ selectedClaim.product }}</div>
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Customer Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="newRegistration.customer" placeholder="Full name" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem;">
           </div>
-          <div class="col-md-12">
-            <label style="display: block; margin-bottom: 4px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Reported Issue</label>
-            <div style="background: #f8fafc; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; color: #334155; font-size: 0.95rem;">
-              {{ selectedClaim.issue }}
+          <div class="col-md-6">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Product Model <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="newRegistration.product" placeholder="e.g. Router AC1200" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem;">
+          </div>
+          <div class="col-md-6">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Serial Number</label>
+            <input type="text" class="form-control" [(ngModel)]="newRegistration.serialNumber" placeholder="S/N" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem;">
+          </div>
+          <div class="col-md-6">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Purchase Date</label>
+            <input type="date" class="form-control" [(ngModel)]="newRegistration.purchaseDate" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem;">
+          </div>
+          <div class="col-md-6 d-flex align-items-center mt-4 pt-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="amcSwitch" [(ngModel)]="newRegistration.amcIncluded">
+              <label class="form-check-label ms-2" for="amcSwitch" style="font-weight: 500; color: #1e293b;">Include AMC</label>
             </div>
-          </div>
-          <div class="col-md-12">
-            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Status</label>
-            <span [class]="getStatusClass(selectedClaim.status)">{{ selectedClaim.status }}</span>
           </div>
         </div>
       </div>
-      <div style="border-top: 1px solid #f1f5f9; padding: 20px 24px; background: #faf8f8; display: flex; justify-content: flex-end;">
-        <button type="button" class="btn btn-primary" (click)="closeViewModal()" style="border-radius: 10px; font-weight: 600; padding: 10px 32px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Close</button>
+      <div style="border-top: 1px solid #f1f5f9; padding: 20px 24px; background: #faf8f8; display: flex; justify-content: flex-end; gap: 12px;">
+        <button type="button" class="btn btn-light" (click)="closeRegistrationModal()" style="border-radius: 10px; font-weight: 600; padding: 10px 24px; color: #475569; border: 1px solid #e2e8f0; background: white;">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitRegistration()" style="border-radius: 10px; font-weight: 600; padding: 10px 24px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Register</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Approval Modal -->
+<div *ngIf="isApprovalModalOpen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-out;">
+  <div style="width: 100%; max-width: 500px; margin: 20px; animation: slideUp 0.3s ease-out;">
+    <div style="background: white; border-radius: 20px; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); overflow: hidden;">
+      <div style="border-bottom: 1px solid #f1f5f9; padding: 24px; background: #faf8f8; display: flex; justify-content: space-between; align-items: center;">
+        <h5 class="fw-bold mb-0" style="color: #1e293b; font-size: 1.15rem;">
+          <span *ngIf="approvalForm.status === 'Approved'" class="text-success"><i class="bi bi-check-circle me-2"></i>Approve Claim</span>
+          <span *ngIf="approvalForm.status === 'Rejected'" class="text-danger"><i class="bi bi-x-circle me-2"></i>Reject Claim</span>
+        </h5>
+        <button type="button" class="btn-close" (click)="closeApprovalModal()" aria-label="Close" style="font-size: 0.85rem;"></button>
+      </div>
+      <div style="padding: 24px;">
+        <div class="row g-3">
+          <div class="col-md-12">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Claim ID</label>
+            <div style="font-size: 1.05rem; font-weight: 700; color: #0f172a;">{{ approvalForm.claimId }}</div>
+          </div>
+          
+          <div class="col-md-12" *ngIf="approvalForm.status === 'Approved'">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Required Spare Parts</label>
+            <input type="text" class="form-control" [(ngModel)]="approvalForm.sparePartsRequired" placeholder="e.g. Power Adapter, Screen (comma separated)" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem;">
+            <small class="text-muted mt-1 d-block">Leave blank if no spare parts are needed.</small>
+          </div>
+
+          <div class="col-md-12">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Resolution Notes / Remarks <span class="text-danger" *ngIf="approvalForm.status === 'Rejected'">*</span></label>
+            <textarea class="form-control" [(ngModel)]="approvalForm.notes" rows="3" placeholder="Provide reasoning or next steps..." style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem; resize: none;"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="border-top: 1px solid #f1f5f9; padding: 20px 24px; background: #faf8f8; display: flex; justify-content: flex-end; gap: 12px;">
+        <button type="button" class="btn btn-light" (click)="closeApprovalModal()" style="border-radius: 10px; font-weight: 600; padding: 10px 24px; color: #475569; border: 1px solid #e2e8f0; background: white;">Cancel</button>
+        <button type="button" class="btn" [ngClass]="approvalForm.status === 'Approved' ? 'btn-success' : 'btn-danger'" (click)="submitApproval()" style="border-radius: 10px; font-weight: 600; padding: 10px 24px; border: none; color: white;">
+          Confirm {{ approvalForm.status }}
+        </button>
       </div>
     </div>
   </div>

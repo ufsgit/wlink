@@ -11,6 +11,8 @@ interface Claim {
   issue: string;
   date: string;
   status: 'Pending' | 'Approved' | 'Rejected';
+  amcStatus: 'Active' | 'Expired' | 'None';
+  spareParts: string[];
 }
 
 @Component({
@@ -46,10 +48,10 @@ export class WarrantyServiceComponent implements OnInit {
   };
 
   claims: Claim[] = [
-    { id: 'WR-101', customer: 'John Doe', product: 'Router AC1200', issue: 'No power', date: '2023-10-25', status: 'Pending' },
-    { id: 'WR-102', customer: 'Jane Smith', product: 'Mesh WiFi Node', issue: 'Keeps disconnecting', date: '2023-10-24', status: 'Pending' },
-    { id: 'WR-103', customer: 'Acme Corp', product: 'Enterprise Switch', issue: 'Port 4 dead', date: '2023-10-22', status: 'Approved' },
-    { id: 'WR-104', customer: 'Global Ind', product: 'Router AC1200', issue: 'Overheating', date: '2023-10-21', status: 'Rejected' },
+    { id: 'WR-101', customer: 'John Doe', product: 'Router AC1200', issue: 'No power', date: '2023-10-25', status: 'Pending', amcStatus: 'Active', spareParts: ['Power Adapter'] },
+    { id: 'WR-102', customer: 'Jane Smith', product: 'Mesh WiFi Node', issue: 'Keeps disconnecting', date: '2023-10-24', status: 'Pending', amcStatus: 'Expired', spareParts: [] },
+    { id: 'WR-103', customer: 'Acme Corp', product: 'Enterprise Switch', issue: 'Port 4 dead', date: '2023-10-22', status: 'Approved', amcStatus: 'Active', spareParts: ['Port Module'] },
+    { id: 'WR-104', customer: 'Global Ind', product: 'Router AC1200', issue: 'Overheating', date: '2023-10-21', status: 'Rejected', amcStatus: 'None', spareParts: [] },
   ];
 
   searchTerm: string = '';
@@ -64,12 +66,22 @@ export class WarrantyServiceComponent implements OnInit {
       c.customer.toLowerCase().includes(term) ||
       c.product.toLowerCase().includes(term) ||
       c.issue.toLowerCase().includes(term) ||
-      c.status.toLowerCase().includes(term)
+      c.status.toLowerCase().includes(term) ||
+      c.amcStatus.toLowerCase().includes(term)
     );
   }
 
   toastMessage: string | null = null;
   toastTimeout: any;
+
+  // Modal States
+  isRegistrationModalOpen = false;
+  isApprovalModalOpen = false;
+
+  // Forms
+  newRegistration: any = { customer: '', product: '', serialNumber: '', purchaseDate: '', amcIncluded: false };
+  approvalForm: any = { claimId: '', status: '', notes: '', sparePartsRequired: '' };
+  currentClaim: Claim | null = null;
 
   ngOnInit() {}
 
@@ -79,28 +91,58 @@ export class WarrantyServiceComponent implements OnInit {
     this.toastTimeout = setTimeout(() => { this.toastMessage = null; }, 3000);
   }
 
-  approveClaim(claim: Claim) {
-    claim.status = 'Approved';
-    this.showToast(`Claim ${claim.id} Approved.`);
+  // Registration Modal
+  openRegistrationModal() {
+    this.isRegistrationModalOpen = true;
+    this.newRegistration = { customer: '', product: '', serialNumber: '', purchaseDate: '', amcIncluded: false };
+  }
+  
+  closeRegistrationModal() {
+    this.isRegistrationModalOpen = false;
   }
 
-  rejectClaim(claim: Claim) {
-    claim.status = 'Rejected';
-    this.showToast(`Claim ${claim.id} Rejected.`);
+  submitRegistration() {
+    if (!this.newRegistration.customer || !this.newRegistration.product) {
+      this.showToast('Please fill all required fields.');
+      return;
+    }
+    this.activeWarranties++;
+    this.showToast(`Warranty registered successfully for ${this.newRegistration.customer}.`);
+    this.closeRegistrationModal();
   }
 
-  isViewModalOpen = false;
-  selectedClaim: Claim | null = null;
-
-  viewDetails(claim: Claim) {
-    this.selectedClaim = claim;
-    this.isViewModalOpen = true;
+  // Approval Modal
+  openApprovalModal(claim: Claim, status: 'Approved' | 'Rejected') {
+    this.currentClaim = claim;
+    this.approvalForm = { claimId: claim.id, status: status, notes: '', sparePartsRequired: '' };
+    this.isApprovalModalOpen = true;
   }
 
-  closeViewModal() {
-    this.isViewModalOpen = false;
-    this.selectedClaim = null;
+  closeApprovalModal() {
+    this.isApprovalModalOpen = false;
+    this.currentClaim = null;
   }
+
+  submitApproval() {
+    if (this.currentClaim) {
+      this.currentClaim.status = this.approvalForm.status;
+      if (this.approvalForm.sparePartsRequired) {
+        this.currentClaim.spareParts = this.approvalForm.sparePartsRequired.split(',').map((s: string) => s.trim());
+      }
+      this.showToast(`Claim ${this.currentClaim.id} has been ${this.approvalForm.status}.`);
+    }
+    this.closeApprovalModal();
+  }
+
+  getAmcClass(amc: string): string {
+    switch(amc) {
+      case 'Active': return 'badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-1';
+      case 'Expired': return 'badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2 py-1';
+      case 'None': return 'badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-2 py-1';
+      default: return '';
+    }
+  }
+
   getStatusClass(status: string): string {
     switch(status) {
       case 'Approved': return 'badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2';

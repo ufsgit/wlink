@@ -6,6 +6,9 @@
       <h2 class="fw-bold mb-2" style="color: #1e293b;">Complaints</h2>
       <p class="text-muted mb-0" style="font-size: 0.95rem;">Track and manage customer complaints</p>
     </div>
+    <button class="btn btn-primary" (click)="openModal()" style="padding: 10px 24px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); border: none; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+      <i class="bi bi-plus-lg me-2"></i> Add New Complaint
+    </button>
   </div>
 
   <!-- KPI Cards -->
@@ -95,6 +98,7 @@
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Customer</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Category</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Priority</th>
+            <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Technician</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Status</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8; text-align: right;">Actions</th>
           </tr>
@@ -113,13 +117,17 @@
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9;">
               <span [class]="getPriorityClass(cmp.priority)">{{ cmp.priority }}</span>
             </td>
+            <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; color: #475569;">
+              <span *ngIf="cmp.technician !== 'Unassigned'">{{ cmp.technician }}</span>
+              <span *ngIf="cmp.technician === 'Unassigned'" style="color: #94a3b8; font-style: italic;">Unassigned</span>
+            </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9;">
               <span [class]="getStatusClass(cmp.status)">{{ cmp.status }}</span>
             </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; text-align: right; white-space: nowrap;">
               <div class="d-flex justify-content-end align-items-center">
                 <button class="btn btn-sm btn-light" (click)="acknowledge(cmp)" [disabled]="cmp.status === 'Resolved' || cmp.status === 'In Progress'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Acknowledge">
-                  <i class="bi bi-eye text-primary"></i>
+                  <i class="bi bi-play-circle text-primary"></i>
                 </button>
                 <button class="btn btn-sm btn-light" (click)="resolve(cmp)" [disabled]="cmp.status === 'Resolved'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Resolve">
                   <i class="bi bi-check2-all text-success"></i>
@@ -137,7 +145,73 @@
 
 </div>
 
+<!-- New Complaint Modal -->
+<div *ngIf="isModalOpen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-out;">
+  <div style="width: 100%; max-width: 500px; margin: 20px; animation: slideUp 0.3s ease-out;">
+    <div style="background: white; border-radius: 20px; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); overflow: hidden;">
+      <div style="border-bottom: 1px solid #f1f5f9; padding: 24px; background: #faf8f8; display: flex; justify-content: space-between; align-items: center;">
+        <h5 class="fw-bold mb-0" style="color: #1e293b; font-size: 1.15rem;">Add New Complaint</h5>
+        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close" style="font-size: 0.85rem;"></button>
+      </div>
+      <div style="padding: 24px;">
+        <div class="row g-3">
+          <div class="col-md-12">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Customer Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="newComplaint.customer" placeholder="Full name" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem;">
+          </div>
+          <div class="col-md-6">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Category <span class="text-danger">*</span></label>
+            <select class="form-select" [(ngModel)]="newComplaint.category" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem;">
+              <option value="" disabled selected>Select...</option>
+              <option value="Technical">Technical</option>
+              <option value="Billing">Billing</option>
+              <option value="Service">Service</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Priority</label>
+            <select class="form-select" [(ngModel)]="newComplaint.priority" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem;">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
+          <div class="col-md-12">
+            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Issue Description</label>
+            <textarea class="form-control" [(ngModel)]="newComplaint.issue" placeholder="Describe the issue in detail..." rows="3" style="border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 0.95rem; resize: none;"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="border-top: 1px solid #f1f5f9; padding: 20px 24px; background: #faf8f8; display: flex; justify-content: flex-end; gap: 12px;">
+        <button type="button" class="btn btn-light" (click)="closeModal()" style="border-radius: 10px; font-weight: 600; padding: 10px 24px; color: #475569; border: 1px solid #e2e8f0; background: white;">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitComplaint()" style="border-radius: 10px; font-weight: 600; padding: 10px 24px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Create Ticket</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Toast Notification -->
+<div *ngIf="toastMessage" class="toast-notification" style="position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 9999; display: flex; align-items: center; gap: 12px; animation: slideInUp 0.3s ease-out;">
+  <i class="bi bi-info-circle-fill text-info fs-5"></i>
+  <span style="font-weight: 500;">{{ toastMessage }}</span>
+  <button class="btn-close btn-close-white ms-auto" (click)="toastMessage = null" style="font-size: 0.75rem;"></button>
+</div>
+
 <style>
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .modern-table tbody tr:hover {
   background-color: #f8fafc;
 }

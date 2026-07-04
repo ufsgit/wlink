@@ -49,6 +49,30 @@ export class CustomerFeedbackComponent implements OnInit {
     ]
   };
 
+  public radarChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    }
+  };
+  public radarChartType: ChartType = 'radar';
+  public radarChartData: ChartConfiguration['data'] = {
+    labels: ['Punctuality', 'Professionalism', 'Issue Resolution', 'Communication', 'Cleanliness'],
+    datasets: [
+      {
+        data: [85, 92, 78, 88, 95],
+        label: 'Quality Score',
+        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+        borderColor: '#4f46e5',
+        pointBackgroundColor: '#4f46e5',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#4f46e5'
+      }
+    ]
+  };
+
   feedbacks: Feedback[] = [
     { id: 'FB-01', customer: 'Alice Johnson', rating: 5, text: 'Amazing service! The technician was very polite and finished early.', date: 'Today, 10:30 AM', flagged: false, replied: false },
     { id: 'FB-02', customer: 'Bob Smith', rating: 2, text: 'The installation was delayed by 3 hours without prior notice.', date: 'Yesterday, 2:15 PM', flagged: false, replied: false },

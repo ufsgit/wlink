@@ -68,11 +68,22 @@
   </div>
 
   <!-- Chart Section -->
-  <div *ngIf="activeView === 'chart'" class="chart-card" style="background: white; border-radius: 24px; padding: 24px; box-shadow: 0 4px 12px -4px rgba(17, 24, 39, 0.05); border: 1px solid rgba(229, 231, 235, 0.8);">
-    <h5 class="fw-bold mb-4" style="color: #1e293b;">Rating Distribution</h5>
-    <div style="height: 300px; display: flex; justify-content: center;">
-      <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions" [type]="doughnutChartType"></canvas>
+  <div *ngIf="activeView === 'chart'" class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+    
+    <div class="chart-card" style="background: white; border-radius: 24px; padding: 24px; box-shadow: 0 4px 12px -4px rgba(17, 24, 39, 0.05); border: 1px solid rgba(229, 231, 235, 0.8);">
+      <h5 class="fw-bold mb-4" style="color: #1e293b;">Rating Distribution</h5>
+      <div style="height: 300px; display: flex; justify-content: center;">
+        <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions" [type]="doughnutChartType"></canvas>
+      </div>
     </div>
+
+    <div class="chart-card" style="background: white; border-radius: 24px; padding: 24px; box-shadow: 0 4px 12px -4px rgba(17, 24, 39, 0.05); border: 1px solid rgba(229, 231, 235, 0.8);">
+      <h5 class="fw-bold mb-4" style="color: #1e293b;">Service Quality Analysis</h5>
+      <div style="height: 300px; display: flex; justify-content: center;">
+        <canvas baseChart [data]="radarChartData" [options]="radarChartOptions" [type]="radarChartType"></canvas>
+      </div>
+    </div>
+
   </div>
 
   <!-- Reviews List Section -->

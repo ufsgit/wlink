@@ -10,6 +10,7 @@ interface Complaint {
   category: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   status: 'Pending' | 'In Progress' | 'Escalated' | 'Resolved';
+  technician: string;
 }
 
 @Component({
@@ -48,10 +49,10 @@ export class ComplaintsComponent implements OnInit {
   };
 
   complaints: Complaint[] = [
-    { id: 'CMP-501', customer: 'Alice Johnson', category: 'Technical', priority: 'High', status: 'In Progress' },
-    { id: 'CMP-502', customer: 'Bob Williams', category: 'Billing', priority: 'Medium', status: 'Pending' },
-    { id: 'CMP-503', customer: 'Charlie Brown', category: 'Service', priority: 'Critical', status: 'Escalated' },
-    { id: 'CMP-504', customer: 'David Lee', category: 'Technical', priority: 'Low', status: 'Resolved' }
+    { id: 'CMP-501', customer: 'Alice Johnson', category: 'Technical', priority: 'High', status: 'In Progress', technician: 'Tech A' },
+    { id: 'CMP-502', customer: 'Bob Williams', category: 'Billing', priority: 'Medium', status: 'Pending', technician: 'Unassigned' },
+    { id: 'CMP-503', customer: 'Charlie Brown', category: 'Service', priority: 'Critical', status: 'Escalated', technician: 'Manager B' },
+    { id: 'CMP-504', customer: 'David Lee', category: 'Technical', priority: 'Low', status: 'Resolved', technician: 'Tech C' }
   ];
 
   searchTerm: string = '';
@@ -66,11 +67,43 @@ export class ComplaintsComponent implements OnInit {
       c.customer.toLowerCase().includes(term) ||
       c.category.toLowerCase().includes(term) ||
       c.priority.toLowerCase().includes(term) ||
-      c.status.toLowerCase().includes(term)
+      c.status.toLowerCase().includes(term) ||
+      c.technician.toLowerCase().includes(term)
     );
   }
 
+  // Modal State
+  isModalOpen = false;
+  newComplaint: any = { customer: '', category: '', priority: 'Medium', issue: '' };
+  toastMessage: string | null = null;
+  toastTimeout: any;
+
   ngOnInit(): void {}
+
+  showToast(message: string) {
+    this.toastMessage = message;
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastTimeout = setTimeout(() => { this.toastMessage = null; }, 3000);
+  }
+
+  openModal() {
+    this.newComplaint = { customer: '', category: '', priority: 'Medium', issue: '' };
+    this.isModalOpen = true;
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+  }
+
+  submitComplaint() {
+    if (!this.newComplaint.customer || !this.newComplaint.category) {
+      this.showToast('Please fill required fields.');
+      return;
+    }
+    this.openComplaints++;
+    this.showToast(`New complaint registered for ${this.newComplaint.customer}.`);
+    this.closeModal();
+  }
 
   getPriorityClass(priority: string): string {
     switch(priority) {
@@ -94,17 +127,20 @@ export class ComplaintsComponent implements OnInit {
   acknowledge(cmp: Complaint) {
     if (cmp.status !== 'Resolved' && cmp.status !== 'In Progress') {
       cmp.status = 'In Progress';
+      this.showToast(`Acknowledged ${cmp.id}`);
     }
   }
 
   resolve(cmp: Complaint) {
     cmp.status = 'Resolved';
+    this.showToast(`Resolved ${cmp.id}`);
   }
 
   escalate(cmp: Complaint) {
     if (cmp.status !== 'Resolved') {
       cmp.status = 'Escalated';
       cmp.priority = 'Critical';
+      this.showToast(`Escalated ${cmp.id}`);
     }
   }
 }

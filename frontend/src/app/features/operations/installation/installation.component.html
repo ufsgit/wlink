@@ -95,6 +95,7 @@
         <thead>
           <tr>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">ID</th>
+            <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">PO Number</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Customer</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Date</th>
             <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8;">Technician</th>
@@ -106,6 +107,9 @@
           <tr *ngFor="let inst of filteredInstallations" style="transition: all 0.2s ease;">
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9;">
               <span class="fw-bold" style="color: #3b82f6;">{{ inst.id }}</span>
+            </td>
+            <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; font-weight: 500; color: #64748b;">
+              {{ inst.poNumber }}
             </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; font-weight: 500; color: #1e293b;">
               {{ inst.customer }}
@@ -122,20 +126,20 @@
             </td>
             <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; text-align: right; white-space: nowrap;">
               <div class="d-flex justify-content-end align-items-center">
-                <button class="btn btn-sm btn-light" (click)="assignTechnician(inst)" [disabled]="inst.status === 'Completed'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Assign Technician">
-                  <i class="bi bi-person-plus text-primary"></i>
+                <button class="btn btn-sm btn-light" (click)="generateWorkOrder(inst)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Generate Work Order">
+                  <i class="bi bi-file-earmark-text text-primary"></i>
                 </button>
                 
-                <button class="btn btn-sm btn-light" (click)="updateStatus(inst, 'In Progress')" [disabled]="inst.status === 'In Progress' || inst.status === 'Completed'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Mark In Progress">
-                  <i class="bi bi-play-circle text-warning"></i>
+                <button class="btn btn-sm btn-light" (click)="assignTechnician(inst)" [disabled]="inst.status === 'Completed'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Assign Technician">
+                  <i class="bi bi-person-plus text-info"></i>
+                </button>
+                
+                <button class="btn btn-sm btn-light" (click)="uploadPhoto(inst)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Upload Photos">
+                  <i class="bi bi-camera text-warning"></i>
                 </button>
 
-                <button class="btn btn-sm btn-light" (click)="updateStatus(inst, 'Completed')" [disabled]="inst.status === 'Completed'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Mark Completed">
-                  <i class="bi bi-check-circle text-success"></i>
-                </button>
-
-                <button class="btn btn-sm btn-light" (click)="reschedule(inst)" [disabled]="inst.status === 'Completed'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Reschedule">
-                  <i class="bi bi-calendar-event text-secondary"></i>
+                <button class="btn btn-sm btn-light" (click)="signOff(inst)" [disabled]="inst.status === 'Completed'" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; margin-left: 8px;" title="Customer Sign-off">
+                  <i class="bi bi-pen text-success"></i>
                 </button>
               </div>
             </td>

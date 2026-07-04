@@ -6,6 +6,7 @@ import { ChartConfiguration, ChartType } from 'chart.js';
 
 interface Installation {
   id: string;
+  poNumber: string;
   customer: string;
   date: string;
   technician: string;
@@ -44,11 +45,11 @@ export class InstallationComponent implements OnInit {
 
   // Table Data
   installations: Installation[] = [
-    { id: 'INS-001', customer: 'John Doe', date: '2023-10-25', technician: 'Unassigned', status: 'Pending' },
-    { id: 'INS-002', customer: 'Jane Smith', date: '2023-10-25', technician: 'Tech A', status: 'In Progress' },
-    { id: 'INS-003', customer: 'Acme Corp', date: '2023-10-24', technician: 'Tech B', status: 'Completed' },
-    { id: 'INS-004', customer: 'Global Industries', date: '2023-10-26', technician: 'Unassigned', status: 'Pending' },
-    { id: 'INS-005', customer: 'Sarah Connor', date: '2023-10-25', technician: 'Tech C', status: 'In Progress' }
+    { id: 'INS-001', poNumber: 'PO-2023-8901', customer: 'John Doe', date: '2023-10-25', technician: 'Unassigned', status: 'Pending' },
+    { id: 'INS-002', poNumber: 'PO-2023-8902', customer: 'Jane Smith', date: '2023-10-25', technician: 'Tech A', status: 'In Progress' },
+    { id: 'INS-003', poNumber: 'PO-2023-8903', customer: 'Acme Corp', date: '2023-10-24', technician: 'Tech B', status: 'Completed' },
+    { id: 'INS-004', poNumber: 'PO-2023-8904', customer: 'Global Industries', date: '2023-10-26', technician: 'Unassigned', status: 'Pending' },
+    { id: 'INS-005', poNumber: 'PO-2023-8905', customer: 'Sarah Connor', date: '2023-10-25', technician: 'Tech C', status: 'In Progress' }
   ];
 
   searchTerm: string = '';
@@ -60,6 +61,7 @@ export class InstallationComponent implements OnInit {
     const term = this.searchTerm.toLowerCase();
     return this.installations.filter(inst => 
       inst.id.toLowerCase().includes(term) ||
+      inst.poNumber.toLowerCase().includes(term) ||
       inst.customer.toLowerCase().includes(term) ||
       inst.technician.toLowerCase().includes(term) ||
       inst.status.toLowerCase().includes(term)
@@ -110,6 +112,7 @@ export class InstallationComponent implements OnInit {
     const newId = `INS-00${this.installations.length + 1}`;
     this.installations.unshift({
       id: newId,
+      poNumber: `PO-2023-9${Math.floor(100 + Math.random() * 900)}`,
       customer: this.newInstallation.customer!,
       date: this.newInstallation.date!,
       technician: 'Unassigned',
@@ -153,6 +156,21 @@ export class InstallationComponent implements OnInit {
     }
     inst.date = '2023-10-30';
     this.showToast(`Rescheduled ${inst.id} to ${inst.date}`);
+  }
+
+  generateWorkOrder(inst: Installation) {
+    this.showToast(`Work Order generated for PO ${inst.poNumber}. Email sent to ${inst.technician}.`);
+  }
+
+  uploadPhoto(inst: Installation) {
+    this.showToast(`Installation photos uploaded successfully for ${inst.id}.`);
+  }
+
+  signOff(inst: Installation) {
+    if (inst.status !== 'Completed') {
+      inst.status = 'Completed';
+    }
+    this.showToast(`Customer has signed off on installation ${inst.id}.`);
   }
 
   getStatusClass(status: string): string {
