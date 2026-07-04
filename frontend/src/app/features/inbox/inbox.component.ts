@@ -61,6 +61,16 @@ export class InboxComponent implements OnInit, OnDestroy {
   templateSearch = '';
   sendingTemplate = false;
 
+  // Attach File Menu
+  showAttachMenu = false;
+
+  // Shared Media Library
+  showSharedLibrary = false;
+  sharedLibraryFiles: any[] = [];
+  loadingSharedLibrary = false;
+  sharedLibrarySearch = '';
+  uploadingToLibrary = false;
+
   // Voice Recording
   isRecording = false;
   private mediaRecorder: any = null;
@@ -556,6 +566,7 @@ export class InboxComponent implements OnInit, OnDestroy {
   // Input Extras
   toggleEmojiPicker() {
     this.showEmojiPicker = !this.showEmojiPicker;
+    this.showAttachMenu = false;
   }
 
   addEmoji(emoji: string) {
@@ -563,7 +574,108 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.showEmojiPicker = false;
   }
 
-  attachFile() {
+  // Toggle the attach dropdown menu
+  toggleAttachMenu() {
+    if (!this.selectedConvo) return;
+    this.showAttachMenu = !this.showAttachMenu;
+    this.showEmojiPicker = false;
+  }
+
+  // Open the Shared Media Library modal
+  openSharedLibrary() {
+    this.showAttachMenu = false;
+    this.showSharedLibrary = true;
+    this.sharedLibrarySearch = '';
+    this.loadSharedLibraryFiles();
+  }
+
+  loadSharedLibraryFiles() {
+    this.loadingSharedLibrary = true;
+    this.api.get('/media-library').subscribe({
+      next: (res: any) => {
+        this.sharedLibraryFiles = res.data || [];
+        this.loadingSharedLibrary = false;
+      },
+      error: () => {
+        this.loadingSharedLibrary = false;
+        this.showToast('Failed to load shared library', 'danger');
+      }
+    });
+  }
+
+  get filteredSharedFiles() {
+    if (!this.sharedLibrarySearch.trim()) return this.sharedLibraryFiles;
+    const q = this.sharedLibrarySearch.toLowerCase();
+    return this.sharedLibraryFiles.filter((f: any) =>
+      f.name?.toLowerCase().includes(q) || f.file_type?.toLowerCase().includes(q)
+    );
+  }
+
+  // Send a file from the shared library as a message
+  sendSharedFile(file: any) {
+    if (!this.selectedConvo) return;
+    this.api.post(`/conversations/${this.selectedConvo.id}/messages`, {
+      content: '',
+      message_type: file.file_type,
+      media_url: file.file_url
+    }).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          if (!this.messages.find((m: any) => m.id === res.data.id)) {
+            this.messages.push(res.data);
+            this.scrollToBottom();
+          }
+          const convo = this.conversations.find((c: any) => c.id === this.selectedConvo.id);
+          if (convo) convo.last_message = `📎 ${file.name}`;
+          this.showToast(`"${file.name}" sent successfully`, 'success');
+          this.showSharedLibrary = false;
+        }
+      },
+      error: (err: any) => this.showToast('Failed to send file: ' + (err.error?.message || 'Error'), 'danger')
+    });
+  }
+
+  // Upload a file directly to the shared library
+  uploadToSharedLibrary(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+    this.uploadingToLibrary = true;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('name', file.name);
+    this.api.upload('/media-library', formData).subscribe({
+      next: (res: any) => {
+        this.uploadingToLibrary = false;
+        if (res.success) {
+          this.sharedLibraryFiles.unshift(res.data);
+          this.showToast(`"${res.data.name}" added to shared library`, 'success');
+        }
+      },
+      error: () => {
+        this.uploadingToLibrary = false;
+        this.showToast('Failed to upload to shared library', 'danger');
+      }
+    });
+    // Reset input so the same file can be re-selected
+    event.target.value = '';
+  }
+
+  // Delete a file from the shared library
+  deleteSharedFile(file: any, event: Event) {
+    event.stopPropagation();
+    if (!confirm(`Remove "${file.name}" from the shared library?`)) return;
+    this.api.delete(`/media-library/${file.id}`).subscribe({
+      next: () => {
+        this.sharedLibraryFiles = this.sharedLibraryFiles.filter((f: any) => f.id !== file.id);
+        this.showToast(`"${file.name}" removed from library`, 'success');
+      },
+      error: (err: any) => this.showToast('Failed to remove file: ' + (err.error?.message || 'Error'), 'danger')
+    });
+  }
+
+  // Attach file from user's device (original behaviour)
+  attachFromDevice() {
+    this.showAttachMenu = false;
     if (!this.selectedConvo) return;
     const input = document.createElement('input');
     input.type = 'file';
@@ -591,16 +703,16 @@ export class InboxComponent implements OnInit, OnDestroy {
                    message_type: type,
                    media_url: relativeUrl
                 }).subscribe({
-                   next: (msgRes) => {
+                   next: () => {
                      this.showToast('File sent successfully', 'success');
                    },
-                   error: (err) => {
+                   error: (err: any) => {
                      this.showToast('Failed to send file: ' + (err.error?.message || err.message), 'danger');
                    }
                 });
              }
           },
-          error: (err) => {
+          error: () => {
              this.showToast('Upload failed', 'danger');
           }
         });

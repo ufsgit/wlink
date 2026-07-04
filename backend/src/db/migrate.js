@@ -446,6 +446,20 @@ async function runMigrations() {
     await pool.query("ALTER TABLE contacts MODIFY COLUMN channel_preference ENUM('whatsapp','sms','rcs','instagram','facebook','website') DEFAULT 'whatsapp'");
   } catch (e) { /* Ignore if already extended */ }
 
+  // Create shared_media_library table for reusable files (brochures, PDFs, etc.)
+  await pool.query(`CREATE TABLE IF NOT EXISTS shared_media_library (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    business_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    file_url VARCHAR(500) NOT NULL,
+    file_type ENUM('image','video','document','audio') DEFAULT 'document',
+    file_size INT DEFAULT 0,
+    uploaded_by INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
+  )`);
+
   console.log('✅ Database migrations completed');
 
   await seedData();

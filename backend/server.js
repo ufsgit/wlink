@@ -87,6 +87,8 @@ app.use('/api/integrations', require('./src/routes/integrations.routes'));
 app.use('/api/analytics', require('./src/routes/analytics.routes'));
 app.use('/api/affiliates', require('./src/routes/affiliates.routes'));
 app.use('/api/settings', require('./src/routes/settings.routes'));
+app.use('/api/media-library', require('./src/routes/media-library.routes'));
+
 
 // Socket.IO
 io.on('connection', (socket) => {

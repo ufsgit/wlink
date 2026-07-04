@@ -1,4 +1,5 @@
-<div class="inbox-container">
+<div class="inbox-container" (click)="showAttachMenu = false; showEmojiPicker = false; showChannelFilter = false">
+
   <!-- Sidebar: Conversation List -->
   <div class="inbox-sidebar">
     <div class="sidebar-header">
@@ -226,7 +227,32 @@
           </div>
         </div>
         <button class="btn-action" title="Emoji" (click)="toggleEmojiPicker()"><i class="bi bi-emoji-smile"></i></button>
-        <button class="btn-action" title="Attach file" (click)="attachFile()"><i class="bi bi-paperclip"></i></button>
+        <!-- Attach File Dropdown -->
+        <div class="attach-dropdown-wrap" (click)="$event.stopPropagation()">
+          <button class="btn-action" title="Attach file" (click)="toggleAttachMenu()">
+            <i class="bi bi-paperclip"></i>
+          </button>
+          <div class="attach-popup-menu" *ngIf="showAttachMenu" (click)="$event.stopPropagation()">
+            <div class="attach-menu-item" (click)="openSharedLibrary()">
+              <div class="attach-menu-icon purple">
+                <i class="bi bi-folder2-open"></i>
+              </div>
+              <div class="attach-menu-text">
+                <div class="attach-menu-label">Shared Library</div>
+                <div class="attach-menu-sub">Brochures &amp; shared files</div>
+              </div>
+            </div>
+            <div class="attach-menu-item" (click)="attachFromDevice()">
+              <div class="attach-menu-icon blue">
+                <i class="bi bi-laptop"></i>
+              </div>
+              <div class="attach-menu-text">
+                <div class="attach-menu-label">From My Device</div>
+                <div class="attach-menu-sub">Upload a file from your computer</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <button class="btn-action" title="Send Template" (click)="openTemplatePicker()"><i class="bi bi-file-earmark-text"></i></button>
         <button class="btn-action" [class.recording]="isRecording" title="Voice message" (click)="toggleVoiceRecording()">
           <i class="bi" [ngClass]="isRecording ? 'bi-stop-circle-fill' : 'bi-mic'"></i>
@@ -535,6 +561,94 @@
             </div>
             <div class="premium-item-arrow">
               <i class="bi bi-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Media Library Modal -->
+  <div class="premium-modal-overlay" *ngIf="showSharedLibrary" (click)="showSharedLibrary = false; showAttachMenu = false">
+    <div class="premium-modal library-modal" (click)="$event.stopPropagation()">
+      <div class="premium-modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge" style="background: linear-gradient(135deg,#8b5cf6,#6d28d9);">
+            <i class="bi bi-folder2-open"></i>
+          </div>
+          <div>
+            <h5>Shared Media Library</h5>
+            <p>Pick a file to send to this conversation</p>
+          </div>
+        </div>
+        <div class="library-header-actions">
+          <!-- Upload button -->
+          <label class="btn-upload-lib" [class.uploading]="uploadingToLibrary" title="Upload to library">
+            <i class="bi" [ngClass]="uploadingToLibrary ? 'bi-hourglass-split' : 'bi-cloud-upload'"></i>
+            {{ uploadingToLibrary ? 'Uploading...' : 'Upload' }}
+            <input type="file" hidden (change)="uploadToSharedLibrary($event)"
+                   accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
+          </label>
+          <button class="modal-close-btn" (click)="showSharedLibrary = false">&times;</button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div style="padding: 14px 24px 0;">
+        <div class="input-wrapper-with-icon">
+          <i class="bi bi-search"></i>
+          <input type="text" [(ngModel)]="sharedLibrarySearch" placeholder="Search files by name or type...">
+        </div>
+      </div>
+
+      <div class="premium-modal-body" style="padding-top: 16px;">
+        <!-- Loading -->
+        <div *ngIf="loadingSharedLibrary" class="text-center py-4">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+          <p class="text-muted small mt-2">Loading shared library...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loadingSharedLibrary && filteredSharedFiles.length === 0" class="library-empty-state">
+          <div class="library-empty-icon">
+            <i class="bi bi-folder-x"></i>
+          </div>
+          <p class="library-empty-title">No shared files yet</p>
+          <p class="library-empty-sub">Click <strong>Upload</strong> above to add brochures or shared assets that all agents can use.</p>
+        </div>
+
+        <!-- File Grid -->
+        <div class="library-file-grid" *ngIf="!loadingSharedLibrary && filteredSharedFiles.length > 0">
+          <div *ngFor="let file of filteredSharedFiles" class="library-file-card" (click)="sendSharedFile(file)">
+            <!-- File Type Icon -->
+            <div class="lib-file-icon"
+                 [class.lib-icon-image]="file.file_type === 'image'"
+                 [class.lib-icon-video]="file.file_type === 'video'"
+                 [class.lib-icon-audio]="file.file_type === 'audio'"
+                 [class.lib-icon-doc]="file.file_type === 'document'">
+              <i class="bi" [ngClass]="{
+                'bi-image-fill': file.file_type === 'image',
+                'bi-camera-video-fill': file.file_type === 'video',
+                'bi-music-note-beamed': file.file_type === 'audio',
+                'bi-file-earmark-fill': file.file_type === 'document'
+              }"></i>
+            </div>
+            <!-- File Info -->
+            <div class="lib-file-info">
+              <div class="lib-file-name" [title]="file.name">{{ file.name }}</div>
+              <div class="lib-file-meta">
+                <span class="lib-type-badge" [class]="'lib-badge-' + file.file_type">{{ file.file_type }}</span>
+                <span *ngIf="file.uploaded_by_name" class="lib-uploader">by {{ file.uploaded_by_name }}</span>
+              </div>
+            </div>
+            <!-- Actions -->
+            <div class="lib-file-actions">
+              <button class="lib-send-btn" title="Send this file">
+                <i class="bi bi-send-fill"></i>
+              </button>
+              <button class="lib-delete-btn" title="Remove from library" (click)="deleteSharedFile(file, $event)">
+                <i class="bi bi-trash3"></i>
+              </button>
             </div>
           </div>
         </div>
