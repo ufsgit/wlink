@@ -79,6 +79,16 @@ export class LayoutComponent implements OnInit {
   setDepartment(dept: string) {
     this.activeDepartment = dept;
     this.isDepartmentDropdownOpen = false;
+    
+    if (dept === 'CRM') {
+      this.router.navigate(['/crm-dashboard']);
+    } else if (dept === 'Leads') {
+      this.router.navigate(['/lead-dashboard']);
+    } else if (dept === 'Operation') {
+      this.router.navigate(['/operation-dashboard']);
+    } else if (dept === 'HR') {
+      this.router.navigate(['/hr-dashboard']);
+    }
   }
 
   toggleNotificationDropdown(event: MouseEvent) {
@@ -275,7 +285,10 @@ export class LayoutComponent implements OnInit {
   private getTitle(url: string): string {
     const segments = url.split('/');
     const last = segments[segments.length - 1].split('?')[0]; // Remove query params
-    if (!last || last === 'dashboard') return 'Dashboard Overview';
+    if (!last || last === 'lead-dashboard') return 'Lead Dashboard';
+    if (last === 'crm-dashboard') return 'CRM Dashboard';
+    if (last === 'operation-dashboard') return 'Operations Dashboard';
+    if (last === 'hr-dashboard') return 'HR Dashboard';
     if (last === 'contacts') return 'Leads';
     if (last === 'sms') return 'SMS Campaigns';
     if (last === 'ivr') return 'IVR Flows';

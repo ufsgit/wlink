@@ -4,13 +4,13 @@ import { RouterModule } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-lead-dashboard',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  templateUrl: './lead-dashboard.component.html',
+  styleUrls: ['./lead-dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class LeadDashboardComponent implements OnInit {
   stats: any = {
     totalContacts: 0,
     openConversations: 0,

@@ -556,6 +556,54 @@
             <option value="Interested">Interested</option>
             <option value="Not Interested">Not Interested</option>
             <option value="Converted">Converted</option>
+            <option value="Branch">Branch</option>
+            <option value="Sales Loss">Sales Loss</option>
+          </select>
+        </div>
+
+        <div class="field-row" *ngIf="newContact.status === 'Branch'">
+          <label>Branch</label>
+          <select class="form-select premium-input" [(ngModel)]="newContact.branch" style="display:block;">
+            <option value="">-- Select Branch --</option>
+            <option *ngFor="let b of dummyBranches" [value]="b">{{ b }}</option>
+          </select>
+        </div>
+        <div class="field-row" *ngIf="newContact.status === 'Branch'">
+          <label>Department</label>
+          <select class="form-select premium-input" [(ngModel)]="newContact.department" style="display:block;">
+            <option value="">-- Select Department --</option>
+            <option *ngFor="let d of dummyDepartments" [value]="d">{{ d }}</option>
+          </select>
+        </div>
+        <div class="field-row full-width" *ngIf="newContact.status === 'Branch'">
+          <label>Assign To</label>
+          <div style="display: flex; gap: 16px; margin-top: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+              <input type="radio" name="assign_type_add" value="auto" [(ngModel)]="newContact.assign_type"> Auto Assign
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+              <input type="radio" name="assign_type_add" value="employee" [(ngModel)]="newContact.assign_type"> Select Employee
+            </label>
+          </div>
+        </div>
+        <div class="field-row" *ngIf="newContact.status === 'Branch' && newContact.assign_type === 'employee'">
+          <label>Employee</label>
+          <select class="form-select premium-input" [(ngModel)]="newContact.assigned_employee" style="display:block;">
+            <option value="">-- Select Employee --</option>
+            <option *ngFor="let e of dummyEmployees" [value]="e">{{ e }}</option>
+          </select>
+        </div>
+        <div class="field-row full-width" *ngIf="newContact.status === 'Branch' && newContact.assign_type === 'auto'">
+          <div class="alert alert-info py-2 px-3" style="font-size: 0.9rem; margin-bottom: 0;">
+            <i class="bi bi-info-circle me-1"></i> Contact will be automatically assigned to the most suitable employee based on load.
+          </div>
+        </div>
+
+        <div class="field-row" *ngIf="newContact.status === 'Sales Loss'">
+          <label>Loss Reason</label>
+          <select class="form-select premium-input" [(ngModel)]="newContact.loss_reason" style="display:block;">
+            <option value="">-- Select Reason --</option>
+            <option *ngFor="let r of dummyLossReasons" [value]="r">{{ r }}</option>
           </select>
         </div>
 
@@ -674,6 +722,58 @@
           <option value="Interested">Interested</option>
           <option value="Not Interested">Not Interested</option>
           <option value="Converted">Converted</option>
+          <option value="Branch">Branch</option>
+          <option value="Sales Loss">Sales Loss</option>
+        </select>
+      </div>
+      
+      <div class="field-row mb-3" *ngIf="quickStatusData.status === 'Branch'">
+        <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #334155;">Branch</label>
+        <select class="form-select premium-input" [(ngModel)]="quickStatusData.branch" style="display:block; width: 100%;">
+          <option value="">-- Select Branch --</option>
+          <option *ngFor="let b of dummyBranches" [value]="b">{{ b }}</option>
+        </select>
+      </div>
+
+      <div class="field-row mb-3" *ngIf="quickStatusData.status === 'Branch'">
+        <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #334155;">Department</label>
+        <select class="form-select premium-input" [(ngModel)]="quickStatusData.department" style="display:block; width: 100%;">
+          <option value="">-- Select Department --</option>
+          <option *ngFor="let d of dummyDepartments" [value]="d">{{ d }}</option>
+        </select>
+      </div>
+
+      <div class="field-row mb-3" *ngIf="quickStatusData.status === 'Branch'">
+        <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #334155;">Assign To</label>
+        <div style="display: flex; gap: 16px; margin-top: 4px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+            <input type="radio" name="assign_type_qs" value="auto" [(ngModel)]="quickStatusData.assign_type"> Auto Assign
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+            <input type="radio" name="assign_type_qs" value="employee" [(ngModel)]="quickStatusData.assign_type"> Select Employee
+          </label>
+        </div>
+      </div>
+
+      <div class="field-row mb-3" *ngIf="quickStatusData.status === 'Branch' && quickStatusData.assign_type === 'employee'">
+        <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #334155;">Employee</label>
+        <select class="form-select premium-input" [(ngModel)]="quickStatusData.assigned_employee" style="display:block; width: 100%;">
+          <option value="">-- Select Employee --</option>
+          <option *ngFor="let e of dummyEmployees" [value]="e">{{ e }}</option>
+        </select>
+      </div>
+
+      <div class="field-row mb-3" *ngIf="quickStatusData.status === 'Branch' && quickStatusData.assign_type === 'auto'">
+        <div class="alert alert-info py-2 px-3" style="font-size: 0.9rem; margin-bottom: 0;">
+          <i class="bi bi-info-circle me-1"></i> Contact will be automatically assigned to the most suitable employee based on load.
+        </div>
+      </div>
+
+      <div class="field-row mb-3" *ngIf="quickStatusData.status === 'Sales Loss'">
+        <label style="font-weight: 600; margin-bottom: 5px; display: block; color: #334155;">Loss Reason</label>
+        <select class="form-select premium-input" [(ngModel)]="quickStatusData.loss_reason" style="display:block; width: 100%;">
+          <option value="">-- Select Reason --</option>
+          <option *ngFor="let r of dummyLossReasons" [value]="r">{{ r }}</option>
         </select>
       </div>
 

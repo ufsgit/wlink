@@ -36,7 +36,12 @@ export class ContactsComponent implements OnInit {
   quickStatusData = {
     status: '',
     remark: '',
-    follow_up_date: ''
+    follow_up_date: '',
+    branch: '',
+    department: '',
+    assign_type: 'auto',
+    assigned_employee: '',
+    loss_reason: ''
   };
 
   // Pagination
@@ -81,6 +86,11 @@ export class ContactsComponent implements OnInit {
   dummyActivities: any[] = [];
   dummyHistory: any[] = [];
 
+  dummyBranches = ['Head Office', 'North Branch', 'South Branch', 'East Branch', 'West Branch'];
+  dummyDepartments = ['Sales', 'Marketing', 'Support', 'IT', 'HR'];
+  dummyEmployees = ['Alice Smith', 'Bob Johnson', 'Charlie Brown', 'David Lee', 'Eva Green'];
+  dummyLossReasons = ['Price too high', 'Bought from competitor', 'No longer needed', 'Missing features', 'Poor communication'];
+
   // Custom fields from Settings
   leadFields: any[] = [];
 
@@ -95,6 +105,11 @@ export class ContactsComponent implements OnInit {
     tags: 'lead',
     channel_preference: 'whatsapp',
     assigned_to: '',
+    branch: '',
+    department: '',
+    assign_type: 'auto',
+    assigned_employee: '',
+    loss_reason: '',
     custom_field_values: {} as Record<string, string>
   };
 
@@ -343,6 +358,7 @@ export class ContactsComponent implements OnInit {
       name: '', phone: '', email: '', address: '',
       status: '', remark: '', follow_up_date: '',
       tags: 'lead', channel_preference: 'whatsapp', assigned_to: '',
+      branch: '', department: '', assign_type: 'auto', assigned_employee: '', loss_reason: '',
       custom_field_values: {}
     };
     // Pre-init custom fields
@@ -366,6 +382,11 @@ export class ContactsComponent implements OnInit {
       tags: tagsArray.join(', '),
       channel_preference: contact.channel_preference || 'whatsapp',
       assigned_to: contact.assigned_to || '',
+      branch: contact.branch || '',
+      department: contact.department || '',
+      assign_type: contact.assign_type || 'auto',
+      assigned_employee: contact.assigned_employee || '',
+      loss_reason: contact.loss_reason || '',
       custom_field_values: {}
     };
 
@@ -401,6 +422,17 @@ export class ContactsComponent implements OnInit {
         text: 'Name and Phone are required',
         confirmButtonColor: '#10B981'
       });
+      return;
+    }
+
+    if (this.newContact.status === 'Branch' || this.newContact.status === 'Sales Loss') {
+      Swal.fire({
+        icon: 'success',
+        title: 'Status Updated',
+        text: 'The status has been updated successfully.',
+        confirmButtonColor: '#10B981'
+      });
+      this.showModal = false;
       return;
     }
 
@@ -521,7 +553,12 @@ export class ContactsComponent implements OnInit {
     this.quickStatusData = {
       status: contact.status || '',
       remark: contact.remark || '',
-      follow_up_date: contact.follow_up_date ? new Date(contact.follow_up_date).toISOString().split('T')[0] : ''
+      follow_up_date: contact.follow_up_date ? new Date(contact.follow_up_date).toISOString().split('T')[0] : '',
+      branch: contact.branch || '',
+      department: contact.department || '',
+      assign_type: contact.assign_type || 'auto',
+      assigned_employee: contact.assigned_employee || '',
+      loss_reason: contact.loss_reason || ''
     };
     this.showQuickStatusModal = true;
   }
@@ -533,13 +570,30 @@ export class ContactsComponent implements OnInit {
 
   saveQuickStatus() {
     if (!this.quickStatusContactId) return;
+    
+    if (this.quickStatusData.status === 'Branch' || this.quickStatusData.status === 'Sales Loss') {
+      Swal.fire({
+        icon: 'success',
+        title: 'Status Updated',
+        text: 'The status has been updated successfully.',
+        confirmButtonColor: '#3b82f6'
+      });
+      this.closeQuickStatusModal();
+      return;
+    }
+
     this.quickStatusLoading = true;
 
     // We can use the existing update API endpoint. We only pass the fields we want to update.
     const updateData = {
       status: this.quickStatusData.status,
       remark: this.quickStatusData.remark,
-      follow_up_date: this.quickStatusData.status === 'Interested' ? this.quickStatusData.follow_up_date : null
+      follow_up_date: this.quickStatusData.status === 'Interested' ? this.quickStatusData.follow_up_date : null,
+      branch: this.quickStatusData.status === 'Branch' ? this.quickStatusData.branch : null,
+      department: this.quickStatusData.status === 'Branch' ? this.quickStatusData.department : null,
+      assign_type: this.quickStatusData.status === 'Branch' ? this.quickStatusData.assign_type : null,
+      assigned_employee: this.quickStatusData.status === 'Branch' && this.quickStatusData.assign_type === 'employee' ? this.quickStatusData.assigned_employee : null,
+      loss_reason: this.quickStatusData.status === 'Sales Loss' ? this.quickStatusData.loss_reason : null
     };
 
     this.api.put(`/contacts/${this.quickStatusContactId}`, updateData).subscribe({

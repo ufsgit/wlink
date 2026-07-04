@@ -1,7 +1,7 @@
 <div class="app-container" [class.sidebar-collapsed]="isCollapsed">
   <aside class="sidebar">
     <div class="logo-section">
-      <div class="logo-container" routerLink="/dashboard" style="cursor: pointer;" title="Go to Dashboard">
+      <div class="logo-container" routerLink="/lead-dashboard" style="cursor: pointer;" title="Go to Dashboard">
         <div class="logo-icon">
           <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-svg" style="width: 100%; height: 100%; display: block;">
             <!-- Connecting link paths forming W -->
@@ -56,9 +56,9 @@
     <nav class="nav-links" *ngIf="user$ | async as user">
       <!-- LEADS MENU -->
       <ng-container *ngIf="activeDepartment === 'Leads'">
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Dashboard' : ''">
+        <a routerLink="/lead-dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Lead Dashboard' : ''">
         <i class="bi bi-speedometer2"></i>
-        <span *ngIf="!isCollapsed">Dashboard</span>
+        <span *ngIf="!isCollapsed">Lead Dashboard</span>
       </a>
       <a routerLink="/inbox" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Shared Inbox' : ''">
         <i class="bi bi-chat-dots"></i>
@@ -157,7 +157,7 @@
 
       <!-- CRM MENU -->
       <ng-container *ngIf="activeDepartment === 'CRM'">
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'CRM Dashboard' : ''">
+        <a routerLink="/crm-dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'CRM Dashboard' : ''">
           <i class="bi bi-speedometer2"></i>
           <span *ngIf="!isCollapsed">Dashboard</span>
         </a>
@@ -255,7 +255,7 @@
 
       <!-- OPERATION MENU -->
       <ng-container *ngIf="activeDepartment === 'Operation'">
-        <a routerLink="/dashboard" class="nav-item" [title]="isCollapsed ? 'Operation Dashboard' : ''">
+        <a routerLink="/operation-dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Operation Dashboard' : ''">
           <i class="bi bi-speedometer2"></i>
           <span *ngIf="!isCollapsed">Dashboard</span>
         </a>
@@ -310,7 +310,7 @@
 
       <!-- HR MENU -->
       <ng-container *ngIf="activeDepartment === 'HR'">
-        <a routerLink="/dashboard" class="nav-item" [title]="isCollapsed ? 'HR Dashboard' : ''">
+        <a routerLink="/hr-dashboard" class="nav-item" [title]="isCollapsed ? 'HR Dashboard' : ''">
           <i class="bi bi-speedometer2"></i>
           <span *ngIf="!isCollapsed">Dashboard</span>
         </a>

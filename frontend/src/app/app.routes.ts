@@ -2,7 +2,6 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { LayoutComponent } from './shared/layout/layout.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { InboxComponent } from './features/inbox/inbox.component';
 import { ContactsComponent } from './features/contacts/contacts.component';
 import { BroadcastsComponent } from './features/broadcasts/broadcasts.component';
@@ -28,8 +27,11 @@ export const routes: Routes = [
     component: LayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
+      { path: '', redirectTo: 'lead-dashboard', pathMatch: 'full' },
+      { path: 'lead-dashboard', loadComponent: () => import('./features/lead-dashboard/lead-dashboard.component').then(m => m.LeadDashboardComponent) },
+      { path: 'crm-dashboard', loadComponent: () => import('./features/crm-dashboard/crm-dashboard.component').then(m => m.CrmDashboardComponent) },
+      { path: 'operation-dashboard', loadComponent: () => import('./features/operation-dashboard/operation-dashboard.component').then(m => m.OperationDashboardComponent) },
+      { path: 'hr-dashboard', loadComponent: () => import('./features/hr-dashboard/hr-dashboard.component').then(m => m.HrDashboardComponent) },
       { path: 'inbox', component: InboxComponent },
       { path: 'contacts', component: ContactsComponent },
       { path: 'broadcasts', component: BroadcastsComponent, data: { roles: ['admin', 'superadmin'] } },
@@ -46,7 +48,12 @@ export const routes: Routes = [
       { path: 'affiliates', component: AffiliatesComponent, data: { roles: ['admin', 'superadmin'] } },
       { path: 'templates', component: TemplatesComponent, data: { roles: ['admin', 'superadmin'] } },
       { path: 'ivr', component: IvrComponent, data: { roles: ['admin', 'superadmin'] } },
+      { path: 'reports/work', loadComponent: () => import('./features/lead-report/work-report/work-report.component').then(m => m.WorkReportComponent) },
+      { path: 'reports/conversation', loadComponent: () => import('./features/lead-report/conversation-report/conversation-report.component').then(m => m.ConversationReportComponent) },
+      { path: 'reports/employee', loadComponent: () => import('./features/lead-report/employee-report/employee-report.component').then(m => m.EmployeeReportComponent) },
+      { path: 'reports/enquiry', loadComponent: () => import('./features/lead-report/enquiry-report/enquiry-report.component').then(m => m.EnquiryReportComponent) },
+      { path: 'reports/status', loadComponent: () => import('./features/lead-report/status-report/status-report.component').then(m => m.StatusReportComponent) },
     ]
   },
-  { path: '**', redirectTo: 'dashboard' }
+  { path: '**', redirectTo: 'lead-dashboard' }
 ];
