@@ -113,6 +113,46 @@ export class ContactsComponent implements OnInit {
     custom_field_values: {} as Record<string, string>
   };
 
+  // Quotation Modal
+  isQuoteModalOpen = false;
+  editingQuote: any = null;
+  toastMessage = '';
+  toastTimeout: any;
+
+  openQuoteModal(quote: any = null) {
+    if (quote) {
+      this.editingQuote = { ...quote };
+    } else {
+      this.editingQuote = {
+        id: 'QT-' + new Date().getFullYear() + '-' + Math.floor(100 + Math.random() * 900),
+        client: this.selectedContact ? this.selectedContact.name : '',
+        email: this.selectedContact ? this.selectedContact.email : '',
+        date: new Date().toISOString().split('T')[0],
+        amount: '',
+        status: 'Pending Approval'
+      };
+    }
+    this.isQuoteModalOpen = true;
+  }
+
+  closeQuoteModal() {
+    this.isQuoteModalOpen = false;
+    this.editingQuote = null;
+  }
+
+  submitQuote() {
+    this.showAction('Quotation saved successfully!');
+    this.closeQuoteModal();
+  }
+
+  showAction(message: string) {
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastMessage = message;
+    this.toastTimeout = setTimeout(() => {
+      this.toastMessage = '';
+    }, 3000);
+  }
+
   get today(): string {
     return new Date().toISOString().split('T')[0];
   }

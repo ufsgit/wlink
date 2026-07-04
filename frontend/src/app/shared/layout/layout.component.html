@@ -326,6 +326,10 @@
           <i class="bi bi-people"></i>
           <span *ngIf="!isCollapsed">Employees</span>
         </a>
+        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Pending Approvals' : ''">
+          <i class="bi bi-check2-square"></i>
+          <span *ngIf="!isCollapsed">Pending Approvals</span>
+        </a>
 
         <!-- Reports -->
         <a href="javascript:void(0)" class="nav-item submenu-header" [class.active]="isHrReportsOpen" *ngIf="!isCollapsed" (click)="toggleHrReports($event)">

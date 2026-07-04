@@ -92,7 +92,8 @@ import { FormsModule } from '@angular/forms';
                 </td>
                 <td style="padding: 20px 32px; text-align: right;">
                   <button class="btn btn-sm btn-light me-2" (click)="openViewModal(po)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="View"><i class="bi bi-eye"></i></button>
-                  <button class="btn btn-sm btn-light" (click)="showAction('Downloading PDF for ' + po.id)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Download PDF"><i class="bi bi-download"></i></button>
+                  <button class="btn btn-sm btn-light me-2" (click)="showAction('Downloading PDF for ' + po.id)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Download PDF"><i class="bi bi-download"></i></button>
+                  <button class="btn btn-sm btn-light" (click)="showAction('Transporting ' + po.id + ' for delivery...')" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Transport for Delivery"><i class="bi bi-truck text-success"></i></button>
                 </td>
               </tr>
             </tbody>

@@ -15,9 +15,9 @@ import { FormsModule } from '@angular/forms';
           <h2 class="fw-bold mb-2" style="color: #1e293b;">Quotations</h2>
           <p class="text-muted mb-0" style="font-size: 0.95rem;">Manage client quotations and proposals</p>
         </div>
-        <button class="btn btn-primary" (click)="openCreateModal()" style="padding: 10px 24px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); border: none; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+        <!-- <button class="btn btn-primary" (click)="openCreateModal()" style="padding: 10px 24px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); border: none; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
           <i class="bi bi-plus-lg me-2"></i> Create Quotation
-        </button>
+        </button> -->
       </div>
 
       <!-- KPI Cards (4 Cards) -->
@@ -99,7 +99,7 @@ import { FormsModule } from '@angular/forms';
                   </span>
                 </td>
                 <td style="padding: 20px 32px; text-align: right;">
-                  <button class="btn btn-sm btn-light me-2" (click)="openViewModal(quote)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="View"><i class="bi bi-eye"></i></button>
+                  <button class="btn btn-sm btn-light me-2" (click)="openQuoteModal(quote)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="View/Edit"><i class="bi bi-pencil"></i></button>
                   <button class="btn btn-sm btn-light" (click)="showAction('Downloading PDF for ' + quote.id)" style="border-radius: 8px; border: 1px solid #e2e8f0; color: #475569;" title="Download PDF"><i class="bi bi-download"></i></button>
                 </td>
               </tr>
@@ -108,36 +108,37 @@ import { FormsModule } from '@angular/forms';
         </div>
       </div>
       
-      <!-- Create Modal -->
-      <div *ngIf="isCreateModalOpen" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-out;">
-        <div style="background: white; border-radius: 24px; padding: 32px; width: 500px; max-width: 90vw; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-           <h3 style="font-weight: 800; color: #1e293b; margin-bottom: 24px; font-size: 1.5rem;">Create New Quotation</h3>
+      <!-- Quote Modal -->
+      <div *ngIf="isQuoteModalOpen && editingQuote" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-out;">
+        <div style="background: white; border-radius: 24px; padding: 32px; width: 600px; max-width: 90vw; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+           <h3 style="font-weight: 800; color: #1e293b; margin-bottom: 24px; font-size: 1.5rem;">Quotation Details</h3>
            
            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px;">
              <div>
                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Quote #</label>
-               <input type="text" class="form-control" placeholder="e.g. QT-2023-1045" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+               <input type="text" class="form-control" [(ngModel)]="editingQuote.id" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
              </div>
              <div>
                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Date</label>
-               <input type="date" class="form-control" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+               <input type="date" class="form-control" [(ngModel)]="editingQuote.date" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
              </div>
-             <div>
+             <div style="grid-column: span 2;">
                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Client Name</label>
-               <input type="text" class="form-control" placeholder="e.g. Acme Corp" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+               <input type="text" class="form-control" [(ngModel)]="editingQuote.client" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
              </div>
-             <div>
+             <div style="grid-column: span 2;">
                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Client Email</label>
-               <input type="email" class="form-control" placeholder="e.g. billing@acme.com" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+               <input type="email" class="form-control" [(ngModel)]="editingQuote.email" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
              </div>
              <div>
                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Amount</label>
-               <input type="text" class="form-control" placeholder="e.g. $5,000.00" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+               <input type="text" class="form-control" [(ngModel)]="editingQuote.amount" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
              </div>
              <div>
                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Status</label>
-               <select class="form-select" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+               <select class="form-select" [(ngModel)]="editingQuote.status" style="border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px 16px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
                  <option>Pending Approval</option>
+                 <option>Sent</option>
                  <option>Accepted</option>
                  <option>Rejected</option>
                  <option>Expired</option>
@@ -146,42 +147,8 @@ import { FormsModule } from '@angular/forms';
            </div>
 
            <div style="display: flex; justify-content: flex-end; gap: 12px;">
-             <button class="btn btn-light" (click)="closeCreateModal()" style="border-radius: 12px; font-weight: 700; padding: 10px 24px; color: #475569; border: 1px solid #e2e8f0; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">Cancel</button>
-             <button class="btn btn-primary" (click)="submitCreateQuotation()" style="border-radius: 12px; font-weight: 700; padding: 10px 24px; background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">Create Quotation</button>
-           </div>
-        </div>
-      </div>
-
-      <!-- View Modal -->
-      <div *ngIf="isViewModalOpen && selectedQuote" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-out;">
-        <div style="background: white; border-radius: 24px; padding: 32px; width: 500px; max-width: 90vw; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
-             <h3 style="font-weight: 800; color: #1e293b; margin: 0; font-size: 1.5rem;">Quotation Details</h3>
-             <span [ngClass]="getStatusClass(selectedQuote.status)" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 8px;">{{ selectedQuote.status }}</span>
-           </div>
-           
-           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 36px; background: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0;">
-             <div>
-               <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Quote #</label>
-               <div style="font-weight: 700; color: #3b82f6; font-size: 1.05rem;">{{ selectedQuote.id }}</div>
-             </div>
-             <div>
-               <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Date</label>
-               <div style="font-weight: 700; color: #1e293b; font-size: 1.05rem;">{{ selectedQuote.date }}</div>
-             </div>
-             <div style="grid-column: span 2;">
-               <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Client</label>
-               <div style="font-weight: 700; color: #1e293b; font-size: 1.05rem;">{{ selectedQuote.client }}</div>
-               <div style="color: #64748b; font-size: 0.9rem;">{{ selectedQuote.email }}</div>
-             </div>
-             <div style="grid-column: span 2; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: -8px;">
-               <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Total Amount</label>
-               <div style="font-weight: 800; color: #0f172a; font-size: 1.5rem;">{{ selectedQuote.amount }}</div>
-             </div>
-           </div>
-
-           <div style="display: flex; justify-content: flex-end;">
-             <button class="btn btn-light" (click)="closeViewModal()" style="border-radius: 12px; font-weight: 700; padding: 10px 32px; border: 1px solid #cbd5e1; color: #475569; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">Close</button>
+             <button class="btn btn-light" (click)="closeQuoteModal()" style="border-radius: 12px; font-weight: 700; padding: 10px 24px; color: #475569; border: 1px solid #e2e8f0; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">Cancel</button>
+             <button class="btn btn-primary" (click)="submitQuote()" style="border-radius: 12px; font-weight: 700; padding: 10px 24px; background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">Save Quotation</button>
            </div>
         </div>
       </div>
@@ -336,6 +303,8 @@ export class QuotationsComponent {
   isCreateModalOpen = false;
   isViewModalOpen = false;
   selectedQuote: any = null;
+  isQuoteModalOpen = false;
+  editingQuote: any = null;
 
   quotations = [
     { id: 'QT-2023-1042', client: 'Acme Corp', email: 'billing@acmecorp.com', date: 'Oct 24, 2023', amount: '$12,450.00', status: 'Pending Approval' },
@@ -364,17 +333,31 @@ export class QuotationsComponent {
     );
   }
 
-  openCreateModal() {
-    this.isCreateModalOpen = true;
+  openQuoteModal(quote: any = null) {
+    if (quote) {
+      this.editingQuote = { ...quote };
+    } else {
+      this.editingQuote = {
+        id: 'QT-' + new Date().getFullYear() + '-' + Math.floor(100 + Math.random() * 900),
+        client: '',
+        email: '',
+        date: new Date().toISOString().split('T')[0],
+        amount: '',
+        status: 'Pending Approval'
+      };
+    }
+    this.isQuoteModalOpen = true;
   }
 
-  closeCreateModal() {
-    this.isCreateModalOpen = false;
+  closeQuoteModal() {
+    this.isQuoteModalOpen = false;
+    this.editingQuote = null;
   }
 
-  submitCreateQuotation() {
-    this.closeCreateModal();
-    this.showAction('Quotation successfully created!');
+  submitQuote() {
+    this.toastMessage = 'Quotation saved successfully!';
+    setTimeout(() => this.toastMessage = '', 3000);
+    this.closeQuoteModal();
   }
 
   openViewModal(quote: any) {

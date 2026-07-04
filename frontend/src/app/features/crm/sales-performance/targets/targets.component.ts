@@ -14,6 +14,7 @@ export class TargetsComponent {
   isCreateModalOpen: boolean = false;
   isViewModalOpen: boolean = false;
   selectedTarget: any = null;
+  selectedTargetType: 'Individual' | 'Branch' = 'Individual';
 
   targets = [
     { id: 'TGT-2023-001', assignee: 'John Doe', role: 'Sales Executive', period: 'Q3 2023', target: '$50,000', achieved: '$35,000', status: 'On Track' },
@@ -23,12 +24,34 @@ export class TargetsComponent {
     { id: 'TGT-2023-005', assignee: 'Michael Wilson', role: 'Sales Executive', period: 'Q3 2023', target: '$45,000', achieved: '$10,000', status: 'Behind' }
   ];
 
+  branchTargets = [
+    { id: 'B-TGT-001', branch: 'New York Branch', manager: 'Alice Smith', period: 'Q3 2023', target: '$500,000', achieved: '$450,000', status: 'On Track' },
+    { id: 'B-TGT-002', branch: 'Los Angeles Branch', manager: 'Bob Johnson', period: 'Q3 2023', target: '$750,000', achieved: '$800,000', status: 'Overachieved' },
+    { id: 'B-TGT-003', branch: 'Chicago Branch', manager: 'Charlie Brown', period: 'Q3 2023', target: '$300,000', achieved: '$200,000', status: 'Behind' },
+  ];
+
   get filteredTargets() {
     if (!this.searchTerm) return this.targets;
     return this.targets.filter(t => 
       t.assignee.toLowerCase().includes(this.searchTerm.toLowerCase()) || 
       t.id.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
+  }
+
+  get filteredBranchTargets() {
+    if (!this.searchTerm) return this.branchTargets;
+    return this.branchTargets.filter(t => 
+      t.branch.toLowerCase().includes(this.searchTerm.toLowerCase()) || 
+      t.id.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+  }
+
+  get summary() {
+    if (this.selectedTargetType === 'Individual') {
+      return { total: '$315K', achieved: '$248K', pending: '$67K', completion: '78.7%' };
+    } else {
+      return { total: '$1.5M', achieved: '$1.45M', pending: '$50K', completion: '96.6%' };
+    }
   }
 
   getStatusClass(status: string): string {
