@@ -259,19 +259,19 @@
           <i class="bi bi-speedometer2"></i>
           <span *ngIf="!isCollapsed">Dashboard</span>
         </a>
-        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Installation' : ''">
+        <a routerLink="/installation" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Installation' : ''">
           <i class="bi bi-tools"></i>
           <span *ngIf="!isCollapsed">Installation</span>
         </a>
-        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Customer Feedback' : ''">
+        <a routerLink="/customer-feedback" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Customer Feedback' : ''">
           <i class="bi bi-star"></i>
           <span *ngIf="!isCollapsed">Customer Feedback</span>
         </a>
-        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Warranty & Service' : ''">
+        <a routerLink="/warranty-service" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Warranty & Service' : ''">
           <i class="bi bi-shield-check"></i>
           <span *ngIf="!isCollapsed">Warranty & Service</span>
         </a>
-        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Complaints' : ''">
+        <a routerLink="/complaints" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Complaints' : ''">
           <i class="bi bi-exclamation-triangle"></i>
           <span *ngIf="!isCollapsed">Complaints</span>
         </a>
@@ -285,23 +285,23 @@
           <i class="bi" [ngClass]="isOperationReportsOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
         </a>
         <div class="submenu" *ngIf="isOperationReportsOpen && !isCollapsed">
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Installation Report' : ''">
+          <a routerLink="/installation-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Installation Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Installation Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Complaint Report' : ''">
+          <a routerLink="/complaint-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Complaint Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Complaint Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Warranty Report' : ''">
+          <a routerLink="/warranty-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Warranty Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Warranty Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Technician Report' : ''">
+          <a routerLink="/technician-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Technician Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Technician Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Customer Feedback Report' : ''">
+          <a routerLink="/customer-feedback-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Customer Feedback Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Customer Feedback Report</span>
           </a>
@@ -314,19 +314,19 @@
           <i class="bi bi-speedometer2"></i>
           <span *ngIf="!isCollapsed">Dashboard</span>
         </a>
-        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Attendance' : ''">
+        <a routerLink="/attendance" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Attendance' : ''">
           <i class="bi bi-clock"></i>
           <span *ngIf="!isCollapsed">Attendance</span>
         </a>
-        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Employee Location' : ''">
+        <a routerLink="/employee-location" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Employee Location' : ''">
           <i class="bi bi-geo-alt"></i>
           <span *ngIf="!isCollapsed">Employee Location</span>
         </a>
-        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Employees' : ''">
+        <a routerLink="/employees" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Employees' : ''">
           <i class="bi bi-people"></i>
           <span *ngIf="!isCollapsed">Employees</span>
         </a>
-        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Pending Approvals' : ''">
+        <a routerLink="/pending-approvals" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Pending Approvals' : ''">
           <i class="bi bi-check2-square"></i>
           <span *ngIf="!isCollapsed">Pending Approvals</span>
         </a>
@@ -340,27 +340,27 @@
           <i class="bi" [ngClass]="isHrReportsOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
         </a>
         <div class="submenu" *ngIf="isHrReportsOpen && !isCollapsed">
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Attendance' : ''">
+          <a routerLink="/attendance-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Attendance' : ''">
             <span class="bullet">&bull;</span>
             <span>Attendance</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Leave' : ''">
+          <a routerLink="/leave-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Leave' : ''">
             <span class="bullet">&bull;</span>
             <span>Leave</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Expense' : ''">
+          <a routerLink="/expense-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Expense' : ''">
             <span class="bullet">&bull;</span>
             <span>Expense</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'GPS' : ''">
+          <a routerLink="/gps-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'GPS' : ''">
             <span class="bullet">&bull;</span>
             <span>GPS</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Performance' : ''">
+          <a routerLink="/performance-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Performance' : ''">
             <span class="bullet">&bull;</span>
             <span>Performance</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Employee Report' : ''">
+          <a routerLink="/employee-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Employee Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Employee Report</span>
           </a>

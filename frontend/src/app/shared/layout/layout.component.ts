@@ -288,14 +288,39 @@ export class LayoutComponent implements OnInit {
 
   private syncDepartmentWithUrl(url: string) {
     if (!url) return;
-    if (url.includes('crm-dashboard') || url.includes('quotations') || url.includes('purchase-orders') || url.includes('delivery-management') || url.includes('contacts') || url.includes('targets') || url.includes('achievements') || url.includes('leaderboard') || url.includes('incentives') || url.includes('underperformers')) {
+    
+    const crmRoutes = ['crm-dashboard', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report'];
+    
+    const operationRoutes = ['operation-dashboard', 'installation', 'customer-feedback', 'warranty-service', 'complaints', 'installation-report', 'complaint-report', 'warranty-report', 'technician-report', 'customer-feedback-report'];
+    
+    const hrRoutes = ['hr-dashboard', 'attendance', 'employee-location', 'employees', 'pending-approvals', 'attendance-report', 'leave-report', 'expense-report', 'gps-report', 'performance-report', 'employee-report'];
+
+    const leadsReportRoutes = ['reports/work', 'reports/conversation', 'reports/employee', 'reports/enquiry', 'reports/status'];
+
+    if (crmRoutes.some(route => url.includes(route))) {
       this.activeDepartment = 'CRM';
-    } else if (url.includes('operation-dashboard')) {
+      
+      const crmReports = ['pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report'];
+      if (crmReports.some(r => url.includes(r))) this.isReportsOpen = true;
+      
+      const salesPerf = ['targets', 'achievements', 'leaderboard', 'incentives', 'underperformers'];
+      if (salesPerf.some(r => url.includes(r))) this.isSalesPerformanceOpen = true;
+      
+    } else if (operationRoutes.some(route => url.includes(route))) {
       this.activeDepartment = 'Operation';
-    } else if (url.includes('hr-dashboard')) {
+      
+      const opReports = ['installation-report', 'complaint-report', 'warranty-report', 'technician-report', 'customer-feedback-report'];
+      if (opReports.some(r => url.includes(r))) this.isOperationReportsOpen = true;
+      
+    } else if (hrRoutes.some(route => url.includes(route))) {
       this.activeDepartment = 'HR';
-    } else if (url.includes('lead-dashboard')) {
-      this.activeDepartment = 'Leads';
+      
+      const hrReports = ['attendance-report', 'leave-report', 'expense-report', 'gps-report', 'performance-report', 'employee-report'];
+      if (hrReports.some(r => url.includes(r))) this.isHrReportsOpen = true;
+      
+    } else {
+      this.activeDepartment = 'Leads'; 
+      if (leadsReportRoutes.some(r => url.includes(r))) this.isReportsOpen = true;
     }
   }
 
@@ -314,6 +339,30 @@ export class LayoutComponent implements OnInit {
     if (last === 'ivr') return 'IVR Flows';
     if (last === 'rcs') return 'RCS Business';
     if (last === 'ctwa') return 'Click to WhatsApp';
+    
+    // Operations
+    if (last === 'installation') return 'Installation';
+    if (last === 'customer-feedback') return 'Customer Feedback';
+    if (last === 'warranty-service') return 'Warranty & Service';
+    if (last === 'complaints') return 'Complaints';
+    if (last === 'installation-report') return 'Installation Report';
+    if (last === 'complaint-report') return 'Complaint Report';
+    if (last === 'warranty-report') return 'Warranty Report';
+    if (last === 'technician-report') return 'Technician Report';
+    if (last === 'customer-feedback-report') return 'Customer Feedback Report';
+
+    // HR
+    if (last === 'attendance') return 'Attendance';
+    if (last === 'employee-location') return 'Employee Location';
+    if (last === 'employees') return 'Employees';
+    if (last === 'pending-approvals') return 'Pending Approvals';
+    if (last === 'attendance-report') return 'Attendance Report';
+    if (last === 'leave-report') return 'Leave Report';
+    if (last === 'expense-report') return 'Expense Report';
+    if (last === 'gps-report') return 'GPS Report';
+    if (last === 'performance-report') return 'Performance Report';
+    if (last === 'employee-report') return 'Employee Report';
+
     return last.charAt(0).toUpperCase() + last.slice(1).replace(/-/g, ' ');
   }
 
