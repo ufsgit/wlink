@@ -22,6 +22,7 @@ interface EmployeeLog {
   templateUrl: './employee-report.component.html',
   styleUrl: './employee-report.component.css'
 })
+
 export class EmployeeReportComponent implements OnInit {
 
   // Dashboard State
@@ -55,7 +56,7 @@ export class EmployeeReportComponent implements OnInit {
   get totalPages(): number {
     return Math.ceil(this.filteredLogs.length / this.pageSize);
   }
-  
+
   get paginatedLogs(): EmployeeLog[] {
     const start = (this.currentPage - 1) * this.pageSize;
     return this.filteredLogs.slice(start, start + this.pageSize);
@@ -91,7 +92,7 @@ export class EmployeeReportComponent implements OnInit {
   deptChartData: ChartConfiguration['data'] = {
     labels: this.departments,
     datasets: [
-      { data: [0,0,0,0,0], label: 'Headcount', backgroundColor: '#3b82f6', borderRadius: 4 }
+      { data: [0, 0, 0, 0, 0], label: 'Headcount', backgroundColor: '#3b82f6', borderRadius: 4 }
     ]
   };
 
@@ -102,7 +103,7 @@ export class EmployeeReportComponent implements OnInit {
   };
   statusChartData: ChartConfiguration['data'] = {
     labels: this.statuses,
-    datasets: [{ data: [0,0,0], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }]
+    datasets: [{ data: [0, 0, 0], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }]
   };
 
   ngOnInit() {
@@ -114,7 +115,7 @@ export class EmployeeReportComponent implements OnInit {
     this.allLogs = [];
     const firstNames = ['John', 'Jane', 'Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
     const lastNames = ['Doe', 'Smith', 'Cooper', 'Marley', 'Chaplin', 'Prince', 'Adams', 'Castle', 'Hopper', 'Ford'];
-    
+
     for (let i = 1; i <= 250; i++) {
       const randStatus = Math.random();
       let status: EmployeeLog['status'] = 'Active';
@@ -137,7 +138,7 @@ export class EmployeeReportComponent implements OnInit {
         department: this.departments[Math.floor(Math.random() * this.departments.length)],
         branch: this.branches[Math.floor(Math.random() * this.branches.length)],
         role: role,
-        joinDate: `${year}-${month < 10 ? '0'+month : month}-${day < 10 ? '0'+day : day}`,
+        joinDate: `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`,
         salary: baseSalary + Math.floor(Math.random() * 20000),
         status: status
       });
@@ -153,7 +154,7 @@ export class EmployeeReportComponent implements OnInit {
       if (this.filters.branch) filtered = filtered.filter(l => l.branch === this.filters.branch);
       if (this.filters.role) filtered = filtered.filter(l => l.role === this.filters.role);
       if (this.filters.status) filtered = filtered.filter(l => l.status === this.filters.status);
-      
+
       if (this.filters.search) {
         const t = this.filters.search.toLowerCase();
         filtered = filtered.filter(l => l.name.toLowerCase().includes(t) || l.id.toLowerCase().includes(t));
@@ -171,7 +172,7 @@ export class EmployeeReportComponent implements OnInit {
     this.kpi.totalEmployees = this.filteredLogs.length;
     this.kpi.activeEmployees = this.filteredLogs.filter(l => l.status === 'Active').length;
     this.kpi.newHires = this.filteredLogs.filter(l => l.joinDate.startsWith('2023')).length;
-    
+
     this.kpi.totalPayroll = this.filteredLogs.reduce((sum, l) => sum + l.salary, 0);
     this.kpi.avgSalary = this.kpi.totalEmployees ? Math.round(this.kpi.totalPayroll / this.kpi.totalEmployees) : 0;
   }
@@ -188,18 +189,18 @@ export class EmployeeReportComponent implements OnInit {
     const active = this.filteredLogs.filter(l => l.status === 'Active').length;
     const leave = this.filteredLogs.filter(l => l.status === 'On Leave').length;
     const terminated = this.filteredLogs.filter(l => l.status === 'Terminated').length;
-    
+
     this.statusChartData = {
       labels: this.statuses,
       datasets: [{ data: [active, leave, terminated], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }]
     };
-    
+
     // Yearly Hiring
     const h20 = this.filteredLogs.filter(l => l.joinDate.startsWith('2020')).length;
     const h21 = this.filteredLogs.filter(l => l.joinDate.startsWith('2021')).length;
     const h22 = this.filteredLogs.filter(l => l.joinDate.startsWith('2022')).length;
     const h23 = this.filteredLogs.filter(l => l.joinDate.startsWith('2023')).length;
-    
+
     this.trendChartData = {
       labels: ['2020', '2021', '2022', '2023'],
       datasets: [{ data: [h20, h21, h22, h23], label: 'New Hires', borderColor: '#22c55e', tension: 0.4, fill: true, backgroundColor: 'rgba(34, 197, 94, 0.1)' }]
@@ -230,12 +231,12 @@ export class EmployeeReportComponent implements OnInit {
 
   showToast(msg: string) {
     this.toastMessage = msg;
-    if(this.toastTimeout) clearTimeout(this.toastTimeout);
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toastTimeout = setTimeout(() => this.toastMessage = null, 3000);
   }
 
   getStatusClass(status: string): string {
-    switch(status) {
+    switch (status) {
       case 'Active': return 'badge bg-success-subtle text-success';
       case 'On Leave': return 'badge bg-warning-subtle text-warning';
       case 'Terminated': return 'badge bg-danger-subtle text-danger';

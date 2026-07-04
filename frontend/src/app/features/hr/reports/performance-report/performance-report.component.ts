@@ -23,6 +23,7 @@ interface PerformanceLog {
   templateUrl: './performance-report.component.html',
   styleUrl: './performance-report.component.css'
 })
+
 export class PerformanceReportComponent implements OnInit {
 
   // Dashboard State
@@ -57,7 +58,7 @@ export class PerformanceReportComponent implements OnInit {
   get totalPages(): number {
     return Math.ceil(this.filteredLogs.length / this.pageSize);
   }
-  
+
   get paginatedLogs(): PerformanceLog[] {
     const start = (this.currentPage - 1) * this.pageSize;
     return this.filteredLogs.slice(start, start + this.pageSize);
@@ -94,7 +95,7 @@ export class PerformanceReportComponent implements OnInit {
   deptChartData: ChartConfiguration['data'] = {
     labels: this.departments,
     datasets: [
-      { data: [0,0,0,0,0], label: 'Avg Rating', backgroundColor: '#3b82f6', borderRadius: 4 }
+      { data: [0, 0, 0, 0, 0], label: 'Avg Rating', backgroundColor: '#3b82f6', borderRadius: 4 }
     ]
   };
 
@@ -105,7 +106,7 @@ export class PerformanceReportComponent implements OnInit {
   };
   ratingChartData: ChartConfiguration['data'] = {
     labels: ['Outstanding', 'Exceeds', 'Meets', 'Needs Impr.', 'Unacceptable'],
-    datasets: [{ data: [0,0,0,0,0], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'], borderWidth: 0 }]
+    datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'], borderWidth: 0 }]
   };
 
   ngOnInit() {
@@ -116,7 +117,7 @@ export class PerformanceReportComponent implements OnInit {
   generateMockData() {
     this.allLogs = [];
     const names = ['John Doe', 'Jane Smith', 'Alice Cooper', 'Bob Marley', 'Charlie Chaplin', 'Diana Prince', 'Eve Adams', 'Frank Castle'];
-    
+
     for (let i = 1; i <= 150; i++) {
       // Gaussian-ish distribution for ratings
       const r = Math.random();
@@ -157,12 +158,12 @@ export class PerformanceReportComponent implements OnInit {
       if (this.filters.department) filtered = filtered.filter(l => l.department === this.filters.department);
       if (this.filters.branch) filtered = filtered.filter(l => l.branch === this.filters.branch);
       if (this.filters.manager) filtered = filtered.filter(l => l.manager === this.filters.manager);
-      
+
       if (this.filters.rating) {
         const targetRating = parseInt(this.filters.rating.charAt(0));
         filtered = filtered.filter(l => l.rating === targetRating);
       }
-      
+
       if (this.filters.search) {
         const t = this.filters.search.toLowerCase();
         filtered = filtered.filter(l => l.employee.toLowerCase().includes(t) || l.id.toLowerCase().includes(t));
@@ -181,7 +182,7 @@ export class PerformanceReportComponent implements OnInit {
     this.kpi.completed = this.filteredLogs.filter(l => l.status === 'Completed').length;
     this.kpi.topPerformers = this.filteredLogs.filter(l => l.status === 'Completed' && l.rating >= 4).length;
     this.kpi.lowPerformers = this.filteredLogs.filter(l => l.status === 'Completed' && l.rating <= 2).length;
-    
+
     const rated = this.filteredLogs.filter(l => l.status === 'Completed');
     const totalRating = rated.reduce((sum, l) => sum + l.rating, 0);
     this.kpi.avgRating = rated.length ? Math.round((totalRating / rated.length) * 10) / 10 : 0;
@@ -205,7 +206,7 @@ export class PerformanceReportComponent implements OnInit {
     const r3 = this.filteredLogs.filter(l => l.rating === 3).length;
     const r2 = this.filteredLogs.filter(l => l.rating === 2).length;
     const r1 = this.filteredLogs.filter(l => l.rating === 1).length;
-    
+
     this.ratingChartData = {
       labels: ['Outstanding (5)', 'Exceeds (4)', 'Meets (3)', 'Needs Impr. (2)', 'Unacceptable (1)'],
       datasets: [{ data: [r5, r4, r3, r2, r1], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'], borderWidth: 0 }]
@@ -236,12 +237,12 @@ export class PerformanceReportComponent implements OnInit {
 
   showToast(msg: string) {
     this.toastMessage = msg;
-    if(this.toastTimeout) clearTimeout(this.toastTimeout);
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toastTimeout = setTimeout(() => this.toastMessage = null, 3000);
   }
 
   getRatingClass(rating: number): string {
-    switch(rating) {
+    switch (rating) {
       case 5: return 'text-success fw-bold';
       case 4: return 'text-primary fw-bold';
       case 3: return 'text-warning fw-bold';
@@ -252,7 +253,7 @@ export class PerformanceReportComponent implements OnInit {
   }
 
   getStatusClass(status: string): string {
-    switch(status) {
+    switch (status) {
       case 'Completed': return 'badge bg-success-subtle text-success';
       case 'Under Review': return 'badge bg-warning-subtle text-warning';
       case 'Pending': return 'badge bg-secondary-subtle text-secondary';

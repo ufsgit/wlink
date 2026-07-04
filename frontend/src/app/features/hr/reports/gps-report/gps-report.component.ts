@@ -57,7 +57,7 @@ export class GpsReportComponent implements OnInit {
   get totalPages(): number {
     return Math.ceil(this.filteredLogs.length / this.pageSize);
   }
-  
+
   get paginatedLogs(): GpsLog[] {
     const start = (this.currentPage - 1) * this.pageSize;
     return this.filteredLogs.slice(start, start + this.pageSize);
@@ -93,7 +93,7 @@ export class GpsReportComponent implements OnInit {
   deptChartData: ChartConfiguration['data'] = {
     labels: this.departments,
     datasets: [
-      { data: [0,0,0,0], label: 'Total km', backgroundColor: '#3b82f6', borderRadius: 4 }
+      { data: [0, 0, 0, 0], label: 'Total km', backgroundColor: '#3b82f6', borderRadius: 4 }
     ]
   };
 
@@ -104,7 +104,7 @@ export class GpsReportComponent implements OnInit {
   };
   statusChartData: ChartConfiguration['data'] = {
     labels: this.statuses,
-    datasets: [{ data: [0,0,0], backgroundColor: ['#22c55e', '#64748b', '#ef4444'], borderWidth: 0 }]
+    datasets: [{ data: [0, 0, 0], backgroundColor: ['#22c55e', '#64748b', '#ef4444'], borderWidth: 0 }]
   };
 
   ngOnInit() {
@@ -115,7 +115,7 @@ export class GpsReportComponent implements OnInit {
   generateMockData() {
     this.allLogs = [];
     const names = ['Michael Scott', 'Jim Halpert', 'Pam Beesly', 'Dwight Schrute', 'Stanley Hudson'];
-    
+
     for (let i = 1; i <= 150; i++) {
       const randStatus = Math.random();
       let status: GpsLog['status'] = 'Completed';
@@ -145,7 +145,7 @@ export class GpsReportComponent implements OnInit {
       if (this.filters.department) filtered = filtered.filter(l => l.department === this.filters.department);
       if (this.filters.branch) filtered = filtered.filter(l => l.branch === this.filters.branch);
       if (this.filters.status) filtered = filtered.filter(l => l.status === this.filters.status);
-      
+
       if (this.filters.search) {
         const t = this.filters.search.toLowerCase();
         filtered = filtered.filter(l => l.employee.toLowerCase().includes(t) || l.id.toLowerCase().includes(t));
@@ -207,12 +207,12 @@ export class GpsReportComponent implements OnInit {
 
   showToast(msg: string) {
     this.toastMessage = msg;
-    if(this.toastTimeout) clearTimeout(this.toastTimeout);
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toastTimeout = setTimeout(() => this.toastMessage = null, 3000);
   }
 
   getStatusClass(status: string): string {
-    switch(status) {
+    switch (status) {
       case 'Active': return 'badge bg-success-subtle text-success';
       case 'Completed': return 'badge bg-secondary-subtle text-secondary';
       case 'Off-Grid': return 'badge bg-danger-subtle text-danger';

@@ -289,7 +289,7 @@ export class LayoutComponent implements OnInit {
   private syncDepartmentWithUrl(url: string) {
     if (!url) return;
     
-    const crmRoutes = ['crm-dashboard', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report'];
+    const crmRoutes = ['crm-dashboard', 'contacts', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report'];
     
     const operationRoutes = ['operation-dashboard', 'installation', 'customer-feedback', 'warranty-service', 'complaints', 'installation-report', 'complaint-report', 'warranty-report', 'technician-report', 'customer-feedback-report'];
     
