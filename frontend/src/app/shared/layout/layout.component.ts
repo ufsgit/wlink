@@ -279,7 +279,24 @@ export class LayoutComponent implements OnInit {
     ).subscribe((event: any) => {
       const url = event.urlAfterRedirects;
       this.pageTitle = this.getTitle(url);
+      this.syncDepartmentWithUrl(url);
     });
+
+    // Sync on initial load
+    this.syncDepartmentWithUrl(this.router.url);
+  }
+
+  private syncDepartmentWithUrl(url: string) {
+    if (!url) return;
+    if (url.includes('crm-dashboard') || url.includes('quotations') || url.includes('purchase-orders') || url.includes('delivery-management') || url.includes('contacts') || url.includes('targets') || url.includes('achievements') || url.includes('leaderboard') || url.includes('incentives') || url.includes('underperformers')) {
+      this.activeDepartment = 'CRM';
+    } else if (url.includes('operation-dashboard')) {
+      this.activeDepartment = 'Operation';
+    } else if (url.includes('hr-dashboard')) {
+      this.activeDepartment = 'HR';
+    } else if (url.includes('lead-dashboard')) {
+      this.activeDepartment = 'Leads';
+    }
   }
 
   private getTitle(url: string): string {
@@ -287,6 +304,9 @@ export class LayoutComponent implements OnInit {
     const last = segments[segments.length - 1].split('?')[0]; // Remove query params
     if (!last || last === 'lead-dashboard') return 'Lead Dashboard';
     if (last === 'crm-dashboard') return 'CRM Dashboard';
+    if (last === 'quotations') return 'Quotations';
+    if (last === 'purchase-orders') return 'Purchase Orders';
+    if (last === 'delivery-management') return 'Delivery Management';
     if (last === 'operation-dashboard') return 'Operations Dashboard';
     if (last === 'hr-dashboard') return 'HR Dashboard';
     if (last === 'contacts') return 'Leads';

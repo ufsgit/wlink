@@ -187,23 +187,23 @@
           <i class="bi" [ngClass]="isSalesPerformanceOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
         </a>
         <div class="submenu" *ngIf="isSalesPerformanceOpen && !isCollapsed">
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Targets' : ''">
+          <a routerLink="/targets" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Targets' : ''">
             <span class="bullet">&bull;</span>
             <span>Targets</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Achievements' : ''">
+          <a routerLink="/achievements" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Achievements' : ''">
             <span class="bullet">&bull;</span>
             <span>Achievements</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Leaderboard' : ''">
+          <a routerLink="/leaderboard" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Leaderboard' : ''">
             <span class="bullet">&bull;</span>
             <span>Leaderboard</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Incentives' : ''">
+          <a routerLink="/incentives" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Incentives' : ''">
             <span class="bullet">&bull;</span>
             <span>Incentives</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Underperformers' : ''">
+          <a routerLink="/underperformers" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Underperformers' : ''">
             <span class="bullet">&bull;</span>
             <span>Underperformers</span>
           </a>
@@ -218,35 +218,35 @@
           <i class="bi" [ngClass]="isReportsOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
         </a>
         <div class="submenu" *ngIf="isReportsOpen && !isCollapsed">
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Pending Followup' : ''">
+          <a routerLink="/pending-followup" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Pending Followup' : ''">
             <span class="bullet">&bull;</span>
             <span>Pending Followup</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Today\'s Leads' : ''">
+          <a routerLink="/todays-leads" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Today\'s Leads' : ''">
             <span class="bullet">&bull;</span>
             <span>Today's Leads</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Quotation Report' : ''">
+          <a routerLink="/quotation-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Quotation Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Quotation Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Purchase Order Report' : ''">
+          <a routerLink="/purchase-order-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Purchase Order Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Purchase Order Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Sales Funnel Report' : ''">
+          <a routerLink="/sales-funnel-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Sales Funnel Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Sales Funnel Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Lead Conversion Report' : ''">
+          <a routerLink="/lead-conversion-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Lead Conversion Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Lead Conversion Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Won/Lost Report' : ''">
+          <a routerLink="/won-lost-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Won/Lost Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Won/Lost Report</span>
           </a>
-          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Salesperson Report' : ''">
+          <a routerLink="/salesperson-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Salesperson Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Salesperson Report</span>
           </a>
