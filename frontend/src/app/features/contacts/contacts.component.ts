@@ -71,6 +71,15 @@ export class ContactsComponent implements OnInit {
   showDetailPanel = false;
   selectedContact: any = null;
   detailLoading = false;
+  detailActiveTab = 'Profile';
+
+  dummyTimeline: any[] = [];
+  dummyQuotations: any[] = [];
+  dummyPOs: any[] = [];
+  dummyDocuments: any[] = [];
+  dummyNotes: any[] = [];
+  dummyActivities: any[] = [];
+  dummyHistory: any[] = [];
 
   // Custom fields from Settings
   leadFields: any[] = [];
@@ -197,18 +206,61 @@ export class ContactsComponent implements OnInit {
     this.showDetailPanel = true;
     this.detailLoading = true;
     this.selectedContact = null;
+    this.detailActiveTab = 'Profile';
     this.api.get(`/contacts/${contact.id}`).subscribe({
       next: (res: any) => {
         if (res.success) {
           this.selectedContact = {
             ...res.data,
-            tags: Array.isArray(res.data.tags) ? res.data.tags : JSON.parse(res.data.tags || '[]')
+            tags: Array.isArray(res.data.tags) ? res.data.tags : JSON.parse(res.data.tags || '[]'),
+            aiScore: Math.floor(Math.random() * 30) + 70, // 70-99
+            leadSource: ['Facebook', 'Website Form', 'WhatsApp', 'Instagram'][Math.floor(Math.random() * 4)],
+            interestedProducts: ['Software License', 'Annual Maintenance', 'Consulting', 'Hardware Bundle'][Math.floor(Math.random() * 4)]
           };
+          this.generateDummyData();
         }
         this.detailLoading = false;
       },
       error: () => this.detailLoading = false
     });
+  }
+
+  generateDummyData() {
+    this.dummyTimeline = [
+      { date: new Date(Date.now() - 86400000 * 5), type: 'created', title: 'Lead Created', desc: 'Sourced from ' + this.selectedContact.leadSource },
+      { date: new Date(Date.now() - 86400000 * 4), type: 'call', title: 'Initial Discovery Call', desc: 'Discussed requirements for ' + this.selectedContact.interestedProducts },
+      { date: new Date(Date.now() - 86400000 * 2), type: 'quote', title: 'Quotation Created', desc: 'Quote #QT-2026-041 sent' },
+      { date: new Date(Date.now() - 86400000 * 1), type: 'status', title: 'Status Changed', desc: 'Moved to Interested' }
+    ];
+    this.dummyQuotations = [
+      { id: 'QT-2026-041', amount: 15400, date: new Date(Date.now() - 86400000 * 2), status: 'Sent' },
+      { id: 'QT-2026-012', amount: 9800, date: new Date(Date.now() - 86400000 * 15), status: 'Rejected' }
+    ];
+    this.dummyPOs = [
+      { id: 'PO-99125', amount: 12500, date: new Date(Date.now() - 86400000 * 2), status: 'Review' },
+      { id: 'PO-99124', amount: 9800, date: new Date(Date.now() - 86400000 * 14), status: 'Rejected' },
+      { id: 'PO-98001', amount: 45000, date: new Date(Date.now() - 86400000 * 30), status: 'Approved' },
+      { id: 'PO-97555', amount: 8200, date: new Date(Date.now() - 86400000 * 45), status: 'Price Modified' }
+    ];
+    this.dummyDocuments = [
+      { name: 'Company_Profile.pdf', type: 'pdf', size: '2.4 MB' },
+      { name: 'Requirements_Doc.docx', type: 'doc', size: '1.1 MB' },
+      { name: 'Site_Photos.zip', type: 'zip', size: '14.5 MB' }
+    ];
+    this.dummyNotes = [
+      { author: 'Sales Team', date: new Date(Date.now() - 86400000 * 4), content: 'Client is very focused on delivery timelines. Needs to be expedited if possible.' },
+      { author: 'Admin User', date: new Date(Date.now() - 86400000 * 10), content: 'Requested demo of the new product line.' }
+    ];
+    this.dummyActivities = [
+      { type: 'followup', title: 'Follow-up Call', dueDate: new Date(Date.now() + 86400000 * 2), priority: 'High', status: 'Pending' },
+      { type: 'meeting', title: 'Product Demo', dueDate: new Date(Date.now() + 86400000 * 5), priority: 'Medium', status: 'Scheduled' }
+    ];
+    this.dummyHistory = [
+      { type: 'call', date: new Date(Date.now() - 86400000 * 4), direction: 'outbound', duration: '5m 23s', note: 'Discussed initial requirements and pricing.' },
+      { type: 'email', date: new Date(Date.now() - 86400000 * 3), direction: 'outbound', subject: 'Product Catalog', content: 'Sent the latest product catalog PDF as requested.' },
+      { type: 'meeting', date: new Date(Date.now() - 86400000 * 2), direction: 'inbound', duration: '45m', note: 'In-person meeting at their office. Very positive.' },
+      { type: 'call', date: new Date(Date.now() - 86400000 * 1), direction: 'inbound', duration: '2m 10s', note: 'Client called to confirm they received the quote.' }
+    ];
   }
 
   closeDetailPanel() {
@@ -218,15 +270,17 @@ export class ContactsComponent implements OnInit {
 
   openEditFromDetail() {
     if (this.selectedContact) {
+      const contact = this.selectedContact;
       this.closeDetailPanel();
-      this.openEditModal(this.selectedContact);
+      this.openEditModal(contact);
     }
   }
 
   goToChatFromDetail() {
     if (this.selectedContact) {
+      const contact = this.selectedContact;
       this.closeDetailPanel();
-      this.goToChat(this.selectedContact);
+      this.goToChat(contact);
     }
   }
 
@@ -511,5 +565,4 @@ export class ContactsComponent implements OnInit {
         Swal.fire('Error', 'Failed to update status', 'error');
       }
     });
-  }
-}
+  }}

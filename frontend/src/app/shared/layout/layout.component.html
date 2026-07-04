@@ -27,8 +27,36 @@
       </button>
     </div>
 
+    <!-- Department Switcher -->
+    <div class="department-switcher" *ngIf="!isCollapsed">
+      <button class="dept-btn" (click)="toggleDepartmentDropdown($event)">
+        <div class="dept-info">
+          <i class="bi" [ngClass]="{'bi-funnel': activeDepartment === 'Leads', 'bi-briefcase': activeDepartment === 'CRM', 'bi-tools': activeDepartment === 'Operation', 'bi-people': activeDepartment === 'HR'}"></i>
+          <span>{{ activeDepartment }}</span>
+        </div>
+        <i class="bi bi-chevron-down dept-chevron" [class.rotated]="isDepartmentDropdownOpen"></i>
+      </button>
+      
+      <div class="dept-dropdown" *ngIf="isDepartmentDropdownOpen" (click)="$event.stopPropagation()">
+        <a class="dept-dropdown-item" [class.active]="activeDepartment === 'Leads'" (click)="setDepartment('Leads')">
+          <i class="bi bi-funnel"></i> Leads
+        </a>
+        <a class="dept-dropdown-item" [class.active]="activeDepartment === 'CRM'" (click)="setDepartment('CRM')">
+          <i class="bi bi-briefcase"></i> CRM
+        </a>
+        <a class="dept-dropdown-item" [class.active]="activeDepartment === 'Operation'" (click)="setDepartment('Operation')">
+          <i class="bi bi-tools"></i> Operation
+        </a>
+        <a class="dept-dropdown-item" [class.active]="activeDepartment === 'HR'" (click)="setDepartment('HR')">
+          <i class="bi bi-people"></i> HR
+        </a>
+      </div>
+    </div>
+
     <nav class="nav-links" *ngIf="user$ | async as user">
-      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Dashboard' : ''">
+      <!-- LEADS MENU -->
+      <ng-container *ngIf="activeDepartment === 'Leads'">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Dashboard' : ''">
         <i class="bi bi-speedometer2"></i>
         <span *ngIf="!isCollapsed">Dashboard</span>
       </a>
@@ -49,10 +77,10 @@
         </a>
       </ng-container>
 
-      <a routerLink="/contacts" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Contacts' : ''">
+      <!-- <a routerLink="/contacts" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leads' : ''">
         <i class="bi bi-people"></i>
-        <span *ngIf="!isCollapsed">Contacts</span>
-      </a>
+        <span *ngIf="!isCollapsed">Leads</span>
+      </a> -->
 
       <!-- Admin Only Strategy & Settings -->
       <ng-container *ngIf="user.role === 'admin' || user.role === 'superadmin'">
@@ -124,6 +152,215 @@
           <i class="bi bi-gear"></i>
           <span *ngIf="!isCollapsed">Settings</span>
         </a>
+      </ng-container>
+      </ng-container>
+
+      <!-- CRM MENU -->
+      <ng-container *ngIf="activeDepartment === 'CRM'">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'CRM Dashboard' : ''">
+          <i class="bi bi-speedometer2"></i>
+          <span *ngIf="!isCollapsed">Dashboard</span>
+        </a>
+        <a routerLink="/contacts" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leads' : ''">
+          <i class="bi bi-person-lines-fill"></i>
+          <span *ngIf="!isCollapsed">Leads</span>
+        </a>
+        <a routerLink="/quotations" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Quotations' : ''">
+          <i class="bi bi-file-earmark-text"></i>
+          <span *ngIf="!isCollapsed">Quotations</span>
+        </a>
+        <a routerLink="/purchase-orders" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Purchase Orders' : ''">
+          <i class="bi bi-receipt"></i>
+          <span *ngIf="!isCollapsed">Purchase Orders</span>
+        </a>
+        <a routerLink="/delivery-management" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Delivery' : ''">
+          <i class="bi bi-truck"></i>
+          <span *ngIf="!isCollapsed">Delivery Management</span>
+        </a>
+
+        <!-- Sales Performance -->
+        <a href="javascript:void(0)" class="nav-item submenu-header" [class.active]="isSalesPerformanceOpen" *ngIf="!isCollapsed" (click)="toggleSalesPerformance($event)">
+          <div class="nav-item-content">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span>Sales Performance</span>
+          </div>
+          <i class="bi" [ngClass]="isSalesPerformanceOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+        </a>
+        <div class="submenu" *ngIf="isSalesPerformanceOpen && !isCollapsed">
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Targets' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Targets</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Achievements' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Achievements</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Leaderboard' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Leaderboard</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Incentives' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Incentives</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Underperformers' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Underperformers</span>
+          </a>
+        </div>
+
+        <!-- Reports -->
+        <a href="javascript:void(0)" class="nav-item submenu-header" [class.active]="isReportsOpen" *ngIf="!isCollapsed" (click)="toggleReports($event)">
+          <div class="nav-item-content">
+            <i class="bi bi-bar-chart"></i>
+            <span>Reports</span>
+          </div>
+          <i class="bi" [ngClass]="isReportsOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+        </a>
+        <div class="submenu" *ngIf="isReportsOpen && !isCollapsed">
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Pending Followup' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Pending Followup</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Today\'s Leads' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Today's Leads</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Quotation Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Quotation Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Purchase Order Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Purchase Order Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Sales Funnel Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Sales Funnel Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Lead Conversion Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Lead Conversion Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Won/Lost Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Won/Lost Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Salesperson Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Salesperson Report</span>
+          </a>
+        </div>
+      </ng-container>
+
+      <!-- OPERATION MENU -->
+      <ng-container *ngIf="activeDepartment === 'Operation'">
+        <a routerLink="/dashboard" class="nav-item" [title]="isCollapsed ? 'Operation Dashboard' : ''">
+          <i class="bi bi-speedometer2"></i>
+          <span *ngIf="!isCollapsed">Dashboard</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Installation' : ''">
+          <i class="bi bi-tools"></i>
+          <span *ngIf="!isCollapsed">Installation</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Customer Feedback' : ''">
+          <i class="bi bi-star"></i>
+          <span *ngIf="!isCollapsed">Customer Feedback</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Warranty & Service' : ''">
+          <i class="bi bi-shield-check"></i>
+          <span *ngIf="!isCollapsed">Warranty & Service</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Complaints' : ''">
+          <i class="bi bi-exclamation-triangle"></i>
+          <span *ngIf="!isCollapsed">Complaints</span>
+        </a>
+
+        <!-- Reports -->
+        <a href="javascript:void(0)" class="nav-item submenu-header" [class.active]="isOperationReportsOpen" *ngIf="!isCollapsed" (click)="toggleOperationReports($event)">
+          <div class="nav-item-content">
+            <i class="bi bi-bar-chart"></i>
+            <span>Reports</span>
+          </div>
+          <i class="bi" [ngClass]="isOperationReportsOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+        </a>
+        <div class="submenu" *ngIf="isOperationReportsOpen && !isCollapsed">
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Installation Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Installation Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Complaint Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Complaint Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Warranty Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Warranty Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Technician Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Technician Report</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Customer Feedback Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Customer Feedback Report</span>
+          </a>
+        </div>
+      </ng-container>
+
+      <!-- HR MENU -->
+      <ng-container *ngIf="activeDepartment === 'HR'">
+        <a routerLink="/dashboard" class="nav-item" [title]="isCollapsed ? 'HR Dashboard' : ''">
+          <i class="bi bi-speedometer2"></i>
+          <span *ngIf="!isCollapsed">Dashboard</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Attendance' : ''">
+          <i class="bi bi-clock"></i>
+          <span *ngIf="!isCollapsed">Attendance</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Employee Location' : ''">
+          <i class="bi bi-geo-alt"></i>
+          <span *ngIf="!isCollapsed">Employee Location</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" [title]="isCollapsed ? 'Employees' : ''">
+          <i class="bi bi-people"></i>
+          <span *ngIf="!isCollapsed">Employees</span>
+        </a>
+
+        <!-- Reports -->
+        <a href="javascript:void(0)" class="nav-item submenu-header" [class.active]="isHrReportsOpen" *ngIf="!isCollapsed" (click)="toggleHrReports($event)">
+          <div class="nav-item-content">
+            <i class="bi bi-bar-chart"></i>
+            <span>Reports</span>
+          </div>
+          <i class="bi" [ngClass]="isHrReportsOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+        </a>
+        <div class="submenu" *ngIf="isHrReportsOpen && !isCollapsed">
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Attendance' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Attendance</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Leave' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Leave</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Expense' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Expense</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'GPS' : ''">
+            <span class="bullet">&bull;</span>
+            <span>GPS</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Performance' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Performance</span>
+          </a>
+          <a href="javascript:void(0)" class="nav-item submenu-item" [title]="isCollapsed ? 'Employee Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Employee Report</span>
+          </a>
+        </div>
       </ng-container>
     </nav>
 

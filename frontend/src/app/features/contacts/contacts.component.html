@@ -2,7 +2,7 @@
   <!-- Page Header -->
   <div class="contacts-header d-flex justify-content-between align-items-center" style="display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important;">
     <div class="header-left" style="display: flex; align-items: center; gap: 16px; flex: 1; margin-right: 16px;">
-      <h2 style="white-space: nowrap;">Contacts</h2>
+      <h2 style="white-space: nowrap;">Leads</h2>
       <div class="search-box" style="margin: 0; max-width: 300px; width: 100%;">
         <i class="bi bi-search"></i>
         <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search by name, phone or email..." class="premium-input">
@@ -166,8 +166,9 @@
 </div>
 
 <!-- ═══════════════════ LEAD DETAIL PANEL ═══════════════════ -->
-<div class="detail-panel-overlay" *ngIf="showDetailPanel" (click)="closeDetailPanel()">
-  <div class="detail-panel-drawer" (click)="$event.stopPropagation()">
+<div class="custom-modal detail-modal-wrapper" *ngIf="showDetailPanel">
+  <div class="modal-backdrop" (click)="closeDetailPanel()"></div>
+  <div class="modal-card detail-modal-card">
 
     <!-- Loading State -->
     <div class="detail-loading" *ngIf="detailLoading">
@@ -176,101 +177,251 @@
     </div>
 
     <ng-container *ngIf="!detailLoading && selectedContact">
-      <!-- Panel Header -->
-      <div class="detail-panel-header">
-        <div class="detail-avatar-wrap">
+      
+      <!-- Modal Header with Summary -->
+      <div class="detail-modal-header">
+        <div class="header-main-info">
           <div class="detail-avatar">{{ selectedContact.name?.charAt(0) | uppercase }}</div>
-          <div class="detail-avatar-info">
-            <h3 class="detail-name">{{ selectedContact.name }}</h3>
-            <div class="detail-tags-row">
+          <div class="header-text">
+            <h3>{{ selectedContact.name }}</h3>
+            <div class="header-badges">
+              <span class="badge-status" [class.opted-in]="selectedContact.opted_in" [class.pending]="!selectedContact.opted_in">
+                <i class="bi bi-circle-fill" style="font-size: 0.35rem;"></i>
+                {{ selectedContact.opted_in ? 'Opted-in' : 'Pending' }}
+              </span>
               <span class="tag-pill" *ngFor="let tag of selectedContact.tags">{{ tag }}</span>
-              <span *ngIf="!selectedContact.tags || selectedContact.tags.length === 0" class="text-muted small">No tags</span>
+              <span class="ai-score-badge"><i class="bi bi-robot"></i> AI Score: {{ selectedContact.aiScore }}/100</span>
             </div>
           </div>
         </div>
-        <button class="detail-close-btn" (click)="closeDetailPanel()">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-
-      <!-- Status Badges Row -->
-      <div class="detail-status-row">
-        <span class="channel-pill" [ngClass]="selectedContact.channel_preference || 'whatsapp'">
-          <i class="bi" [ngClass]="{
-            'bi-whatsapp': (selectedContact.channel_preference === 'whatsapp' || !selectedContact.channel_preference),
-            'bi-chat-left-text': selectedContact.channel_preference === 'sms',
-            'bi-chat-dots': selectedContact.channel_preference === 'rcs',
-            'bi-instagram': selectedContact.channel_preference === 'instagram',
-            'bi-facebook': selectedContact.channel_preference === 'facebook',
-            'bi-globe': selectedContact.channel_preference === 'website'
-          }"></i>
-          {{ selectedContact.channel_preference || 'WhatsApp' | titlecase }}
-        </span>
-        <span class="badge-status" [class.opted-in]="selectedContact.opted_in" [class.pending]="!selectedContact.opted_in">
-          <i class="bi bi-circle-fill" style="font-size: 0.35rem;"></i>
-          {{ selectedContact.opted_in ? 'Opted-in' : 'Pending' }}
-        </span>
-      </div>
-
-      <!-- Core Info Section -->
-      <div class="detail-section">
-        <div class="detail-section-title">
-          <i class="bi bi-person-lines-fill"></i> Core Information
-        </div>
-        <div class="detail-fields-grid">
-          <div class="detail-field-row">
-            <span class="detail-field-label"><i class="bi bi-telephone"></i> Phone</span>
-            <span class="detail-field-value">{{ selectedContact.phone || '—' }}</span>
-          </div>
-          <div class="detail-field-row">
-            <span class="detail-field-label"><i class="bi bi-envelope"></i> Email</span>
-            <span class="detail-field-value">{{ selectedContact.email || '—' }}</span>
-          </div>
-          <div class="detail-field-row" *ngIf="selectedContact.address">
-            <span class="detail-field-label"><i class="bi bi-geo-alt"></i> Address</span>
-            <span class="detail-field-value">{{ selectedContact.address }}</span>
-          </div>
-          <div class="detail-field-row">
-            <span class="detail-field-label"><i class="bi bi-clock-history"></i> Added On</span>
-            <span class="detail-field-value">{{ selectedContact.created_at | date:'dd MMM yyyy' }}</span>
-          </div>
+        
+        <div class="header-actions">
+          <button class="btn btn-outline-secondary btn-sm" (click)="goToChatFromDetail()">
+            <i class="bi bi-chat-dots"></i> Message
+          </button>
+          <button class="btn btn-primary btn-sm" (click)="openEditFromDetail()">
+            <i class="bi bi-pencil-square"></i> Edit
+          </button>
+          <button class="close-btn ms-3" (click)="closeDetailPanel()">&times;</button>
         </div>
       </div>
 
-      <!-- Custom Fields Section -->
-      <div class="detail-section" *ngIf="selectedContact.custom_fields && selectedContact.custom_fields.length > 0">
-        <div class="detail-section-title">
-          <i class="bi bi-list-columns-reverse"></i> Lead Details
-        </div>
-        <div class="detail-fields-grid">
-          <div class="detail-field-row" *ngFor="let field of selectedContact.custom_fields">
-            <span class="detail-field-label">
-              <i class="bi" [ngClass]="getFieldTypeIcon(field.field_type)"></i>
-              {{ field.label }}
-            </span>
-            <span class="detail-field-value" [class.empty-val]="!field.value">
-              {{ formatFieldValue(field) }}
-            </span>
+      <!-- Tabs Navigation -->
+      <div class="detail-tabs">
+        <button class="tab-btn" [class.active]="detailActiveTab === 'Profile'" (click)="detailActiveTab = 'Profile'">Profile</button>
+        <button class="tab-btn" [class.active]="detailActiveTab === 'Timeline'" (click)="detailActiveTab = 'Timeline'">Timeline</button>
+        <button class="tab-btn" [class.active]="detailActiveTab === 'Quotation'" (click)="detailActiveTab = 'Quotation'">Quotation</button>
+        <button class="tab-btn" [class.active]="detailActiveTab === 'Purchase Orders'" (click)="detailActiveTab = 'Purchase Orders'">Purchase Orders</button>
+        <button class="tab-btn" [class.active]="detailActiveTab === 'Documents'" (click)="detailActiveTab = 'Documents'">Documents</button>
+        <button class="tab-btn" [class.active]="detailActiveTab === 'Contact History'" (click)="detailActiveTab = 'Contact History'">Contact History</button>
+        <button class="tab-btn" [class.active]="detailActiveTab === 'Notes'" (click)="detailActiveTab = 'Notes'">Notes</button>
+        <button class="tab-btn" [class.active]="detailActiveTab === 'Activities'" (click)="detailActiveTab = 'Activities'">Activities</button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="detail-modal-body">
+        
+        <!-- PROFILE TAB -->
+        <div *ngIf="detailActiveTab === 'Profile'" class="tab-pane">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="detail-section-card">
+                <h5><i class="bi bi-person-lines-fill"></i> Core Information</h5>
+                <div class="detail-grid">
+                  <div class="detail-item">
+                    <label>Phone</label>
+                    <span>{{ selectedContact.phone || '—' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Email</label>
+                    <span>{{ selectedContact.email || '—' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Lead Source</label>
+                    <span>{{ selectedContact.leadSource || '—' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Assigned To</label>
+                    <span>{{ selectedContact.assigned_to || 'Unassigned' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Interested Products</label>
+                    <span>{{ selectedContact.interestedProducts || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-section-card">
+                <h5><i class="bi bi-list-columns-reverse"></i> Custom Fields</h5>
+                <div class="detail-grid" *ngIf="selectedContact.custom_fields && selectedContact.custom_fields.length > 0">
+                  <div class="detail-item" *ngFor="let field of selectedContact.custom_fields">
+                    <label>{{ field.label }}</label>
+                    <span>{{ formatFieldValue(field) || '—' }}</span>
+                  </div>
+                </div>
+                <div class="text-muted small p-3" *ngIf="!selectedContact.custom_fields || selectedContact.custom_fields.length === 0">
+                  No custom fields defined yet.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- No Custom Fields Hint -->
-      <div class="detail-no-fields" *ngIf="!selectedContact.custom_fields || selectedContact.custom_fields.length === 0">
-        <i class="bi bi-sliders2"></i>
-        <p>No custom fields defined yet.<br>
-          <a href="javascript:void(0)" style="color:#6366f1;">Go to Settings → Lead Fields</a> to add fields like Course, DOB, Address, etc.
-        </p>
-      </div>
+        <!-- TIMELINE TAB -->
+        <div *ngIf="detailActiveTab === 'Timeline'" class="tab-pane">
+          <div class="timeline-container">
+            <div class="timeline-item" *ngFor="let item of dummyTimeline">
+              <div class="timeline-icon" [ngClass]="item.type">
+                <i class="bi" [ngClass]="{'bi-star': item.type === 'created', 'bi-telephone': item.type === 'call', 'bi-file-earmark-text': item.type === 'quote', 'bi-arrow-repeat': item.type === 'status'}"></i>
+              </div>
+              <div class="timeline-content">
+                <h6>{{ item.title }}</h6>
+                <p>{{ item.desc }}</p>
+                <span class="timeline-date">{{ item.date | date:'MMM d, y, h:mm a' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <!-- Action Footer -->
-      <div class="detail-panel-footer">
-        <button class="btn btn-outline-secondary" (click)="goToChatFromDetail()">
-          <i class="bi bi-chat-dots me-2"></i> Message
-        </button>
-        <button class="btn btn-primary" (click)="openEditFromDetail()">
-          <i class="bi bi-pencil-square me-2"></i> Edit Contact
-        </button>
+        <!-- QUOTATION TAB -->
+        <div *ngIf="detailActiveTab === 'Quotation'" class="tab-pane">
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Create New Quote</button>
+          </div>
+          <div class="modern-table-container">
+            <table class="table modern-table">
+              <thead>
+                <tr>
+                  <th>Quote ID</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let q of dummyQuotations">
+                  <td><strong>{{ q.id }}</strong></td>
+                  <td>{{ q.amount | currency:'USD' }}</td>
+                  <td>{{ q.date | date:'mediumDate' }}</td>
+                  <td><span class="badge" [ngClass]="{'bg-success-soft text-success': q.status === 'Sent', 'bg-danger-soft text-danger': q.status === 'Rejected', 'bg-light text-dark': q.status !== 'Sent' && q.status !== 'Rejected'}">{{ q.status }}</span></td>
+                  <td class="text-end">
+                    <button class="btn btn-light btn-sm me-1" title="PDF"><i class="bi bi-file-pdf text-danger"></i></button>
+                    <button class="btn btn-light btn-sm me-1" title="Send WhatsApp"><i class="bi bi-whatsapp text-success"></i></button>
+                    <button class="btn btn-light btn-sm" title="Convert to PO"><i class="bi bi-arrow-right-circle text-primary"></i></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PURCHASE ORDERS TAB -->
+        <div *ngIf="detailActiveTab === 'Purchase Orders'" class="tab-pane">
+          <div class="modern-table-container">
+            <table class="table modern-table">
+              <thead>
+                <tr>
+                  <th>PO ID</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let po of dummyPOs">
+                  <td><strong>{{ po.id }}</strong></td>
+                  <td>{{ po.amount | currency:'USD' }}</td>
+                  <td>{{ po.date | date:'mediumDate' }}</td>
+                  <td><span class="badge" [ngClass]="{'bg-success-soft text-success': po.status === 'Approved', 'bg-danger-soft text-danger': po.status === 'Rejected', 'bg-warning-soft text-warning': po.status === 'Review', 'bg-info-soft text-info': po.status === 'Price Modified', 'bg-light text-dark': po.status !== 'Approved' && po.status !== 'Rejected' && po.status !== 'Review' && po.status !== 'Price Modified'}">{{ po.status }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- DOCUMENTS TAB -->
+        <div *ngIf="detailActiveTab === 'Documents'" class="tab-pane">
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary btn-sm"><i class="bi bi-upload"></i> Upload Document</button>
+          </div>
+          <div class="document-grid">
+            <div class="document-card" *ngFor="let doc of dummyDocuments">
+              <i class="bi" [ngClass]="{'bi-file-pdf text-danger': doc.type === 'pdf', 'bi-file-word text-primary': doc.type === 'doc', 'bi-file-zip text-warning': doc.type === 'zip'}"></i>
+              <div class="doc-info">
+                <h6>{{ doc.name }}</h6>
+                <span>{{ doc.size }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTACT HISTORY TAB -->
+        <div *ngIf="detailActiveTab === 'Contact History'" class="tab-pane">
+          <div class="history-list" *ngIf="dummyHistory.length > 0">
+            <div class="history-card" *ngFor="let hist of dummyHistory">
+              <div class="hist-icon" [ngClass]="hist.type">
+                <i class="bi" [ngClass]="{'bi-telephone-fill': hist.type === 'call', 'bi-envelope-fill': hist.type === 'email', 'bi-camera-video-fill': hist.type === 'meeting'}"></i>
+              </div>
+              <div class="hist-content">
+                <div class="hist-header">
+                  <h6>{{ hist.type | titlecase }} <span class="badge bg-light border text-dark ms-2">{{ hist.direction | titlecase }}</span></h6>
+                  <span class="hist-time">{{ hist.date | date:'MMM d, y, h:mm a' }}</span>
+                </div>
+                <div class="hist-body">
+                  <p *ngIf="hist.subject"><strong>Subject:</strong> {{ hist.subject }}</p>
+                  <p *ngIf="hist.duration"><strong>Duration:</strong> {{ hist.duration }}</p>
+                  <p class="hist-note">{{ hist.note || hist.content }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="text-center text-muted py-5" *ngIf="dummyHistory.length === 0">
+            <i class="bi bi-inbox fs-1"></i>
+            <p>No call logs or emails synced yet.</p>
+          </div>
+        </div>
+
+        <!-- NOTES TAB -->
+        <div *ngIf="detailActiveTab === 'Notes'" class="tab-pane">
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Add Note</button>
+          </div>
+          <div class="notes-list">
+            <div class="note-card" *ngFor="let note of dummyNotes">
+              <div class="note-header">
+                <strong>{{ note.author }}</strong>
+                <span>{{ note.date | date:'MMM d, h:mm a' }}</span>
+              </div>
+              <div class="note-body">
+                {{ note.content }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITIES TAB -->
+        <div *ngIf="detailActiveTab === 'Activities'" class="tab-pane">
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Add Activity</button>
+          </div>
+          <div class="activities-list">
+            <div class="activity-card" *ngFor="let act of dummyActivities">
+              <div class="act-icon">
+                <i class="bi" [ngClass]="{'bi-telephone': act.type === 'followup', 'bi-camera-video': act.type === 'meeting'}"></i>
+              </div>
+              <div class="act-details">
+                <h6>{{ act.title }}</h6>
+                <span>Due: {{ act.dueDate | date:'MMM d, h:mm a' }}</span>
+              </div>
+              <div class="act-status">
+                <span class="badge" [ngClass]="{'bg-warning text-dark': act.status === 'Pending', 'bg-info': act.status === 'Scheduled'}">{{ act.status }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </ng-container>
   </div>

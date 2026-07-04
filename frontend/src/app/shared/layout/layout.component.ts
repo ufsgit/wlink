@@ -20,6 +20,12 @@ export class LayoutComponent implements OnInit {
   pageTitle = 'Dashboard';
   isCollapsed = false;
   isReportsOpen = false;
+  isSalesPerformanceOpen = false;
+
+  // Department State
+  activeDepartment = 'Leads';
+  isDepartmentDropdownOpen = false;
+  departments = ['Leads', 'CRM', 'Operation', 'HR'];
 
   // Notification States
   showNotificationDropdown = false;
@@ -32,6 +38,9 @@ export class LayoutComponent implements OnInit {
     if (!target.closest('.notification-wrapper')) {
       this.showNotificationDropdown = false;
     }
+    if (!target.closest('.department-switcher')) {
+      this.isDepartmentDropdownOpen = false;
+    }
   }
 
   toggleSidebar() {
@@ -43,7 +52,34 @@ export class LayoutComponent implements OnInit {
     this.isReportsOpen = !this.isReportsOpen;
   }
 
+  toggleSalesPerformance(event: Event) {
+    event.preventDefault();
+    this.isSalesPerformanceOpen = !this.isSalesPerformanceOpen;
+  }
 
+  isOperationReportsOpen = false;
+
+  toggleOperationReports(event: Event) {
+    event.preventDefault();
+    this.isOperationReportsOpen = !this.isOperationReportsOpen;
+  }
+
+  isHrReportsOpen = false;
+
+  toggleHrReports(event: Event) {
+    event.preventDefault();
+    this.isHrReportsOpen = !this.isHrReportsOpen;
+  }
+
+  toggleDepartmentDropdown(event: Event) {
+    event.stopPropagation();
+    this.isDepartmentDropdownOpen = !this.isDepartmentDropdownOpen;
+  }
+
+  setDepartment(dept: string) {
+    this.activeDepartment = dept;
+    this.isDepartmentDropdownOpen = false;
+  }
 
   toggleNotificationDropdown(event: MouseEvent) {
     event.stopPropagation();
@@ -240,6 +276,7 @@ export class LayoutComponent implements OnInit {
     const segments = url.split('/');
     const last = segments[segments.length - 1].split('?')[0]; // Remove query params
     if (!last || last === 'dashboard') return 'Dashboard Overview';
+    if (last === 'contacts') return 'Leads';
     if (last === 'sms') return 'SMS Campaigns';
     if (last === 'ivr') return 'IVR Flows';
     if (last === 'rcs') return 'RCS Business';
