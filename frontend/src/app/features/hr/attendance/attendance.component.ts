@@ -1,16 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface AttendanceRecord {
-  id: string;
-  date: string;
-  employeeName: string;
-  checkIn: string;
-  checkOut: string;
-  status: 'Present' | 'Late' | 'Absent' | 'On Leave';
-  totalHours: string;
-}
+import { AttendanceService, AttendanceRecord } from '../../../core/services/attendance.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-attendance',
@@ -19,7 +11,7 @@ interface AttendanceRecord {
   templateUrl: './attendance.component.html',
   styleUrl: './attendance.component.css'
 })
-export class AttendanceComponent implements OnInit {
+export class AttendanceComponent implements OnInit, OnDestroy {
   // KPIs
   totalEmployees = 150;
   presentToday = 135;
@@ -29,19 +21,37 @@ export class AttendanceComponent implements OnInit {
 
   searchTerm: string = '';
 
-  attendanceRecords: AttendanceRecord[] = [
-    { id: 'ATT-101', date: new Date().toISOString().split('T')[0], employeeName: 'John Doe', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'Present', totalHours: '9h 0m' },
-    { id: 'ATT-102', date: new Date().toISOString().split('T')[0], employeeName: 'Jane Smith', checkIn: '09:30 AM', checkOut: '06:15 PM', status: 'Late', totalHours: '8h 45m' },
-    { id: 'ATT-103', date: new Date().toISOString().split('T')[0], employeeName: 'Michael Brown', checkIn: '-', checkOut: '-', status: 'Absent', totalHours: '0h 0m' },
-    { id: 'ATT-104', date: new Date().toISOString().split('T')[0], employeeName: 'Sarah Connor', checkIn: '08:45 AM', checkOut: '05:30 PM', status: 'Present', totalHours: '8h 45m' },
-    { id: 'ATT-105', date: new Date().toISOString().split('T')[0], employeeName: 'David Lee', checkIn: '-', checkOut: '-', status: 'On Leave', totalHours: '0h 0m' }
-  ];
+  attendanceRecords: AttendanceRecord[] = [];
+  private sub?: Subscription;
 
   toastMessage: string | null = null;
   toastTimeout: any;
-  hasMarkedAttendanceToday = false;
 
-  ngOnInit(): void {}
+  get hasMarkedAttendanceToday(): boolean {
+    const today = new Date().toISOString().split('T')[0];
+    return this.attendanceRecords.some(r => r.employeeName === 'Current User' && r.date === today);
+  }
+
+  constructor(private attendanceService: AttendanceService) {}
+
+  ngOnInit(): void {
+    this.sub = this.attendanceService.records$.subscribe(records => {
+      this.attendanceRecords = records;
+      this.calculateKPIs();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.sub) this.sub.unsubscribe();
+  }
+
+  calculateKPIs() {
+    const today = new Date().toISOString().split('T')[0];
+    const todayRecords = this.attendanceRecords.filter(r => r.date === today);
+    this.presentToday = todayRecords.filter(r => r.status === 'Present').length;
+    this.lateToday = todayRecords.filter(r => r.status === 'Late').length;
+    this.absentToday = this.totalEmployees - this.presentToday - this.lateToday - this.onLeaveToday;
+  }
 
   get filteredRecords(): AttendanceRecord[] {
     if (!this.searchTerm.trim()) return this.attendanceRecords;
@@ -60,33 +70,12 @@ export class AttendanceComponent implements OnInit {
   }
 
   markAttendance() {
-    if (this.hasMarkedAttendanceToday) {
-      this.showToast('You have already marked your attendance today.');
-      return;
-    }
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const isLate = now.getHours() >= 9 && now.getMinutes() > 15;
-    
-    this.attendanceRecords.unshift({
-      id: `ATT-${100 + this.attendanceRecords.length + 1}`,
-      date: now.toISOString().split('T')[0],
-      employeeName: 'Current User', // Mock current user
-      checkIn: timeString,
-      checkOut: '-',
-      status: isLate ? 'Late' : 'Present',
-      totalHours: '-'
-    });
-
-    if (isLate) {
-      this.lateToday++;
-      this.presentToday--;
+    const res = this.attendanceService.addCheckIn('Current User');
+    if (res.success) {
+      this.showToast(res.message);
     } else {
-      this.presentToday++;
+      this.showToast(res.message);
     }
-
-    this.hasMarkedAttendanceToday = true;
-    this.showToast(`Attendance marked successfully at ${timeString}`);
   }
 
   getStatusClass(status: string): string {

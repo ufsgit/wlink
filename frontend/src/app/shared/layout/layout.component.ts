@@ -4,6 +4,7 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
 import { SocketService } from '../../core/services/socket.service';
+import { AttendanceService } from '../../core/services/attendance.service';
 import { Observable, filter } from 'rxjs';
 import Swal from 'sweetalert2';
 
@@ -31,6 +32,71 @@ export class LayoutComponent implements OnInit {
   showNotificationDropdown = false;
 
   notifications: any[] = [];
+
+  // Check-In State
+  isCheckedIn = false;
+  currentEmployeeName = 'Current User';
+
+  ngOnInit() {
+    this.setupSocketNotifications();
+    this.user$.subscribe(user => {
+      this.currentUser = user;
+      if (user?.name) {
+        this.currentEmployeeName = user.name;
+        // Check if user already checked in today
+        const today = new Date().toISOString().split('T')[0];
+        const records = this.attendanceService.getRecords();
+        const myRecord = records.find(r => r.employeeName === this.currentEmployeeName && r.date === today);
+        if (myRecord) {
+          this.isCheckedIn = myRecord.checkOut === '-';
+        }
+      }
+    });
+  }
+
+  toggleCheckIn() {
+    if (!this.isCheckedIn) {
+      // Trying to check in
+      const res = this.attendanceService.addCheckIn(this.currentEmployeeName);
+      if (res.success) {
+        this.isCheckedIn = true;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          icon: 'success',
+          title: res.message
+        });
+      } else {
+        Swal.fire({
+          toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'info', title: res.message
+        });
+        if (res.message.includes('Already checked in')) this.isCheckedIn = true;
+      }
+    } else {
+      // Trying to check out
+      const res = this.attendanceService.addCheckOut(this.currentEmployeeName);
+      if (res.success) {
+        this.isCheckedIn = false;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          icon: 'success',
+          title: res.message
+        });
+      } else {
+        Swal.fire({
+          toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'warning', title: res.message
+        });
+        if (res.message.includes('Already checked out')) this.isCheckedIn = false;
+      }
+    }
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -135,10 +201,6 @@ export class LayoutComponent implements OnInit {
   }
 
 
-
-  ngOnInit() {
-    this.setupSocketNotifications();
-  }
 
   setupSocketNotifications() {
     if ('Notification' in window) {
@@ -270,7 +332,8 @@ export class LayoutComponent implements OnInit {
     private authService: AuthService, 
     private router: Router, 
     private socket: SocketService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private attendanceService: AttendanceService
   ) {
     this.user$ = this.authService.currentUser$;
     
@@ -287,7 +350,7 @@ export class LayoutComponent implements OnInit {
   }
 
   private syncDepartmentWithUrl(url: string) {
-    if (!url) return;
+    if (!url || url.includes('/sop')) return;
     
     const crmRoutes = ['crm-dashboard', 'contacts', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report'];
     
