@@ -284,11 +284,11 @@ export class PurchaseOrdersComponent {
   selectedPO: any = null;
 
   purchaseOrders = [
-    { id: 'PO-9001', supplier: 'TechData Distribution', contact: 'sales@techdata.com', date: 'Oct 24, 2023', amount: '$45,000.00', status: 'Review' },
-    { id: 'PO-9000', supplier: 'Office Solutions Inc', contact: 'orders@officeinc.com', date: 'Oct 23, 2023', amount: '$1,200.00', status: 'Approved' },
-    { id: 'PO-8999', supplier: 'Cisco Systems', contact: 'enterprise@cisco.com', date: 'Oct 20, 2023', amount: '$120,500.00', status: 'Supplier Shared' },
-    { id: 'PO-8998', supplier: 'Dell Technologies', contact: 'b2b@dell.com', date: 'Oct 15, 2023', amount: '$24,000.00', status: 'Completed' },
-    { id: 'PO-8997', supplier: 'Local Print Shop', contact: 'hello@localprint.com', date: 'Oct 12, 2023', amount: '$350.00', status: 'Rejected' },
+    { id: 'PO-9001', supplier: 'TechData Distribution', contact: 'sales@techdata.com', date: 'Oct 24, 2023', amount: '₹45,000.00', status: 'Review' },
+    { id: 'PO-9000', supplier: 'Office Solutions Inc', contact: 'orders@officeinc.com', date: 'Oct 23, 2023', amount: '₹1,200.00', status: 'Approved' },
+    { id: 'PO-8999', supplier: 'Cisco Systems', contact: 'enterprise@cisco.com', date: 'Oct 20, 2023', amount: '₹120,500.00', status: 'Supplier Shared' },
+    { id: 'PO-8998', supplier: 'Dell Technologies', contact: 'b2b@dell.com', date: 'Oct 15, 2023', amount: '₹24,000.00', status: 'Completed' },
+    { id: 'PO-8997', supplier: 'Local Print Shop', contact: 'hello@localprint.com', date: 'Oct 12, 2023', amount: '₹350.00', status: 'Rejected' },
   ];
 
   getStatusClass(status: string): string {

@@ -15,11 +15,11 @@ export class SalesFunnelReportComponent {
   searchTerm: string = '';
   
   funnelStages = [
-    { stage: 'Leads Generated', count: 1250, value: '$1.5M', conversionRate: '100%', avgTime: '0 days' },
-    { stage: 'Qualified Leads', count: 850, value: '$1.1M', conversionRate: '68%', avgTime: '2 days' },
-    { stage: 'Proposal Sent', count: 420, value: '$550K', conversionRate: '49%', avgTime: '5 days' },
-    { stage: 'Negotiation', count: 210, value: '$280K', conversionRate: '50%', avgTime: '12 days' },
-    { stage: 'Closed Won', count: 85, value: '$110K', conversionRate: '40%', avgTime: '21 days' }
+    { stage: 'Leads Generated', count: 1250, value: '₹1.5M', conversionRate: '100%', avgTime: '0 days' },
+    { stage: 'Qualified Leads', count: 850, value: '₹1.1M', conversionRate: '68%', avgTime: '2 days' },
+    { stage: 'Proposal Sent', count: 420, value: '₹550K', conversionRate: '49%', avgTime: '5 days' },
+    { stage: 'Negotiation', count: 210, value: '₹280K', conversionRate: '50%', avgTime: '12 days' },
+    { stage: 'Closed Won', count: 85, value: '₹110K', conversionRate: '40%', avgTime: '21 days' }
   ];
 
   // Chart configuration

@@ -15,11 +15,11 @@ export class SalespersonReportComponent {
   searchTerm: string = '';
   
   salespeople = [
-    { name: 'Jane Doe', leads: 145, won: 42, lost: 18, revenue: 250000, revenueStr: '$250,000', winRate: '70%', status: 'Excellent' },
-    { name: 'Robert Johnson', leads: 120, won: 28, lost: 35, revenue: 180000, revenueStr: '$180,000', winRate: '44%', status: 'Average' },
-    { name: 'Michael Wilson', leads: 180, won: 35, lost: 45, revenue: 210000, revenueStr: '$210,000', winRate: '43%', status: 'Average' },
-    { name: 'Sarah Jenkins', leads: 95, won: 38, lost: 12, revenue: 285000, revenueStr: '$285,000', winRate: '76%', status: 'Excellent' },
-    { name: 'Emily Clark', leads: 80, won: 15, lost: 40, revenue: 85000, revenueStr: '$85,000', winRate: '27%', status: 'Needs Improvement' }
+    { name: 'Jane Doe', leads: 145, won: 42, lost: 18, revenue: 250000, revenueStr: '₹250,000', winRate: '70%', status: 'Excellent' },
+    { name: 'Robert Johnson', leads: 120, won: 28, lost: 35, revenue: 180000, revenueStr: '₹180,000', winRate: '44%', status: 'Average' },
+    { name: 'Michael Wilson', leads: 180, won: 35, lost: 45, revenue: 210000, revenueStr: '₹210,000', winRate: '43%', status: 'Average' },
+    { name: 'Sarah Jenkins', leads: 95, won: 38, lost: 12, revenue: 285000, revenueStr: '₹285,000', winRate: '76%', status: 'Excellent' },
+    { name: 'Emily Clark', leads: 80, won: 15, lost: 40, revenue: 85000, revenueStr: '₹85,000', winRate: '27%', status: 'Needs Improvement' }
   ];
 
   // Chart configuration
@@ -37,7 +37,7 @@ export class SalespersonReportComponent {
     datasets: [
       {
         data: this.salespeople.map(s => s.revenue),
-        label: 'Revenue Generated ($)',
+        label: 'Revenue Generated (₹)',
         backgroundColor: '#a855f7',
         borderRadius: 4
       }

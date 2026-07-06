@@ -17,17 +17,17 @@ export class TargetsComponent {
   selectedTargetType: 'Individual' | 'Branch' = 'Individual';
 
   targets = [
-    { id: 'TGT-2023-001', assignee: 'John Doe', role: 'Sales Executive', period: 'Q3 2023', target: '$50,000', achieved: '$35,000', status: 'On Track' },
-    { id: 'TGT-2023-002', assignee: 'Jane Smith', role: 'Sales Manager', period: 'Q3 2023', target: '$120,000', achieved: '$130,000', status: 'Overachieved' },
-    { id: 'TGT-2023-003', assignee: 'Robert Johnson', role: 'Sales Executive', period: 'Q3 2023', target: '$40,000', achieved: '$15,000', status: 'Behind' },
-    { id: 'TGT-2023-004', assignee: 'Emily Davis', role: 'Sales Executive', period: 'Q3 2023', target: '$60,000', achieved: '$58,000', status: 'On Track' },
-    { id: 'TGT-2023-005', assignee: 'Michael Wilson', role: 'Sales Executive', period: 'Q3 2023', target: '$45,000', achieved: '$10,000', status: 'Behind' }
+    { id: 'TGT-2023-001', assignee: 'John Doe', role: 'Sales Executive', period: 'Q3 2023', target: '₹50,000', achieved: '₹35,000', status: 'On Track' },
+    { id: 'TGT-2023-002', assignee: 'Jane Smith', role: 'Sales Manager', period: 'Q3 2023', target: '₹120,000', achieved: '₹130,000', status: 'Overachieved' },
+    { id: 'TGT-2023-003', assignee: 'Robert Johnson', role: 'Sales Executive', period: 'Q3 2023', target: '₹40,000', achieved: '₹15,000', status: 'Behind' },
+    { id: 'TGT-2023-004', assignee: 'Emily Davis', role: 'Sales Executive', period: 'Q3 2023', target: '₹60,000', achieved: '₹58,000', status: 'On Track' },
+    { id: 'TGT-2023-005', assignee: 'Michael Wilson', role: 'Sales Executive', period: 'Q3 2023', target: '₹45,000', achieved: '₹10,000', status: 'Behind' }
   ];
 
   branchTargets = [
-    { id: 'B-TGT-001', branch: 'New York Branch', manager: 'Alice Smith', period: 'Q3 2023', target: '$500,000', achieved: '$450,000', status: 'On Track' },
-    { id: 'B-TGT-002', branch: 'Los Angeles Branch', manager: 'Bob Johnson', period: 'Q3 2023', target: '$750,000', achieved: '$800,000', status: 'Overachieved' },
-    { id: 'B-TGT-003', branch: 'Chicago Branch', manager: 'Charlie Brown', period: 'Q3 2023', target: '$300,000', achieved: '$200,000', status: 'Behind' },
+    { id: 'B-TGT-001', branch: 'New York Branch', manager: 'Alice Smith', period: 'Q3 2023', target: '₹500,000', achieved: '₹450,000', status: 'On Track' },
+    { id: 'B-TGT-002', branch: 'Los Angeles Branch', manager: 'Bob Johnson', period: 'Q3 2023', target: '₹750,000', achieved: '₹800,000', status: 'Overachieved' },
+    { id: 'B-TGT-003', branch: 'Chicago Branch', manager: 'Charlie Brown', period: 'Q3 2023', target: '₹300,000', achieved: '₹200,000', status: 'Behind' },
   ];
 
   get filteredTargets() {
@@ -48,9 +48,9 @@ export class TargetsComponent {
 
   get summary() {
     if (this.selectedTargetType === 'Individual') {
-      return { total: '$315K', achieved: '$248K', pending: '$67K', completion: '78.7%' };
+      return { total: '₹315K', achieved: '₹248K', pending: '₹67K', completion: '78.7%' };
     } else {
-      return { total: '$1.5M', achieved: '$1.45M', pending: '$50K', completion: '96.6%' };
+      return { total: '₹1.5M', achieved: '₹1.45M', pending: '₹50K', completion: '96.6%' };
     }
   }
 

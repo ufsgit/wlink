@@ -15,11 +15,11 @@ export class WonLostReportComponent {
   searchTerm: string = '';
   
   deals = [
-    { id: 'DL-001', client: 'Acme Corp', amount: '$45,000', status: 'Won', reason: 'Best Price & Value', rep: 'Jane Doe', date: '2023-10-25' },
-    { id: 'DL-002', client: 'TechFlow Inc', amount: '$25,000', status: 'Lost', reason: 'Competitor Feature', rep: 'Robert Johnson', date: '2023-10-22' },
-    { id: 'DL-003', client: 'Global Industries', amount: '$12,500', status: 'Won', reason: 'Relationship', rep: 'Michael Wilson', date: '2023-10-20' },
-    { id: 'DL-004', client: 'StartupHub', amount: '$18,000', status: 'Lost', reason: 'Budget Constraints', rep: 'Jane Doe', date: '2023-10-18' },
-    { id: 'DL-005', client: 'Alpha Innovations', amount: '$35,000', status: 'Won', reason: 'Fast Implementation', rep: 'Sarah Jenkins', date: '2023-10-15' }
+    { id: 'DL-001', client: 'Acme Corp', amount: '₹45,000', status: 'Won', reason: 'Best Price & Value', rep: 'Jane Doe', date: '2023-10-25' },
+    { id: 'DL-002', client: 'TechFlow Inc', amount: '₹25,000', status: 'Lost', reason: 'Competitor Feature', rep: 'Robert Johnson', date: '2023-10-22' },
+    { id: 'DL-003', client: 'Global Industries', amount: '₹12,500', status: 'Won', reason: 'Relationship', rep: 'Michael Wilson', date: '2023-10-20' },
+    { id: 'DL-004', client: 'StartupHub', amount: '₹18,000', status: 'Lost', reason: 'Budget Constraints', rep: 'Jane Doe', date: '2023-10-18' },
+    { id: 'DL-005', client: 'Alpha Innovations', amount: '₹35,000', status: 'Won', reason: 'Fast Implementation', rep: 'Sarah Jenkins', date: '2023-10-15' }
   ];
 
   // Chart configuration

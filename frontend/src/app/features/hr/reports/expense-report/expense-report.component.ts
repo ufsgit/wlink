@@ -87,7 +87,7 @@ export class ExpenseReportComponent implements OnInit {
   };
   trendChartData: ChartConfiguration['data'] = {
     labels: ['W1', 'W2', 'W3', 'W4'],
-    datasets: [{ data: [1200, 1900, 1500, 2500], label: 'Expenses ($)', borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' }]
+    datasets: [{ data: [1200, 1900, 1500, 2500], label: 'Expenses (₹)', borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' }]
   };
 
   // 2. Department Expense Comparison (Bar)
@@ -98,8 +98,8 @@ export class ExpenseReportComponent implements OnInit {
   deptChartData: ChartConfiguration['data'] = {
     labels: this.departments,
     datasets: [
-      { data: [0,0,0,0,0,0], label: 'Approved ($)', backgroundColor: '#3b82f6', borderRadius: 4 },
-      { data: [0,0,0,0,0,0], label: 'Pending ($)', backgroundColor: '#f59e0b', borderRadius: 4 }
+      { data: [0,0,0,0,0,0], label: 'Approved (₹)', backgroundColor: '#3b82f6', borderRadius: 4 },
+      { data: [0,0,0,0,0,0], label: 'Pending (₹)', backgroundColor: '#f59e0b', borderRadius: 4 }
     ]
   };
 
@@ -193,8 +193,8 @@ export class ExpenseReportComponent implements OnInit {
     this.deptChartData = {
       labels: this.departments,
       datasets: [
-        { data: appData, label: 'Approved ($)', backgroundColor: '#3b82f6', borderRadius: 4 },
-        { data: penData, label: 'Pending ($)', backgroundColor: '#f59e0b', borderRadius: 4 }
+        { data: appData, label: 'Approved (₹)', backgroundColor: '#3b82f6', borderRadius: 4 },
+        { data: penData, label: 'Pending (₹)', backgroundColor: '#f59e0b', borderRadius: 4 }
       ]
     };
 

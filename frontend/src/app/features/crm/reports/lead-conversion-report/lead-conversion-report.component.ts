@@ -15,11 +15,11 @@ export class LeadConversionReportComponent {
   searchTerm: string = '';
   
   sources = [
-    { source: 'Organic Search', leads: 450, converted: 55, rate: '12.2%', costPerLead: '$12', roi: '145%' },
-    { source: 'Paid Ads (Google)', leads: 820, converted: 110, rate: '13.4%', costPerLead: '$45', roi: '85%' },
-    { source: 'LinkedIn Social', leads: 210, converted: 45, rate: '21.4%', costPerLead: '$85', roi: '110%' },
-    { source: 'Referral', leads: 85, converted: 38, rate: '44.7%', costPerLead: '$0', roi: 'Infinite' },
-    { source: 'Direct Traffic', leads: 320, converted: 25, rate: '7.8%', costPerLead: '$0', roi: 'N/A' }
+    { source: 'Organic Search', leads: 450, converted: 55, rate: '12.2%', costPerLead: '₹12', roi: '145%' },
+    { source: 'Paid Ads (Google)', leads: 820, converted: 110, rate: '13.4%', costPerLead: '₹45', roi: '85%' },
+    { source: 'LinkedIn Social', leads: 210, converted: 45, rate: '21.4%', costPerLead: '₹85', roi: '110%' },
+    { source: 'Referral', leads: 85, converted: 38, rate: '44.7%', costPerLead: '₹0', roi: 'Infinite' },
+    { source: 'Direct Traffic', leads: 320, converted: 25, rate: '7.8%', costPerLead: '₹0', roi: 'N/A' }
   ];
 
   // Chart configuration

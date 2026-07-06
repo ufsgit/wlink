@@ -13,10 +13,10 @@ export class TodaysLeadsComponent {
   searchTerm: string = '';
   
   leads = [
-    { id: 'LD-101', name: 'Alpha Innovations', source: 'Website Contact', value: '$15,000', assignedTo: 'Unassigned', time: '09:15 AM' },
-    { id: 'LD-102', name: 'Beta Solutions', source: 'Referral', value: '$25,000', assignedTo: 'Jane Doe', time: '10:30 AM' },
-    { id: 'LD-103', name: 'Gamma Dynamics', source: 'LinkedIn Campaign', value: '$8,000', assignedTo: 'Robert Johnson', time: '11:45 AM' },
-    { id: 'LD-104', name: 'Delta Logistics', source: 'Direct Call', value: '$45,000', assignedTo: 'Unassigned', time: '01:20 PM' }
+    { id: 'LD-101', name: 'Alpha Innovations', source: 'Website Contact', value: '₹15,000', assignedTo: 'Unassigned', time: '09:15 AM' },
+    { id: 'LD-102', name: 'Beta Solutions', source: 'Referral', value: '₹25,000', assignedTo: 'Jane Doe', time: '10:30 AM' },
+    { id: 'LD-103', name: 'Gamma Dynamics', source: 'LinkedIn Campaign', value: '₹8,000', assignedTo: 'Robert Johnson', time: '11:45 AM' },
+    { id: 'LD-104', name: 'Delta Logistics', source: 'Direct Call', value: '₹45,000', assignedTo: 'Unassigned', time: '01:20 PM' }
   ];
 
   get filteredLeads() {

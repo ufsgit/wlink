@@ -13,11 +13,11 @@ export class LeaderboardComponent {
   searchTerm: string = '';
 
   leaderboard = [
-    { rank: 1, assignee: 'Jane Smith', role: 'Sales Manager', target: '$120,000', achieved: '$130,000', attainment: 108, winRate: '68%' },
-    { rank: 2, assignee: 'Emily Davis', role: 'Sales Executive', target: '$60,000', achieved: '$58,000', attainment: 96, winRate: '62%' },
-    { rank: 3, assignee: 'John Doe', role: 'Sales Executive', target: '$50,000', achieved: '$35,000', attainment: 70, winRate: '55%' },
-    { rank: 4, assignee: 'Robert Johnson', role: 'Sales Executive', target: '$40,000', achieved: '$15,000', attainment: 37, winRate: '42%' },
-    { rank: 5, assignee: 'Michael Wilson', role: 'Sales Executive', target: '$45,000', achieved: '$10,000', attainment: 22, winRate: '35%' }
+    { rank: 1, assignee: 'Jane Smith', role: 'Sales Manager', target: '₹120,000', achieved: '₹130,000', attainment: 108, winRate: '68%' },
+    { rank: 2, assignee: 'Emily Davis', role: 'Sales Executive', target: '₹60,000', achieved: '₹58,000', attainment: 96, winRate: '62%' },
+    { rank: 3, assignee: 'John Doe', role: 'Sales Executive', target: '₹50,000', achieved: '₹35,000', attainment: 70, winRate: '55%' },
+    { rank: 4, assignee: 'Robert Johnson', role: 'Sales Executive', target: '₹40,000', achieved: '₹15,000', attainment: 37, winRate: '42%' },
+    { rank: 5, assignee: 'Michael Wilson', role: 'Sales Executive', target: '₹45,000', achieved: '₹10,000', attainment: 22, winRate: '35%' }
   ];
 
   get filteredLeaderboard() {

@@ -122,6 +122,12 @@
           <span *ngIf="!isCollapsed">Analytics</span>
         </a>
         -->
+        <!-- Leave Request -->
+        <a routerLink="/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
+          <i class="bi bi-calendar2-check"></i>
+          <span *ngIf="!isCollapsed">Leave Request</span>
+        </a>
+        
         <!-- Reports Menu -->
         <div class="nav-group">
           <a href="#" class="nav-item has-submenu" (click)="toggleReports($event)" [class.active]="isReportsOpen" [title]="isCollapsed ? 'Reports' : ''">
@@ -176,6 +182,12 @@
         <a routerLink="/delivery-management" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Delivery' : ''">
           <i class="bi bi-truck"></i>
           <span *ngIf="!isCollapsed">Delivery Management</span>
+        </a>
+
+        <!-- Leave Request -->
+        <a routerLink="/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
+          <i class="bi bi-calendar2-check"></i>
+          <span *ngIf="!isCollapsed">Leave Request</span>
         </a>
 
         <!-- Sales Performance -->
@@ -274,6 +286,12 @@
         <a routerLink="/complaints" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Complaints' : ''">
           <i class="bi bi-exclamation-triangle"></i>
           <span *ngIf="!isCollapsed">Complaints</span>
+        </a>
+
+        <!-- Leave Request -->
+        <a routerLink="/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
+          <i class="bi bi-calendar2-check"></i>
+          <span *ngIf="!isCollapsed">Leave Request</span>
         </a>
 
         <!-- Reports -->

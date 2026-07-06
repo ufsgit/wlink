@@ -98,7 +98,7 @@
                 <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8; text-align: right;">Total Claims</th>
                 <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8; text-align: right;">Approved</th>
                 <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8; text-align: right;">Rejected</th>
-                <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8; text-align: right;">Cost ($)</th>
+                <th style="padding: 16px 32px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; background: #faf8f8; text-align: right;">Cost (₹)</th>
               </tr>
             </thead>
             <tbody>
@@ -116,7 +116,7 @@
                   {{ row.rejected }}
                 </td>
                 <td style="padding: 20px 32px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #475569;">
-                  ${{ row.cost | number }}
+                  ₹{{ row.cost | number }}
                 </td>
               </tr>
             </tbody>

@@ -13,8 +13,8 @@ export class UnderperformersComponent {
   searchTerm: string = '';
 
   underperformers = [
-    { id: 'PIP-001', assignee: 'Robert Johnson', role: 'Sales Executive', currentAttainment: '37%', target: '$40,000', shortfall: '$25,000', status: 'On PIP' },
-    { id: 'PIP-002', assignee: 'Michael Wilson', role: 'Sales Executive', currentAttainment: '22%', target: '$45,000', shortfall: '$35,000', status: 'Needs Coaching' }
+    { id: 'PIP-001', assignee: 'Robert Johnson', role: 'Sales Executive', currentAttainment: '37%', target: '₹40,000', shortfall: '₹25,000', status: 'On PIP' },
+    { id: 'PIP-002', assignee: 'Michael Wilson', role: 'Sales Executive', currentAttainment: '22%', target: '₹45,000', shortfall: '₹35,000', status: 'Needs Coaching' }
   ];
 
   get filteredUnderperformers() {

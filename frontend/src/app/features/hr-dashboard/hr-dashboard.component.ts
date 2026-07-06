@@ -302,9 +302,9 @@ export class HrDashboardComponent implements OnInit, AfterViewInit {
   ];
 
   expenseRequestsList = [
-    { name: 'Pam Beesly', date: 'Oct 05, 2023', amount: '$125.00', category: 'Office Supplies' },
-    { name: 'Dwight Schrute', date: 'Oct 06, 2023', amount: '$450.00', category: 'Travel' },
-    { name: 'Ryan Howard', date: 'Oct 07, 2023', amount: '$85.50', category: 'Meals' }
+    { name: 'Pam Beesly', date: 'Oct 05, 2023', amount: '₹125.00', category: 'Office Supplies' },
+    { name: 'Dwight Schrute', date: 'Oct 06, 2023', amount: '₹450.00', category: 'Travel' },
+    { name: 'Ryan Howard', date: 'Oct 07, 2023', amount: '₹85.50', category: 'Meals' }
   ];
 
   holidays = [

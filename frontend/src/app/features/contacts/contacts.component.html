@@ -303,7 +303,7 @@
               <tbody>
                 <tr *ngFor="let q of dummyQuotations">
                   <td><strong>{{ q.id }}</strong></td>
-                  <td>{{ q.amount | currency:'USD' }}</td>
+                  <td>{{ q.amount | currency:'INR' }}</td>
                   <td>{{ q.date | date:'mediumDate' }}</td>
                   <td><span class="badge" [ngClass]="{'bg-success-soft text-success': q.status === 'Sent' || q.status === 'Accepted', 'bg-danger-soft text-danger': q.status === 'Rejected', 'bg-light text-dark': q.status !== 'Sent' && q.status !== 'Rejected' && q.status !== 'Accepted'}">{{ q.status }}</span></td>
                   <td class="text-end">
@@ -380,7 +380,7 @@
               <tbody>
                 <tr *ngFor="let po of dummyPOs">
                   <td><strong>{{ po.id }}</strong></td>
-                  <td>{{ po.amount | currency:'USD' }}</td>
+                  <td>{{ po.amount | currency:'INR' }}</td>
                   <td>{{ po.date | date:'mediumDate' }}</td>
                   <td><span class="badge" [ngClass]="{'bg-success-soft text-success': po.status === 'Approved', 'bg-danger-soft text-danger': po.status === 'Rejected', 'bg-warning-soft text-warning': po.status === 'Review', 'bg-info-soft text-info': po.status === 'Price Modified', 'bg-light text-dark': po.status !== 'Approved' && po.status !== 'Rejected' && po.status !== 'Review' && po.status !== 'Price Modified'}">{{ po.status }}</span></td>
                   <td class="text-end">

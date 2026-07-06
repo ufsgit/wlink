@@ -113,7 +113,7 @@
         <div class="kpi-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-currency-dollar"></i></div>
         <div class="kpi-details">
           <span class="kpi-label">Total Payroll</span>
-          <h3 class="kpi-value text-warning">${{ kpi.totalPayroll | number:'1.0-0' }}</h3>
+          <h3 class="kpi-value text-warning">₹{{ kpi.totalPayroll | number:'1.0-0' }}</h3>
         </div>
       </div>
       <div class="kpi-card glass-card">
@@ -129,7 +129,7 @@
     <div class="secondary-kpis glass-card mb-5" style="margin-bottom: 2.5rem !important;">
       <div class="skpi-item">
         <span class="skpi-label">Average Salary</span>
-        <span class="skpi-value text-primary">${{ kpi.avgSalary | number }}</span>
+        <span class="skpi-value text-primary">₹{{ kpi.avgSalary | number }}</span>
       </div>
       <div class="skpi-divider"></div>
       <div class="skpi-item">
@@ -218,7 +218,7 @@
                 <div class="text-dark"><i class="bi bi-calendar me-1"></i>{{ log.joinDate }}</div>
               </td>
               <td>
-                <div class="fw-bold" style="font-size: 1.1rem; color: #10b981;">${{ log.salary | number }}</div>
+                <div class="fw-bold" style="font-size: 1.1rem; color: #10b981;">₹{{ log.salary | number }}</div>
               </td>
               <td><span class="badge rounded-pill px-3 py-2" [ngClass]="getStatusClass(log.status)"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>{{ log.status }}</span></td>
               <td>

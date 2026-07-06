@@ -13,9 +13,9 @@ export class IncentivesComponent {
   searchTerm: string = '';
 
   incentives = [
-    { id: 'INC-001', assignee: 'Jane Smith', period: 'Q3 2023', baseline: '$100,000', achieved: '$130,000', payoutRate: '5%', payoutAmount: '$1,500', status: 'Approved' },
-    { id: 'INC-002', assignee: 'Emily Davis', period: 'Q3 2023', baseline: '$50,000', achieved: '$58,000', payoutRate: '5%', payoutAmount: '$400', status: 'Pending Review' },
-    { id: 'INC-003', assignee: 'John Doe', period: 'Q3 2023', baseline: '$40,000', achieved: '$35,000', payoutRate: '0%', payoutAmount: '$0', status: 'Not Eligible' }
+    { id: 'INC-001', assignee: 'Jane Smith', period: 'Q3 2023', baseline: '₹100,000', achieved: '₹130,000', payoutRate: '5%', payoutAmount: '₹1,500', status: 'Approved' },
+    { id: 'INC-002', assignee: 'Emily Davis', period: 'Q3 2023', baseline: '₹50,000', achieved: '₹58,000', payoutRate: '5%', payoutAmount: '₹400', status: 'Pending Review' },
+    { id: 'INC-003', assignee: 'John Doe', period: 'Q3 2023', baseline: '₹40,000', achieved: '₹35,000', payoutRate: '0%', payoutAmount: '₹0', status: 'Not Eligible' }
   ];
 
   get filteredIncentives() {

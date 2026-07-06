@@ -13,10 +13,10 @@ export class QuotationReportComponent {
   searchTerm: string = '';
   
   quotations = [
-    { id: 'QT-2023-001', client: 'Acme Corp', amount: '$15,000', date: '2023-10-20', validUntil: '2023-11-20', status: 'Accepted' },
-    { id: 'QT-2023-002', client: 'TechFlow Inc', amount: '$25,000', date: '2023-10-21', validUntil: '2023-11-21', status: 'Pending' },
-    { id: 'QT-2023-003', client: 'Global Industries', amount: '$8,000', date: '2023-10-22', validUntil: '2023-11-22', status: 'Rejected' },
-    { id: 'QT-2023-004', client: 'StartupHub', amount: '$45,000', date: '2023-10-25', validUntil: '2023-11-25', status: 'Draft' }
+    { id: 'QT-2023-001', client: 'Acme Corp', amount: '₹15,000', date: '2023-10-20', validUntil: '2023-11-20', status: 'Accepted' },
+    { id: 'QT-2023-002', client: 'TechFlow Inc', amount: '₹25,000', date: '2023-10-21', validUntil: '2023-11-21', status: 'Pending' },
+    { id: 'QT-2023-003', client: 'Global Industries', amount: '₹8,000', date: '2023-10-22', validUntil: '2023-11-22', status: 'Rejected' },
+    { id: 'QT-2023-004', client: 'StartupHub', amount: '₹45,000', date: '2023-10-25', validUntil: '2023-11-25', status: 'Draft' }
   ];
 
   get filteredQuotations() {

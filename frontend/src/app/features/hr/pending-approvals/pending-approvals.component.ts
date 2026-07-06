@@ -29,10 +29,10 @@ export class PendingApprovalsComponent implements OnInit {
 
   requests: ApprovalRequest[] = [
     { id: 'REQ-001', employeeName: 'Alice Johnson', type: 'Leave', dateSubmitted: '2023-10-24', amountOrDays: '3 Days', reason: 'Sick leave', status: 'Pending' },
-    { id: 'REQ-002', employeeName: 'Bob Williams', type: 'Expense', dateSubmitted: '2023-10-25', amountOrDays: '$120.00', reason: 'Client Lunch', status: 'Pending', attachment: 'receipt-lunch.pdf' },
+    { id: 'REQ-002', employeeName: 'Bob Williams', type: 'Expense', dateSubmitted: '2023-10-25', amountOrDays: '₹120.00', reason: 'Client Lunch', status: 'Pending', attachment: 'receipt-lunch.pdf' },
     { id: 'REQ-003', employeeName: 'Charlie Brown', type: 'Time-off', dateSubmitted: '2023-10-26', amountOrDays: '4 Hours', reason: 'Dentist Appointment', status: 'Pending' },
     { id: 'REQ-004', employeeName: 'David Lee', type: 'Leave', dateSubmitted: '2023-10-23', amountOrDays: '5 Days', reason: 'Annual Vacation', status: 'Approved' },
-    { id: 'REQ-005', employeeName: 'Eve Smith', type: 'Expense', dateSubmitted: '2023-10-21', amountOrDays: '$45.50', reason: 'Office Supplies', status: 'Rejected' }
+    { id: 'REQ-005', employeeName: 'Eve Smith', type: 'Expense', dateSubmitted: '2023-10-21', amountOrDays: '₹45.50', reason: 'Office Supplies', status: 'Rejected' }
   ];
 
   selectedRequest: ApprovalRequest | null = null;

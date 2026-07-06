@@ -307,11 +307,11 @@ export class QuotationsComponent {
   editingQuote: any = null;
 
   quotations = [
-    { id: 'QT-2023-1042', client: 'Acme Corp', email: 'billing@acmecorp.com', date: 'Oct 24, 2023', amount: '$12,450.00', status: 'Pending Approval' },
-    { id: 'QT-2023-1041', client: 'Global Industries', email: 'procurement@global.inc', date: 'Oct 22, 2023', amount: '$8,200.00', status: 'Accepted' },
-    { id: 'QT-2023-1040', client: 'Stark Enterprises', email: 'tony@stark.com', date: 'Oct 15, 2023', amount: '$145,000.00', status: 'Expired' },
-    { id: 'QT-2023-1039', client: 'Wayne Tech', email: 'bruce@wayne.com', date: 'Oct 10, 2023', amount: '$45,200.00', status: 'Rejected' },
-    { id: 'QT-2023-1038', client: 'Dunder Mifflin', email: 'michael@dunder.com', date: 'Oct 05, 2023', amount: '$1,250.00', status: 'Accepted' },
+    { id: 'QT-2023-1042', client: 'Acme Corp', email: 'billing@acmecorp.com', date: 'Oct 24, 2023', amount: '₹12,450.00', status: 'Pending Approval' },
+    { id: 'QT-2023-1041', client: 'Global Industries', email: 'procurement@global.inc', date: 'Oct 22, 2023', amount: '₹8,200.00', status: 'Accepted' },
+    { id: 'QT-2023-1040', client: 'Stark Enterprises', email: 'tony@stark.com', date: 'Oct 15, 2023', amount: '₹145,000.00', status: 'Expired' },
+    { id: 'QT-2023-1039', client: 'Wayne Tech', email: 'bruce@wayne.com', date: 'Oct 10, 2023', amount: '₹45,200.00', status: 'Rejected' },
+    { id: 'QT-2023-1038', client: 'Dunder Mifflin', email: 'michael@dunder.com', date: 'Oct 05, 2023', amount: '₹1,250.00', status: 'Accepted' },
   ];
 
   getStatusClass(status: string): string {
