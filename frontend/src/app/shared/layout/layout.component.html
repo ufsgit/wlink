@@ -123,7 +123,7 @@
         </a>
         -->
         <!-- Leave Request -->
-        <a routerLink="/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
+        <a routerLink="/lead/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
           <i class="bi bi-calendar2-check"></i>
           <span *ngIf="!isCollapsed">Leave Request</span>
         </a>
@@ -191,7 +191,7 @@
         </a>
 
         <!-- Leave Request -->
-        <a routerLink="/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
+        <a routerLink="/crm/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
           <i class="bi bi-calendar2-check"></i>
           <span *ngIf="!isCollapsed">Leave Request</span>
         </a>
@@ -301,7 +301,7 @@
         </a>
 
         <!-- Leave Request -->
-        <a routerLink="/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
+        <a routerLink="/operation/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
           <i class="bi bi-calendar2-check"></i>
           <span *ngIf="!isCollapsed">Leave Request</span>
         </a>
@@ -365,6 +365,12 @@
         <a routerLink="/pending-approvals" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Pending Approvals' : ''">
           <i class="bi bi-check2-square"></i>
           <span *ngIf="!isCollapsed">Pending Approvals</span>
+        </a>
+
+        <!-- Leave Request -->
+        <a routerLink="/hr/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
+          <i class="bi bi-calendar2-check"></i>
+          <span *ngIf="!isCollapsed">Leave Request</span>
         </a>
 
         <!-- Reports -->

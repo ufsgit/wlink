@@ -359,11 +359,11 @@ export class LayoutComponent implements OnInit {
   private syncDepartmentWithUrl(url: string) {
     if (!url || url.includes('/sop')) return;
     
-    const crmRoutes = ['crm-dashboard', 'contacts', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report'];
+    const crmRoutes = ['crm-dashboard', 'contacts', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report', 'crm/leave-request'];
     
-    const operationRoutes = ['operation-dashboard', 'installation', 'customer-feedback', 'warranty-service', 'complaints', 'installation-report', 'complaint-report', 'warranty-report', 'technician-report', 'customer-feedback-report'];
+    const operationRoutes = ['operation-dashboard', 'installation', 'customer-feedback', 'warranty-service', 'complaints', 'installation-report', 'complaint-report', 'warranty-report', 'technician-report', 'customer-feedback-report', 'operation/leave-request'];
     
-    const hrRoutes = ['hr-dashboard', 'attendance', 'employee-location', 'employees', 'pending-approvals', 'attendance-report', 'leave-report', 'expense-report', 'gps-report', 'performance-report', 'employee-report'];
+    const hrRoutes = ['hr-dashboard', 'attendance', 'employee-location', 'employees', 'pending-approvals', 'attendance-report', 'leave-report', 'expense-report', 'gps-report', 'performance-report', 'employee-report', 'hr/leave-request'];
 
     const leadsReportRoutes = ['reports/work', 'reports/conversation', 'reports/employee', 'reports/enquiry', 'reports/status'];
 

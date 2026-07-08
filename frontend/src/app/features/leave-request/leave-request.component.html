@@ -1,7 +1,7 @@
 <div class="leave-request-container">
   <div class="page-header">
-    <h2 class="page-title">Leave Request</h2>
-    <p class="page-subtitle">Submit your time off request easily.</p>
+    <h2 class="page-title">{{ moduleName }} Leave Request</h2>
+    <p class="page-subtitle">Submit your time off request easily for the {{ moduleName }} module.</p>
   </div>
 
   <div class="card premium-card">
@@ -9,11 +9,20 @@
       <form (ngSubmit)="submitRequest()">
         
         <!-- Date Selection -->
-        <div class="form-group mb-4">
-          <label for="leaveDate" class="premium-label">Select Date <span class="required">*</span></label>
-          <div class="input-wrapper">
-            <i class="bi bi-calendar-event input-icon"></i>
-            <input type="date" id="leaveDate" class="premium-input" name="date" [(ngModel)]="request.date" required>
+        <div class="row">
+          <div class="col-md-6 form-group mb-4">
+            <label for="fromDate" class="premium-label">From Date <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <i class="bi bi-calendar-event input-icon"></i>
+              <input type="date" id="fromDate" class="premium-input" name="fromDate" [(ngModel)]="request.fromDate" required>
+            </div>
+          </div>
+          <div class="col-md-6 form-group mb-4">
+            <label for="toDate" class="premium-label">To Date <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <i class="bi bi-calendar-event input-icon"></i>
+              <input type="date" id="toDate" class="premium-input" name="toDate" [(ngModel)]="request.toDate" required>
+            </div>
           </div>
         </div>
 
