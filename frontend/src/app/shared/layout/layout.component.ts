@@ -43,21 +43,27 @@ export class LayoutComponent implements OnInit {
       this.currentUser = user;
       if (user?.name) {
         this.currentEmployeeName = user.name;
-        // Check if user already checked in today
-        const today = new Date().toISOString().split('T')[0];
-        const records = this.attendanceService.getRecords();
-        const myRecord = records.find(r => r.employeeName === this.currentEmployeeName && r.date === today);
-        if (myRecord) {
-          this.isCheckedIn = myRecord.checkOut === '-';
-        }
+        this.updateCheckInStatus();
       }
     });
+  }
+
+  updateCheckInStatus() {
+    if (!this.currentEmployeeName) return;
+    const today = new Date().toISOString().split('T')[0];
+    const records = this.attendanceService.getRecords();
+    const myRecord = records.find(r => r.employeeName === this.currentEmployeeName && r.date === today && (r.module === this.activeDepartment || !r.module));
+    if (myRecord) {
+      this.isCheckedIn = myRecord.checkOut === '-';
+    } else {
+      this.isCheckedIn = false;
+    }
   }
 
   toggleCheckIn() {
     if (!this.isCheckedIn) {
       // Trying to check in
-      const res = this.attendanceService.addCheckIn(this.currentEmployeeName);
+      const res = this.attendanceService.addCheckIn(this.currentEmployeeName, this.activeDepartment);
       if (res.success) {
         this.isCheckedIn = true;
         Swal.fire({
@@ -77,7 +83,7 @@ export class LayoutComponent implements OnInit {
       }
     } else {
       // Trying to check out
-      const res = this.attendanceService.addCheckOut(this.currentEmployeeName);
+      const res = this.attendanceService.addCheckOut(this.currentEmployeeName, this.activeDepartment);
       if (res.success) {
         this.isCheckedIn = false;
         Swal.fire({
@@ -145,6 +151,7 @@ export class LayoutComponent implements OnInit {
   setDepartment(dept: string) {
     this.activeDepartment = dept;
     this.isDepartmentDropdownOpen = false;
+    this.updateCheckInStatus();
     
     if (dept === 'CRM') {
       this.router.navigate(['/crm-dashboard']);
@@ -385,6 +392,8 @@ export class LayoutComponent implements OnInit {
       this.activeDepartment = 'Leads'; 
       if (leadsReportRoutes.some(r => url.includes(r))) this.isReportsOpen = true;
     }
+    
+    this.updateCheckInStatus();
   }
 
   private getTitle(url: string): string {

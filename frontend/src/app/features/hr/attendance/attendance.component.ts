@@ -29,7 +29,7 @@ export class AttendanceComponent implements OnInit, OnDestroy {
 
   get hasMarkedAttendanceToday(): boolean {
     const today = new Date().toISOString().split('T')[0];
-    return this.attendanceRecords.some(r => r.employeeName === 'Current User' && r.date === today);
+    return this.attendanceRecords.some(r => r.employeeName === 'Current User' && r.date === today && (r.module === 'HR' || !r.module));
   }
 
   constructor(private attendanceService: AttendanceService) {}
@@ -70,7 +70,7 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   }
 
   markAttendance() {
-    const res = this.attendanceService.addCheckIn('Current User');
+    const res = this.attendanceService.addCheckIn('Current User', 'HR');
     if (res.success) {
       this.showToast(res.message);
     } else {
