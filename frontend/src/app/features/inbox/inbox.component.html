@@ -1,7 +1,7 @@
 <div class="inbox-container" (click)="showAttachMenu = false; showEmojiPicker = false; showChannelFilter = false">
 
   <!-- Sidebar: Conversation List -->
-  <div class="inbox-sidebar">
+  <div class="inbox-sidebar" *ngIf="!isEmbedded">
     <div class="sidebar-header">
       <div class="sidebar-title-row">
         <div class="sidebar-title">
@@ -20,22 +20,30 @@
               }"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" [class.show]="showChannelFilter">
-              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('')" [class.active-filter]="!currentChannel">
-                <i class="bi bi-collection me-3 text-muted"></i> All Channels
-              </a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('whatsapp')" [class.active-filter]="currentChannel === 'whatsapp'">
-                <i class="bi bi-whatsapp me-3" style="color: #25D366;"></i> WhatsApp
-              </a></li>
-              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('instagram')" [class.active-filter]="currentChannel === 'instagram'">
-                <i class="bi bi-instagram me-3" style="color: #E1306C;"></i> Instagram
-              </a></li>
-              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('messenger')" [class.active-filter]="currentChannel === 'messenger'">
-                <i class="bi bi-messenger me-3" style="color: #0084FF;"></i> Messenger
-              </a></li>
-              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('website'); showChannelFilter = false" [class.active-filter]="currentChannel === 'website'">
-                <i class="bi bi-globe me-3" style="color: #3B82F6;"></i> Website Widget
-              </a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('')"
+                  [class.active-filter]="!currentChannel">
+                  <i class="bi bi-collection me-3 text-muted"></i> All Channels
+                </a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('whatsapp')"
+                  [class.active-filter]="currentChannel === 'whatsapp'">
+                  <i class="bi bi-whatsapp me-3" style="color: #25D366;"></i> WhatsApp
+                </a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('instagram')"
+                  [class.active-filter]="currentChannel === 'instagram'">
+                  <i class="bi bi-instagram me-3" style="color: #E1306C;"></i> Instagram
+                </a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="filterByChannel('messenger')"
+                  [class.active-filter]="currentChannel === 'messenger'">
+                  <i class="bi bi-messenger me-3" style="color: #0084FF;"></i> Messenger
+                </a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)"
+                  (click)="filterByChannel('website'); showChannelFilter = false"
+                  [class.active-filter]="currentChannel === 'website'">
+                  <i class="bi bi-globe me-3" style="color: #3B82F6;"></i> Website Widget
+                </a></li>
             </ul>
           </div>
         </div>
@@ -59,13 +67,16 @@
     <!-- Channel Filter Tabs -->
     <div class="channel-tabs">
       <button class="channel-tab tab-all" [class.active]="!currentChannel" (click)="filterByChannel('')">All</button>
-      <button class="channel-tab tab-whatsapp" [class.active]="currentChannel === 'whatsapp'" (click)="filterByChannel('whatsapp')">
+      <button class="channel-tab tab-whatsapp" [class.active]="currentChannel === 'whatsapp'"
+        (click)="filterByChannel('whatsapp')">
         <i class="bi bi-whatsapp"></i> WhatsApp
       </button>
-      <button class="channel-tab tab-instagram" [class.active]="currentChannel === 'instagram'" (click)="filterByChannel('instagram')">
+      <button class="channel-tab tab-instagram" [class.active]="currentChannel === 'instagram'"
+        (click)="filterByChannel('instagram')">
         <i class="bi bi-instagram"></i> Instagram
       </button>
-      <button class="channel-tab tab-messenger" [class.active]="currentChannel === 'messenger'" (click)="filterByChannel('messenger')">
+      <button class="channel-tab tab-messenger" [class.active]="currentChannel === 'messenger'"
+        (click)="filterByChannel('messenger')">
         <i class="bi bi-messenger"></i> Messenger
       </button>
     </div>
@@ -80,16 +91,13 @@
         <i class="bi bi-inbox"></i>
         <p>No conversations yet</p>
       </div>
-      
-      <div *ngFor="let convo of conversations" 
-           class="convo-item" 
-           [ngClass]="{
+
+      <div *ngFor="let convo of conversations" class="convo-item" [ngClass]="{
              'active': selectedConvo?.id === convo.id,
              'active-whatsapp': selectedConvo?.id === convo.id && convo.channel === 'whatsapp',
              'active-instagram': selectedConvo?.id === convo.id && convo.channel === 'instagram',
              'active-messenger': selectedConvo?.id === convo.id && convo.channel === 'messenger'
-           }"
-           (click)="selectConversation(convo)">
+           }" (click)="selectConversation(convo)">
         <div class="convo-avatar-wrap">
           <div class="convo-avatar">{{ convo.contact_name?.charAt(0) || 'C' }}</div>
           <div class="channel-indicator" [ngClass]="{
@@ -149,22 +157,32 @@
           <span>Resolve</span>
         </button>
         <div class="dropdown">
-          <button class="header-action-btn" type="button" (click)="showHeaderMenu = !showHeaderMenu" title="More options">
+          <button class="header-action-btn" type="button" (click)="showHeaderMenu = !showHeaderMenu"
+            title="More options">
             <i class="bi bi-three-dots-vertical"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow border-0" [class.show]="showHeaderMenu">
             <li><a class="dropdown-item py-2" href="javascript:void(0)" (click)="assignToMe(); showHeaderMenu = false">
-              <i class="bi bi-person-check me-2"></i> Assign to Me
-            </a></li>
+                <i class="bi bi-person-check me-2"></i> Assign to Me
+              </a></li>
             <li><a class="dropdown-item py-2" href="javascript:void(0)">
-              <i class="bi bi-envelope-open me-2"></i> Mark as Unread
-            </a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)" (click)="deleteSelectedConversation(); showHeaderMenu = false">
-              <i class="bi bi-trash me-2"></i> Delete Conversation
-            </a></li>
+                <i class="bi bi-envelope-open me-2"></i> Mark as Unread
+              </a></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)"
+                (click)="deleteSelectedConversation(); showHeaderMenu = false">
+                <i class="bi bi-trash me-2"></i> Delete Conversation
+              </a></li>
           </ul>
         </div>
+        <button class="header-action-btn" (click)="toggleSidebar()" title="Toggle contact details">
+          <i class="bi" [ngClass]="showSidebar ? 'bi-info-circle-fill' : 'bi-info-circle'"></i>
+        </button>
+        <button *ngIf="isEmbedded" class="header-action-btn" style="color: #ef4444;" (click)="closeEmbedded.emit()" title="Close chat">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
     </div>
 
@@ -193,12 +211,14 @@
               <div *ngIf="msg.content" style="margin-top: 5px;">{{ msg.content }}</div>
             </ng-container>
             <ng-container *ngIf="msg.message_type === 'document'">
-              <a [href]="getMediaUrl(msg.media_url)" target="_blank" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px;">
-                 <i class="bi bi-file-earmark-text" style="font-size: 1.5rem;"></i> Download Document
+              <a [href]="getMediaUrl(msg.media_url)" target="_blank"
+                style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px;">
+                <i class="bi bi-file-earmark-text" style="font-size: 1.5rem;"></i> Download Document
               </a>
               <div *ngIf="msg.content" style="margin-top: 5px;">{{ msg.content }}</div>
             </ng-container>
-            <ng-container *ngIf="msg.message_type !== 'audio' && msg.message_type !== 'voice' && msg.message_type !== 'image' && msg.message_type !== 'video' && msg.message_type !== 'document'">
+            <ng-container
+              *ngIf="msg.message_type !== 'audio' && msg.message_type !== 'voice' && msg.message_type !== 'image' && msg.message_type !== 'video' && msg.message_type !== 'document'">
               <div *ngIf="msg.message_type === 'template'" class="template-msg-label">
                 <i class="bi bi-file-earmark-text-fill"></i> Template
               </div>
@@ -226,7 +246,8 @@
             <span *ngFor="let e of emojis" (click)="addEmoji(e)">{{e}}</span>
           </div>
         </div>
-        <button class="btn-action" title="Emoji" (click)="toggleEmojiPicker()"><i class="bi bi-emoji-smile"></i></button>
+        <button class="btn-action" title="Emoji" (click)="toggleEmojiPicker()"><i
+            class="bi bi-emoji-smile"></i></button>
         <!-- Attach File Dropdown -->
         <div class="attach-dropdown-wrap" (click)="$event.stopPropagation()">
           <button class="btn-action" title="Attach file" (click)="toggleAttachMenu()">
@@ -253,16 +274,15 @@
             </div>
           </div>
         </div>
-        <button class="btn-action" title="Send Template" (click)="openTemplatePicker()"><i class="bi bi-file-earmark-text"></i></button>
-        <button class="btn-action" [class.recording]="isRecording" title="Voice message" (click)="toggleVoiceRecording()">
+        <button class="btn-action" title="Send Template" (click)="openTemplatePicker()"><i
+            class="bi bi-file-earmark-text"></i></button>
+        <button class="btn-action" [class.recording]="isRecording" title="Voice message"
+          (click)="toggleVoiceRecording()">
           <i class="bi" [ngClass]="isRecording ? 'bi-stop-circle-fill' : 'bi-mic'"></i>
         </button>
       </div>
       <div class="input-wrapper">
-        <input type="text" 
-               [(ngModel)]="newMessage" 
-               (keyup.enter)="sendMessage()"
-               placeholder="Type a message...">
+        <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type a message...">
       </div>
       <button class="btn-send" (click)="sendMessage()" [disabled]="!newMessage.trim()">
         <i class="bi bi-send-fill"></i>
@@ -271,10 +291,10 @@
   </div>
 
   <!-- Right: Contact Info Panel -->
-  <div class="contact-info-panel" *ngIf="selectedConvo">
+  <div class="contact-info-panel" [class.closed]="!showSidebar" *ngIf="selectedConvo">
     <div class="panel-header">
       <span>Contact Details</span>
-      <button class="panel-close-btn" title="Close panel">
+      <button class="panel-close-btn" title="Close panel" (click)="toggleSidebar()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -297,7 +317,7 @@
           {{ selectedConvo.channel || 'whatsapp' | titlecase }}
         </div>
       </div>
-      
+
       <div class="info-divider"></div>
 
       <div class="info-section">
@@ -355,8 +375,13 @@
         <div class="info-section-title">Quick Actions</div>
         <div class="quick-actions-grid">
           <button class="qa-card" (click)="editContact()">
-            <div class="qa-icon qa-blue"><i class="bi bi-pencil-square"></i></div>
+            <div class="qa-icon qa-blue"><i class="bi bi-person-lines-fill"></i></div>
             <span class="qa-label">Edit Contact</span>
+          </button>
+          <button *ngIf="isLead()" class="qa-card" (click)="editLead()">
+            <div class="qa-icon qa-orange" style="color: #f59e0b; background: #fef3c7;"><i class="bi bi-star-fill"></i>
+            </div>
+            <span class="qa-label">Edit Lead</span>
           </button>
           <button class="qa-card" (click)="addTag()">
             <div class="qa-icon qa-violet"><i class="bi bi-tag-fill"></i></div>
@@ -386,7 +411,8 @@
           <i class="bi bi-chat-square-dots"></i>
         </div>
         <h3>Welcome to your Inbox</h3>
-        <p>Select a conversation from the sidebar to start messaging.<br>All your WhatsApp, Instagram, and Messenger chats in one place.</p>
+        <p>Select a conversation from the sidebar to start messaging.<br>All your WhatsApp, Instagram, and Messenger
+          chats in one place.</p>
         <div class="empty-state-channels">
           <div class="es-channel"><i class="bi bi-whatsapp"></i></div>
           <div class="es-channel"><i class="bi bi-instagram"></i></div>
@@ -435,7 +461,8 @@
         </div>
 
         <div class="template-list" *ngIf="!loadingTemplates && filteredTemplates.length > 0">
-          <div *ngFor="let template of filteredTemplates" class="template-card" (click)="sendTemplate(template)" [class.sending]="sendingTemplate">
+          <div *ngFor="let template of filteredTemplates" class="template-card" (click)="sendTemplate(template)"
+            [class.sending]="sendingTemplate">
             <div class="template-card-header">
               <div class="template-card-name">{{ template.name }}</div>
               <div class="template-card-badges">
@@ -475,7 +502,7 @@
         </div>
         <button class="modal-close-btn" (click)="showProductPicker = false">&times;</button>
       </div>
-      
+
       <!-- Search Input -->
       <div style="padding: 18px 24px 0;">
         <div class="input-wrapper-with-icon">
@@ -495,7 +522,7 @@
           </div>
           <p class="text-muted mt-2">No products found</p>
         </div>
-        
+
         <div class="premium-item-list" *ngIf="!loadingProducts && filteredProducts.length > 0">
           <div *ngFor="let product of filteredProducts" class="premium-item-card" (click)="sendProduct(product)">
             <div class="premium-item-icon blue">
@@ -506,8 +533,10 @@
               <div class="premium-item-subtitle">
                 <span style="font-weight: 700; color: #059669;">₹{{ product.price }}</span>
                 <span style="color: #cbd5e1;">•</span>
-                <span class="stock-dot" [class.in-stock]="product.stock > 0" [class.out-of-stock]="product.stock <= 0" style="display: inline-block; vertical-align: middle;"></span>
-                <span style="font-size: 0.76rem;">{{ product.stock > 0 ? product.stock + ' in stock' : 'Out of stock' }}</span>
+                <span class="stock-dot" [class.in-stock]="product.stock > 0" [class.out-of-stock]="product.stock <= 0"
+                  style="display: inline-block; vertical-align: middle;"></span>
+                <span style="font-size: 0.76rem;">{{ product.stock > 0 ? product.stock + ' in stock' : 'Out of stock'
+                  }}</span>
               </div>
             </div>
             <div class="premium-item-arrow" style="color: #3b82f6;">
@@ -545,7 +574,7 @@
           </div>
           <p class="text-muted mt-2">No active agents found</p>
         </div>
-        
+
         <div class="premium-item-list" *ngIf="!loadingAgents && availableAgents.length > 0">
           <div *ngFor="let agent of availableAgents" class="premium-item-card" (click)="selectAgentToAssign(agent)">
             <div class="premium-item-icon indigo">
@@ -569,7 +598,8 @@
   </div>
 
   <!-- Shared Media Library Modal -->
-  <div class="premium-modal-overlay" *ngIf="showSharedLibrary" (click)="showSharedLibrary = false; showAttachMenu = false">
+  <div class="premium-modal-overlay" *ngIf="showSharedLibrary"
+    (click)="showSharedLibrary = false; showAttachMenu = false">
     <div class="premium-modal library-modal" (click)="$event.stopPropagation()">
       <div class="premium-modal-header">
         <div class="modal-title-group">
@@ -587,7 +617,7 @@
             <i class="bi" [ngClass]="uploadingToLibrary ? 'bi-hourglass-split' : 'bi-cloud-upload'"></i>
             {{ uploadingToLibrary ? 'Uploading...' : 'Upload' }}
             <input type="file" hidden (change)="uploadToSharedLibrary($event)"
-                   accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
           </label>
           <button class="modal-close-btn" (click)="showSharedLibrary = false">&times;</button>
         </div>
@@ -614,18 +644,17 @@
             <i class="bi bi-folder-x"></i>
           </div>
           <p class="library-empty-title">No shared files yet</p>
-          <p class="library-empty-sub">Click <strong>Upload</strong> above to add brochures or shared assets that all agents can use.</p>
+          <p class="library-empty-sub">Click <strong>Upload</strong> above to add brochures or shared assets that all
+            agents can use.</p>
         </div>
 
         <!-- File Grid -->
         <div class="library-file-grid" *ngIf="!loadingSharedLibrary && filteredSharedFiles.length > 0">
           <div *ngFor="let file of filteredSharedFiles" class="library-file-card" (click)="sendSharedFile(file)">
             <!-- File Type Icon -->
-            <div class="lib-file-icon"
-                 [class.lib-icon-image]="file.file_type === 'image'"
-                 [class.lib-icon-video]="file.file_type === 'video'"
-                 [class.lib-icon-audio]="file.file_type === 'audio'"
-                 [class.lib-icon-doc]="file.file_type === 'document'">
+            <div class="lib-file-icon" [class.lib-icon-image]="file.file_type === 'image'"
+              [class.lib-icon-video]="file.file_type === 'video'" [class.lib-icon-audio]="file.file_type === 'audio'"
+              [class.lib-icon-doc]="file.file_type === 'document'">
               <i class="bi" [ngClass]="{
                 'bi-image-fill': file.file_type === 'image',
                 'bi-camera-video-fill': file.file_type === 'video',
@@ -658,31 +687,92 @@
 
   <!-- Edit Contact Modal -->
   <div class="premium-modal-overlay" *ngIf="showEditContactModal" (click)="showEditContactModal = false">
-    <div class="premium-modal" (click)="$event.stopPropagation()">
+    <div class="premium-modal" (click)="$event.stopPropagation()" style="max-width: 700px; width: 90%;">
       <div class="premium-modal-header">
         <div class="modal-title-group">
           <div class="modal-icon-badge primary">
             <i class="bi bi-pencil-square"></i>
           </div>
           <div>
-            <h5>Edit Contact Details</h5>
-            <p>Update the contact information for this conversation</p>
+            <h5>{{ isEditingLeadMode ? 'Edit Lead Details' : 'Edit Contact Details' }}</h5>
+            <p>Update the information for this conversation</p>
           </div>
         </div>
         <button class="modal-close-btn" (click)="showEditContactModal = false">&times;</button>
       </div>
-      <div class="premium-modal-body">
-        <div class="input-field-group">
-          <label>Full Name</label>
-          <div class="input-wrapper-with-icon">
-            <i class="bi bi-person"></i>
-            <input type="text" [(ngModel)]="editContactName" placeholder="Enter contact name..." (keyup.enter)="saveContactEdit()">
+      <div class="premium-modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <!-- ── Contact Info ── -->
+        <div style="font-weight:600; margin-bottom:12px; color:#475569; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.05em;"><i class="bi bi-person-fill me-2"></i> Contact Information</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+          <div class="input-field-group">
+            <label>Full Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="editContactForm.name" placeholder="John Doe" style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;">
+          </div>
+          <div class="input-field-group">
+            <label>Phone <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="editContactForm.phone" placeholder="+91 9876543210" style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;">
+          </div>
+          <div class="input-field-group">
+            <label>Email</label>
+            <input type="email" class="form-control" [(ngModel)]="editContactForm.email" placeholder="john@example.com" style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;">
+          </div>
+          <div class="input-field-group">
+            <label>Tags <span style="font-weight:400;color:#94a3b8;">(comma sep.)</span></label>
+            <input type="text" class="form-control" [(ngModel)]="editContactForm.tags" placeholder="VIP, Customer" style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;">
+          </div>
+          <div class="input-field-group" style="grid-column: 1 / -1;">
+            <label>Address</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="editContactForm.address" placeholder="123 Main St, City, State" style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;"></textarea>
+          </div>
+          <div class="input-field-group">
+            <label>Channel</label>
+            <select class="form-select" [(ngModel)]="editContactForm.channel_preference" style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;">
+              <option value="whatsapp">WhatsApp</option>
+              <option value="sms">SMS</option>
+              <option value="rcs">RCS</option>
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="website">Website</option>
+            </select>
+          </div>
+          <div class="input-field-group">
+            <label>Assigned Agent</label>
+            <select class="form-select" [(ngModel)]="editContactForm.assigned_to" style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;">
+              <option value="">Unassigned</option>
+              <option *ngFor="let agent of availableAgents" [value]="agent.id">{{ agent.name }}</option>
+            </select>
           </div>
         </div>
+
+        <!-- ── Lead Status ── -->
+        <ng-container *ngIf="isEditingLeadMode">
+          <div style="font-weight:600; margin-bottom:12px; margin-top:24px; color:#475569; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.05em; border-top: 1px solid var(--border); padding-top: 24px;"><i class="bi bi-clipboard2-check me-2"></i> Lead Status & Remarks</div>
+
+          <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+            <div class="input-field-group">
+              <label>Status</label>
+              <select class="form-select" [(ngModel)]="editContactForm.status" style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;">
+                <option value="">-- Select --</option>
+                <option value="New">New</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Interested">Interested</option>
+                <option value="Not Interested">Not Interested</option>
+                <option value="Converted">Converted</option>
+                <option value="Branch">Branch</option>
+                <option value="Sales Loss">Sales Loss</option>
+              </select>
+            </div>
+            <div class="input-field-group">
+              <label>Remark / Note</label>
+              <textarea class="form-control" rows="2" [(ngModel)]="editContactForm.note" placeholder="Enter notes or remarks for this lead..." style="border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;"></textarea>
+            </div>
+          </div>
+        </ng-container>
       </div>
       <div class="premium-modal-footer">
         <button class="btn-cancel" (click)="showEditContactModal = false">Cancel</button>
-        <button class="btn-primary-gradient" (click)="saveContactEdit()" [disabled]="!editContactName.trim()">
+        <button class="btn-primary-gradient" (click)="saveContactEdit()" [disabled]="!editContactForm.name?.trim()">
           Save Changes
         </button>
       </div>
@@ -709,7 +799,8 @@
           <label>Tag Label</label>
           <div class="input-wrapper-with-icon">
             <i class="bi bi-tag-fill"></i>
-            <input type="text" [(ngModel)]="newTagName" placeholder="e.g. VIP, Warm Lead, Support..." (keyup.enter)="saveTag()">
+            <input type="text" [(ngModel)]="newTagName" placeholder="e.g. VIP, Warm Lead, Support..."
+              (keyup.enter)="saveTag()">
           </div>
         </div>
 
@@ -718,10 +809,8 @@
             Select from Suggested or Existing Tags
           </label>
           <div class="tags-badge-grid">
-            <span *ngFor="let tag of availableTagsToSelect" 
-                  class="tag-pill-selectable" 
-                  [class.selected]="newTagName === tag"
-                  (click)="newTagName = tag">
+            <span *ngFor="let tag of availableTagsToSelect" class="tag-pill-selectable"
+              [class.selected]="newTagName === tag" (click)="newTagName = tag">
               {{ tag }}
             </span>
           </div>
@@ -760,7 +849,7 @@
       </div>
       <div class="premium-modal-footer border-0 pt-0">
         <button class="btn-cancel" (click)="showConfirmModal = false">Cancel</button>
-          <button class="btn-confirm-action" [ngClass]="confirmType" (click)="confirmActionCallback()">
+        <button class="btn-confirm-action" [ngClass]="confirmType" (click)="confirmActionCallback()">
           Confirm Action
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -15,6 +15,10 @@ import { environment } from '../../../environments/environment';
 })
 export class InboxComponent implements OnInit, OnDestroy {
   @ViewChild('scrollMe') private myScrollContainer!: ElementRef;
+
+  @Input() isEmbedded: boolean = false;
+  @Input() embeddedConvoId?: number;
+  @Output() closeEmbedded = new EventEmitter<void>();
 
   conversations: any[] = [];
   selectedConvo: any = null;
@@ -42,9 +46,18 @@ export class InboxComponent implements OnInit, OnDestroy {
   availableAgents: any[] = [];
   agents: any[] = [];
 
+  // Sidebar State
+  showSidebar = localStorage.getItem('inboxSidebarOpen') === 'true';
+
+  toggleSidebar() {
+    this.showSidebar = !this.showSidebar;
+    localStorage.setItem('inboxSidebarOpen', String(this.showSidebar));
+  }
+
   // Custom Modal/Dialog States
   showEditContactModal = false;
-  editContactName = '';
+  isEditingLeadMode = false;
+  editContactForm: any = {};
   showAddTagModal = false;
   newTagName = '';
   suggestedTags = ['VIP', 'Warm Lead', 'Cold Lead', 'Support', 'Customer', 'Follow Up', 'Prospect', 'Spam'];
@@ -103,14 +116,18 @@ export class InboxComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.currentUser = JSON.parse(localStorage.getItem('uc_user') || '{}');
     
-    this.route.queryParams.subscribe(params => {
-      const convoId = params['convoId'];
-      if (convoId) {
-        this.loadConversations(Number(convoId));
-      } else {
-        this.loadConversations();
-      }
-    });
+    if (this.isEmbedded && this.embeddedConvoId) {
+      this.loadConversations(this.embeddedConvoId);
+    } else {
+      this.route.queryParams.subscribe(params => {
+        const convoId = params['convoId'];
+        if (convoId) {
+          this.loadConversations(Number(convoId));
+        } else {
+          this.loadConversations();
+        }
+      });
+    }
 
     this.setupSocketListeners();
   }
@@ -375,25 +392,81 @@ export class InboxComponent implements OnInit, OnDestroy {
   }
 
   // Quick Actions
+  ensureAgentsLoaded() {
+    if (this.availableAgents.length === 0) {
+      this.api.get('/settings/team').subscribe({
+        next: (res: any) => {
+          const allUsers = res.data || [];
+          this.availableAgents = allUsers.filter((u: any) => u.is_active && (u.role === 'agent' || u.role === 'admin' || u.role === 'superadmin'));
+        }
+      });
+    }
+  }
+
+  loadContactDetailsForEdit() {
+    this.ensureAgentsLoaded();
+    this.api.get(`/contacts/${this.selectedConvo.contact_id}`).subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.editContactForm = { ...res.data };
+          if (typeof this.editContactForm.tags === 'string') {
+            try {
+              const parsed = JSON.parse(this.editContactForm.tags);
+              this.editContactForm.tags = Array.isArray(parsed) ? parsed.join(', ') : parsed;
+            } catch(e) { /* ignore */ }
+          } else if (Array.isArray(this.editContactForm.tags)) {
+            this.editContactForm.tags = this.editContactForm.tags.join(', ');
+          }
+          this.showEditContactModal = true;
+        }
+      },
+      error: () => this.showToast('Failed to load contact details', 'danger')
+    });
+  }
+
   editContact() {
     if (!this.selectedConvo) return;
-    this.editContactName = this.selectedConvo.contact_name || '';
-    this.showEditContactModal = true;
+    this.isEditingLeadMode = false;
+    this.loadContactDetailsForEdit();
+  }
+
+  editLead() {
+    if (!this.selectedConvo) return;
+    this.isEditingLeadMode = true;
+    this.loadContactDetailsForEdit();
   }
 
   saveContactEdit() {
-    if (!this.selectedConvo || !this.editContactName.trim()) return;
-    const newName = this.editContactName.trim();
-    this.api.put(`/contacts/${this.selectedConvo.contact_id}`, { name: newName }).subscribe({
+    if (!this.selectedConvo || !this.editContactForm.name?.trim()) {
+      this.showToast('Full Name is required', 'danger');
+      return;
+    }
+    const payload = { ...this.editContactForm };
+    if (payload.tags) {
+      payload.tags = payload.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+    }
+    
+    this.api.put(`/contacts/${this.selectedConvo.contact_id}`, payload).subscribe({
       next: () => {
-        this.selectedConvo.contact_name = newName;
+        this.selectedConvo.contact_name = payload.name;
+        this.selectedConvo.contact_phone = payload.phone;
         const convo = this.conversations.find(c => c.id === this.selectedConvo.id);
-        if (convo) convo.contact_name = newName;
+        if (convo) convo.contact_name = payload.name;
         this.showEditContactModal = false;
         this.showToast('Contact details updated successfully', 'success');
       },
       error: (err) => this.showToast('Failed to update contact: ' + (err.error?.message || 'Error'), 'danger')
     });
+  }
+
+  isLead(): boolean {
+    if (!this.selectedConvo || !this.selectedConvo.tags) return false;
+    try {
+      const tags = typeof this.selectedConvo.tags === 'string' ? JSON.parse(this.selectedConvo.tags) : this.selectedConvo.tags;
+      return Array.isArray(tags) && (tags.includes('lead') || tags.includes('Lead'));
+    } catch (e) {
+      return false;
+    }
   }
 
   addTag() {

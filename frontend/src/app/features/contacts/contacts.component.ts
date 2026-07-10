@@ -6,10 +6,12 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import Swal from 'sweetalert2';
 
+import { ChatModalComponent } from '../shared/chat-modal/chat-modal.component';
+
 @Component({
   selector: 'app-contacts',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ChatModalComponent],
   templateUrl: './contacts.component.html',
   styleUrls: ['./contacts.component.css']
 })
@@ -43,6 +45,11 @@ export class ContactsComponent implements OnInit {
     assigned_employee: '',
     loss_reason: ''
   };
+
+  // Embedded Chat Modal
+  showChatModal = false;
+  activeChatContactId: number | null = null;
+  activeChatConvoId: number | null = null;
 
   // Pagination
   currentPage = 1;
@@ -572,7 +579,9 @@ export class ContactsComponent implements OnInit {
     }).subscribe({
       next: (res: any) => {
         if (res.success && res.data) {
-          this.router.navigate(['/inbox'], { queryParams: { convoId: res.data.id } });
+          this.activeChatContactId = contact.id;
+          this.activeChatConvoId = res.data.id;
+          this.showChatModal = true;
         }
       },
       error: (err: any) => {

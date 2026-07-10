@@ -2,16 +2,22 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
+import { CourseManagementComponent } from './course-management/course-management.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CourseManagementComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
 export class SettingsComponent implements OnInit {
-  activeTab = 'whatsapp';
+  activeTab = localStorage.getItem('activeSettingsTab') || 'whatsapp';
+
+  setActiveTab(tab: string) {
+    this.activeTab = tab;
+    localStorage.setItem('activeSettingsTab', tab);
+  }
   showToken = false;
   showFbToken = false;
   showIgToken = false;

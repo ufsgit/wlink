@@ -748,6 +748,7 @@
   left: 0;
   width: 100%;
   height: 100%;
+  padding: 40px;
   background: rgba(15, 23, 42, 0.4);
   display: flex;
   align-items: center;
@@ -761,6 +762,9 @@
   border-radius: 20px;
   width: 440px;
   max-width: 90%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   overflow: hidden;
   border: 1px solid rgba(241, 245, 249, 0.8);
@@ -1755,3 +1759,13 @@
   line-height: 1.5;
 }
 
+
+/* Sidebar Animation Classes */
+.contact-info-panel {
+  transition: margin-right 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;
+}
+.contact-info-panel.closed {
+  margin-right: -320px !important;
+  opacity: 0;
+  pointer-events: none;
+}

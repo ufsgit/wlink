@@ -110,6 +110,7 @@ const createContact = async (req, res) => {
 
     res.status(201).json({ success: true, data: rows[0], message: 'Contact created' });
   } catch (err) {
+    console.log('error from contacts',err);
     res.status(500).json({ success: false, message: err.message, data: null });
   }
 };

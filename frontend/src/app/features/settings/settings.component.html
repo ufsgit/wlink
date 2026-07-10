@@ -1,27 +1,22 @@
 <div class="settings-page">
   <div class="settings-nav">
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'whatsapp'" (click)="activeTab = 'whatsapp'">
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'whatsapp'" (click)="setActiveTab('whatsapp')">
       <i class="bi bi-cpu me-2"></i>Channels Manager
     </a>
-    <!-- 
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'profile'" (click)="activeTab = 'profile'">
-      <i class="bi bi-person me-2"></i>Profile
-    </a>
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'business'" (click)="activeTab = 'business'">
-      <i class="bi bi-building me-2"></i>Business
-    </a>
-    -->
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'team'" (click)="activeTab = 'team'; loadTeam()">
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'team'" (click)="setActiveTab('team'); loadTeam()">
       <i class="bi bi-people me-2"></i>Team
     </a>
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'lead-fields'" (click)="activeTab = 'lead-fields'; loadLeadFields()">
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'lead-fields'" (click)="setActiveTab('lead-fields'); loadLeadFields()">
       <i class="bi bi-list-columns me-2"></i>Lead Fields
     </a>
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'api'" (click)="activeTab = 'api'">
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'api'" (click)="setActiveTab('api')">
       <i class="bi bi-code-slash me-2"></i>API & Webhooks
     </a>
-    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'integrations'" (click)="activeTab = 'integrations'">
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'integrations'" (click)="setActiveTab('integrations')">
       <i class="bi bi-plug me-2"></i>Integrations
+    </a>
+    <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'courses'" (click)="setActiveTab('courses')">
+      <i class="bi bi-journal-bookmark me-2"></i>Courses
     </a>
     <!-- 
     <a href="javascript:void(0)" class="nav-link" [class.active]="activeTab === 'billing'" (click)="activeTab = 'billing'; loadBilling()">
@@ -877,6 +872,11 @@ Commerce"></textarea>
           </button>
         </div>
       </div>
+    </div>
+    
+    <!-- ===================== COURSES ===================== -->
+    <div *ngIf="activeTab === 'courses'">
+      <app-course-management></app-course-management>
     </div>
 
   </div>
