@@ -381,7 +381,7 @@ export class LayoutComponent implements OnInit {
   private syncDepartmentWithUrl(url: string) {
     if (!url || url.includes('/sop')) return;
     
-    const crmRoutes = ['crm-dashboard', 'contacts', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report', 'crm/leave-request', 'crm/attendance-report'];
+    const crmRoutes = ['crm-dashboard', 'contacts', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'agent-performance-report', 'won-lost-report', 'salesperson-report', 'crm/leave-request', 'crm/attendance-report'];
     
     const operationRoutes = ['operation-dashboard', 'installation', 'customer-feedback', 'warranty-service', 'complaints', 'installation-report', 'complaint-report', 'warranty-report', 'technician-report', 'customer-feedback-report', 'operation/leave-request'];
     
@@ -392,7 +392,7 @@ export class LayoutComponent implements OnInit {
     if (crmRoutes.some(route => url.includes(route))) {
       this.activeDepartment = 'CRM';
       
-      const crmReports = ['pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report', 'crm/attendance-report'];
+      const crmReports = ['pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'agent-performance-report', 'won-lost-report', 'salesperson-report', 'crm/attendance-report'];
       if (crmReports.some(r => url.includes(r))) this.isReportsOpen = true;
       
       const salesPerf = ['targets', 'achievements', 'leaderboard', 'incentives', 'underperformers'];
@@ -428,6 +428,7 @@ export class LayoutComponent implements OnInit {
     if (last === 'delivery-management') return 'Delivery Management';
     if (last === 'operation-dashboard') return 'Operations Dashboard';
     if (last === 'hr-dashboard') return 'HR Dashboard';
+    if (last === 'agent-performance-report') return 'Individuals Reports';
     if (last === 'contacts') return 'Leads';
     if (last === 'sms') return 'SMS Campaigns';
     if (last === 'ivr') return 'IVR Flows';

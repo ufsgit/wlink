@@ -44,6 +44,7 @@ export const routes: Routes = [
       { path: 'purchase-order-report', loadComponent: () => import('./features/crm/reports/purchase-order-report/purchase-order-report.component').then(m => m.PurchaseOrderReportComponent) },
       { path: 'sales-funnel-report', loadComponent: () => import('./features/crm/reports/sales-funnel-report/sales-funnel-report.component').then(m => m.SalesFunnelReportComponent) },
       { path: 'lead-conversion-report', loadComponent: () => import('./features/crm/reports/lead-conversion-report/lead-conversion-report.component').then(m => m.LeadConversionReportComponent) },
+      { path: 'agent-performance-report', loadComponent: () => import('./features/crm/reports/agent-performance-report/agent-performance-report.component').then(m => m.AgentPerformanceReportComponent) },
       { path: 'won-lost-report', loadComponent: () => import('./features/crm/reports/won-lost-report/won-lost-report.component').then(m => m.WonLostReportComponent) },
       { path: 'salesperson-report', loadComponent: () => import('./features/crm/reports/salesperson-report/salesperson-report.component').then(m => m.SalespersonReportComponent) },
       { path: 'crm/attendance-report', loadComponent: () => import('./features/crm/reports/attendance-report/attendance-report.component').then(m => m.CrmAttendanceReportComponent) },
