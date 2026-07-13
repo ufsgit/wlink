@@ -84,7 +84,7 @@ Chart.register(...registerables);
           </div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!hideMarkedItems">
           <div class="stat-icon icon-purple"><i class="bi bi-file-earmark-text-fill"></i></div>
           <div class="stat-info">
             <label>Quotations</label>
@@ -92,7 +92,7 @@ Chart.register(...registerables);
           </div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!hideMarkedItems">
           <div class="stat-icon icon-pink"><i class="bi bi-receipt"></i></div>
           <div class="stat-info">
             <label>Purchase Orders</label>
@@ -328,6 +328,8 @@ Chart.register(...registerables);
 export class CrmDashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('followUpCanvas') followUpCanvas!: ElementRef<HTMLCanvasElement>;
   
+  hideMarkedItems = true; // Added variable to hide marked items
+  // hideMarkedItems = false; 
   dateRange: string = 'this_month';
 
   // KPI Data
@@ -353,7 +355,37 @@ export class CrmDashboardComponent implements OnInit, AfterViewInit {
 
   followUpChart: any;
 
-  ngOnInit() {}
+  ngOnInit() {
+    // Initial animation
+    this.animateValue('totalLeads', 0, 1250, 1200);
+    this.animateValue('pendingFollowUps', 0, 45, 1200);
+    this.animateValue('todaysFollowUps', 0, 120, 1200);
+    this.animateValue('upcomingFollowUps', 0, 340, 1200);
+    this.animateValue('wonDeals', 0, 10, 1200);
+    this.animateValue('lostDeals', 0, 7, 1200);
+    this.animateValue('quotations', 0, 25, 1200);
+    this.animateValue('purchaseOrders', 0, 12, 1200);
+  }
+
+  animateValue(propName: any, start: number, end: number, duration: number) {
+    if (start === 0 && end > 50) {
+      start = Math.floor(end * 0.6);
+    }
+    
+    let startTimestamp: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 2);
+      (this as any)[propName] = Math.floor(easeProgress * (end - start) + start);
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        (this as any)[propName] = end;
+      }
+    };
+    window.requestAnimationFrame(step);
+  }
 
   ngAfterViewInit() {
     setTimeout(() => {
@@ -362,14 +394,14 @@ export class CrmDashboardComponent implements OnInit, AfterViewInit {
   }
 
   onFilterChange() {
-    this.totalLeads = Math.floor(Math.random() * 2000) + 500;
-    this.pendingFollowUps = Math.floor(Math.random() * 80);
-    this.todaysFollowUps = Math.floor(Math.random() * 150);
-    this.upcomingFollowUps = Math.floor(Math.random() * 400);
-    this.wonDeals = Math.floor(Math.random() * 50);
-    this.lostDeals = Math.floor(Math.random() * 20);
-    this.quotations = Math.floor(Math.random() * 80);
-    this.purchaseOrders = Math.floor(Math.random() * 30);
+    this.animateValue('totalLeads', this.totalLeads, Math.floor(Math.random() * 2000) + 500, 1000);
+    this.animateValue('pendingFollowUps', this.pendingFollowUps, Math.floor(Math.random() * 80), 1000);
+    this.animateValue('todaysFollowUps', this.todaysFollowUps, Math.floor(Math.random() * 150), 1000);
+    this.animateValue('upcomingFollowUps', this.upcomingFollowUps, Math.floor(Math.random() * 400), 1000);
+    this.animateValue('wonDeals', this.wonDeals, Math.floor(Math.random() * 50), 1000);
+    this.animateValue('lostDeals', this.lostDeals, Math.floor(Math.random() * 20), 1000);
+    this.animateValue('quotations', this.quotations, Math.floor(Math.random() * 80), 1000);
+    this.animateValue('purchaseOrders', this.purchaseOrders, Math.floor(Math.random() * 30), 1000);
 
     let current = Math.floor(Math.random() * 400) + 100;
     this.funnelStages.forEach((stage, i) => {

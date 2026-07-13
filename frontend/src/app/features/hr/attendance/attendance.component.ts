@@ -35,9 +35,29 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   constructor(private attendanceService: AttendanceService) {}
 
   ngOnInit(): void {
-    this.sub = this.attendanceService.records$.subscribe(records => {
-      this.attendanceRecords = records;
-      this.calculateKPIs();
+    this.fetchAttendance();
+  }
+
+  fetchAttendance() {
+    const today = new Date().toISOString().split('T')[0];
+    this.sub = this.attendanceService.getReport({ start_date: today, end_date: today }).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          // Map backend logs to frontend interface if necessary, or just use them
+          this.attendanceRecords = res.data.map((log: any) => ({
+            id: log.id,
+            date: new Date(log.check_in_time).toISOString().split('T')[0],
+            employeeName: log.user_name,
+            checkIn: new Date(log.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            checkOut: log.check_out_time ? new Date(log.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+            status: log.is_late ? 'Late' : 'Present', // Or map from log.status
+            totalHours: log.total_minutes ? `${log.total_minutes} min` : '-',
+            module: log.menu
+          }));
+          this.calculateKPIs();
+        }
+      },
+      error: (err) => console.error('Failed to fetch attendance', err)
     });
   }
 
@@ -70,12 +90,17 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   }
 
   markAttendance() {
-    const res = this.attendanceService.addCheckIn('Current User', 'HR');
-    if (res.success) {
-      this.showToast(res.message);
-    } else {
-      this.showToast(res.message);
-    }
+    this.attendanceService.addCheckIn('HR').subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.showToast(res.message);
+          this.fetchAttendance();
+        }
+      },
+      error: (err: any) => {
+        this.showToast(err.error?.message || 'Error checking in');
+      }
+    });
   }
 
   getStatusClass(status: string): string {

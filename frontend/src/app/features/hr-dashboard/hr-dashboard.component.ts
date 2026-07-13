@@ -319,7 +319,37 @@ export class HrDashboardComponent implements OnInit, AfterViewInit {
     { employee: 'Creed Bratton', manager: 'Dwight Schrute' }
   ];
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.animateValue('leaveRequests', 0, 12, 1200);
+    this.animateValue('expenseApprovals', 0, 8, 1200);
+    this.animateValue('totalEmployees', 0, 142, 1200);
+    this.animateValue('attendanceToday', 0, 128, 1200);
+    this.animateValue('performanceProgress', 0, 74, 1200);
+  }
+
+  animateValue(propName: any, start: number, end: number, duration: number) {
+    // If starting from 0 for a large number, jump to 60% of the value so it doesn't blur
+    if (start === 0 && end > 50) {
+      start = Math.floor(end * 0.6); 
+    }
+    
+    let startTimestamp: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      
+      // easeOutQuad: Shorter tail so the last numbers don't drag
+      const easeProgress = 1 - Math.pow(1 - progress, 2);
+      
+      (this as any)[propName] = Math.floor(easeProgress * (end - start) + start);
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        (this as any)[propName] = end;
+      }
+    };
+    window.requestAnimationFrame(step);
+  }
 
   ngAfterViewInit() {
     setTimeout(() => {
@@ -329,10 +359,10 @@ export class HrDashboardComponent implements OnInit, AfterViewInit {
   }
 
   onFilterChange() {
-    this.leaveRequests = Math.floor(Math.random() * 20);
-    this.expenseApprovals = Math.floor(Math.random() * 15);
-    this.attendanceToday = Math.floor(Math.random() * 20) + 110;
-    this.performanceProgress = Math.floor(Math.random() * 40) + 50;
+    this.animateValue('leaveRequests', this.leaveRequests, Math.floor(Math.random() * 20), 1000);
+    this.animateValue('expenseApprovals', this.expenseApprovals, Math.floor(Math.random() * 15), 1000);
+    this.animateValue('attendanceToday', this.attendanceToday, Math.floor(Math.random() * 20) + 110, 1000);
+    this.animateValue('performanceProgress', this.performanceProgress, Math.floor(Math.random() * 40) + 50, 1000);
 
     if (this.attendanceChart) {
       this.attendanceChart.data.datasets[0].data = [

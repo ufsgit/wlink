@@ -315,7 +315,33 @@ export class OperationDashboardComponent implements OnInit, AfterViewInit {
     { ticketId: 'WAR-1102', customer: 'Emma Watson', type: 'Warranty', status: 'Pending Approval', priority: 'Medium' },
   ];
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.animateValue('pendingInstallations', 0, 24, 1200);
+    this.animateValue('pendingComplaints', 0, 18, 1200);
+    this.animateValue('warrantyClaims', 0, 7, 1200);
+    this.animateValue('techniciansActive', 0, 42, 1200);
+    this.animateValue('todaysInstallations', 0, 35, 1200);
+  }
+
+  animateValue(propName: any, start: number, end: number, duration: number) {
+    if (start === 0 && end > 50) {
+      start = Math.floor(end * 0.6);
+    }
+    
+    let startTimestamp: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 2);
+      (this as any)[propName] = Math.floor(easeProgress * (end - start) + start);
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        (this as any)[propName] = end;
+      }
+    };
+    window.requestAnimationFrame(step);
+  }
 
   ngAfterViewInit() {
     setTimeout(() => {
@@ -325,11 +351,11 @@ export class OperationDashboardComponent implements OnInit, AfterViewInit {
   }
 
   onFilterChange() {
-    this.pendingInstallations = Math.floor(Math.random() * 50);
-    this.pendingComplaints = Math.floor(Math.random() * 40);
-    this.warrantyClaims = Math.floor(Math.random() * 20);
-    this.techniciansActive = Math.floor(Math.random() * 60) + 20;
-    this.todaysInstallations = Math.floor(Math.random() * 50) + 10;
+    this.animateValue('pendingInstallations', this.pendingInstallations, Math.floor(Math.random() * 50), 1000);
+    this.animateValue('pendingComplaints', this.pendingComplaints, Math.floor(Math.random() * 40), 1000);
+    this.animateValue('warrantyClaims', this.warrantyClaims, Math.floor(Math.random() * 20), 1000);
+    this.animateValue('techniciansActive', this.techniciansActive, Math.floor(Math.random() * 60) + 20, 1000);
+    this.animateValue('todaysInstallations', this.todaysInstallations, Math.floor(Math.random() * 50) + 10, 1000);
 
     if (this.trendChart) this.trendChart.destroy();
     if (this.statusChart) this.statusChart.destroy();

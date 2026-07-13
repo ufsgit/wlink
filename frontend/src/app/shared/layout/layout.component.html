@@ -177,21 +177,21 @@
           <i class="bi bi-person-lines-fill"></i>
           <span *ngIf="!isCollapsed">Leads</span>
         </a>
-        <a routerLink="/quotations" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Quotations' : ''">
+        <a routerLink="/quotations" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Quotations' : ''" *ngIf="!hideCRMItems">
           <i class="bi bi-file-earmark-text"></i>
           <span *ngIf="!isCollapsed">Quotations</span>
         </a>
-        <a routerLink="/purchase-orders" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Purchase Orders' : ''">
+        <a routerLink="/purchase-orders" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Purchase Orders' : ''" *ngIf="!hideCRMItems">
           <i class="bi bi-receipt"></i>
           <span *ngIf="!isCollapsed">Purchase Orders</span>
         </a>
-        <a routerLink="/delivery-management" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Delivery' : ''">
+        <a routerLink="/delivery-management" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Delivery' : ''" *ngIf="!hideCRMItems">
           <i class="bi bi-truck"></i>
           <span *ngIf="!isCollapsed">Delivery Management</span>
         </a>
 
         <!-- Leave Request -->
-        <a routerLink="/crm/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''">
+        <a routerLink="/crm/leave-request" routerLinkActive="active" class="nav-item" [title]="isCollapsed ? 'Leave Request' : ''" *ngIf="!hideCRMItems">
           <i class="bi bi-calendar2-check"></i>
           <span *ngIf="!isCollapsed">Leave Request</span>
         </a>
@@ -244,11 +244,11 @@
             <span class="bullet">&bull;</span>
             <span>Today's Leads</span>
           </a>
-          <a routerLink="/quotation-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Quotation Report' : ''">
+          <a routerLink="/quotation-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Quotation Report' : ''" *ngIf="!hideCRMItems">
             <span class="bullet">&bull;</span>
             <span>Quotation Report</span>
           </a>
-          <a routerLink="/purchase-order-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Purchase Order Report' : ''">
+          <a routerLink="/purchase-order-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Purchase Order Report' : ''" *ngIf="!hideCRMItems">
             <span class="bullet">&bull;</span>
             <span>Purchase Order Report</span>
           </a>
@@ -267,6 +267,10 @@
           <a routerLink="/salesperson-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Salesperson Report' : ''">
             <span class="bullet">&bull;</span>
             <span>Salesperson Report</span>
+          </a>
+          <a routerLink="/crm/attendance-report" routerLinkActive="active" class="nav-item submenu-item" [title]="isCollapsed ? 'Attendance Report' : ''">
+            <span class="bullet">&bull;</span>
+            <span>Attendance Report</span>
           </a>
         </div>
         

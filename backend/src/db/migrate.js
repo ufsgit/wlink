@@ -362,6 +362,20 @@ async function runMigrations() {
       recorded_date DATE,
       FOREIGN KEY (business_id) REFERENCES businesses(id)
     )`,
+    `CREATE TABLE IF NOT EXISTS attendance_logs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      business_id INT,
+      user_id INT,
+      user_name VARCHAR(255),
+      menu ENUM('lead', 'crm', 'operation', 'hr'),
+      check_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      check_out_time TIMESTAMP NULL,
+      total_minutes INT,
+      status VARCHAR(50) DEFAULT 'Active',
+      is_late BOOLEAN DEFAULT FALSE,
+      late_reason TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`
   ];
 
   for (const query of queries) {

@@ -16,6 +16,8 @@ import Swal from 'sweetalert2';
   styleUrls: ['./layout.component.css']
 })
 export class LayoutComponent implements OnInit {
+  hideCRMItems = true;
+  // hideCRMItems = false;
   user$: Observable<any>;
   currentUser: any;
   pageTitle = 'Dashboard';
@@ -50,57 +52,77 @@ export class LayoutComponent implements OnInit {
 
   updateCheckInStatus() {
     if (!this.currentEmployeeName) return;
-    const today = new Date().toISOString().split('T')[0];
-    const records = this.attendanceService.getRecords();
-    const myRecord = records.find(r => r.employeeName === this.currentEmployeeName && r.date === today && (r.module === this.activeDepartment || !r.module));
-    if (myRecord) {
-      this.isCheckedIn = myRecord.checkOut === '-';
-    } else {
-      this.isCheckedIn = false;
-    }
+    this.attendanceService.getStatus(this.activeDepartment).subscribe({
+      next: (res: any) => {
+        if (res.success && res.isCheckedIn) {
+          this.isCheckedIn = true;
+        } else {
+          this.isCheckedIn = false;
+        }
+      },
+      error: () => this.isCheckedIn = false
+    });
   }
 
   toggleCheckIn() {
     if (!this.isCheckedIn) {
       // Trying to check in
-      const res = this.attendanceService.addCheckIn(this.currentEmployeeName, this.activeDepartment);
-      if (res.success) {
-        this.isCheckedIn = true;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          icon: 'success',
-          title: res.message
-        });
-      } else {
-        Swal.fire({
-          toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'info', title: res.message
-        });
-        if (res.message.includes('Already checked in')) this.isCheckedIn = true;
-      }
+      this.attendanceService.addCheckIn(this.activeDepartment).subscribe({
+        next: (res: any) => {
+          if (res.success) {
+            this.isCheckedIn = true;
+            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: res.message });
+          }
+        },
+        error: async (err: any) => {
+          if (err.error?.is_late) {
+            const { value: reason } = await Swal.fire({
+              title: 'Late Check In',
+              text: err.error.message,
+              input: 'text',
+              inputPlaceholder: 'Type your reason here...',
+              showCancelButton: true,
+              confirmButtonText: 'Check In',
+              cancelButtonText: 'Cancel',
+              customClass: {
+                popup: 'modern-swal-popup',
+                title: 'modern-swal-title',
+                input: 'modern-swal-input',
+                confirmButton: 'modern-swal-confirm',
+                cancelButton: 'modern-swal-cancel',
+                actions: 'modern-swal-actions'
+              },
+              buttonsStyling: false,
+              backdrop: `rgba(0,0,0,0.4)`
+            });
+            if (reason) {
+              this.attendanceService.addCheckIn(this.activeDepartment, reason).subscribe({
+                 next: (res: any) => {
+                   this.isCheckedIn = true;
+                   Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: res.message });
+                 }
+              });
+            }
+          } else {
+            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'info', title: err.error?.message || 'Error checking in' });
+            if (err.error?.message?.includes('already checked in')) this.isCheckedIn = true;
+          }
+        }
+      });
     } else {
       // Trying to check out
-      const res = this.attendanceService.addCheckOut(this.currentEmployeeName, this.activeDepartment);
-      if (res.success) {
-        this.isCheckedIn = false;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          icon: 'success',
-          title: res.message
-        });
-      } else {
-        Swal.fire({
-          toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'warning', title: res.message
-        });
-        if (res.message.includes('Already checked out')) this.isCheckedIn = false;
-      }
+      this.attendanceService.addCheckOut(this.activeDepartment).subscribe({
+        next: (res: any) => {
+          if (res.success) {
+            this.isCheckedIn = false;
+            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: res.message });
+          }
+        },
+        error: (err: any) => {
+          Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'warning', title: err.error?.message || 'Error checking out' });
+          if (err.error?.message?.includes('No active')) this.isCheckedIn = false;
+        }
+      });
     }
   }
 
@@ -359,7 +381,7 @@ export class LayoutComponent implements OnInit {
   private syncDepartmentWithUrl(url: string) {
     if (!url || url.includes('/sop')) return;
     
-    const crmRoutes = ['crm-dashboard', 'contacts', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report', 'crm/leave-request'];
+    const crmRoutes = ['crm-dashboard', 'contacts', 'quotations', 'purchase-orders', 'delivery-management', 'targets', 'achievements', 'leaderboard', 'incentives', 'underperformers', 'pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report', 'crm/leave-request', 'crm/attendance-report'];
     
     const operationRoutes = ['operation-dashboard', 'installation', 'customer-feedback', 'warranty-service', 'complaints', 'installation-report', 'complaint-report', 'warranty-report', 'technician-report', 'customer-feedback-report', 'operation/leave-request'];
     
@@ -370,7 +392,7 @@ export class LayoutComponent implements OnInit {
     if (crmRoutes.some(route => url.includes(route))) {
       this.activeDepartment = 'CRM';
       
-      const crmReports = ['pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report'];
+      const crmReports = ['pending-followup', 'todays-leads', 'quotation-report', 'purchase-order-report', 'sales-funnel-report', 'lead-conversion-report', 'won-lost-report', 'salesperson-report', 'crm/attendance-report'];
       if (crmReports.some(r => url.includes(r))) this.isReportsOpen = true;
       
       const salesPerf = ['targets', 'achievements', 'leaderboard', 'incentives', 'underperformers'];
